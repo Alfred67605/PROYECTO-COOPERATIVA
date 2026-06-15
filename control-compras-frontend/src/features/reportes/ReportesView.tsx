@@ -1,0 +1,253 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import api from '../../lib/axios';
+import { Download, FileText, Loader2, Calendar, Filter, Pickaxe, Building2, Package, Activity, ArrowRight, ShoppingCart } from 'lucide-react';
+import { useToast } from '../../components/ui/Toast';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+
+export const ReportesView = () => {
+  const toast = useToast();
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
+  
+  // Rango de fechas por defecto (Este Mes)
+  const [dateRange, setDateRange] = useState({ 
+    inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], 
+    fin: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0] 
+  });
+
+  const { data: reporte, isLoading, refetch } = useQuery({
+    queryKey: ['reporte-generado', dateRange.inicio, dateRange.fin],
+    queryFn: async () => {
+      const { data } = await api.get(`/reportes/generar?inicio=${dateRange.inicio}&fin=${dateRange.fin}`);
+      return data;
+    }
+  });
+
+  const setRango = (tipo: 'diario' | 'semanal' | 'mensual') => {
+    const hoy = new Date();
+    
+    // Función auxiliar para formatear la fecha a YYYY-MM-DD en la zona horaria local
+    const formatDate = (d: Date) => {
+      const offset = d.getTimezoneOffset();
+      const localDate = new Date(d.getTime() - (offset*60*1000));
+      return localDate.toISOString().split('T')[0];
+    };
+
+    if (tipo === 'diario') {
+      setDateRange({ inicio: formatDate(hoy), fin: formatDate(hoy) });
+    } else if (tipo === 'semanal') {
+      const day = hoy.getDay();
+      const diffToMonday = hoy.getDate() - day + (day === 0 ? -6 : 1);
+      
+      const primerDia = new Date(hoy);
+      primerDia.setDate(diffToMonday);
+      
+      const ultimoDia = new Date(primerDia);
+      ultimoDia.setDate(primerDia.getDate() + 6);
+      
+      setDateRange({ inicio: formatDate(primerDia), fin: formatDate(ultimoDia) });
+    } else if (tipo === 'mensual') {
+      const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+      setDateRange({ inicio: formatDate(primerDia), fin: formatDate(ultimoDia) });
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setExportingPdf(true);
+    try {
+      const res = await api.get(`/reportes/exportar/pdf?inicio=${dateRange.inicio}&fin=${dateRange.fin}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reporte_compras_${dateRange.inicio}_al_${dateRange.fin}.html`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Reporte PDF Generado', 'El documento respetará el filtro de fechas actual.');
+    } catch {
+      toast.error('Error', 'No se pudo generar el reporte PDF.');
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExportingExcel(true);
+    try {
+      const res = await api.get(`/reportes/exportar/excel?inicio=${dateRange.inicio}&fin=${dateRange.fin}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reporte_compras_${dateRange.inicio}_al_${dateRange.fin}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Reporte Excel Exportado', 'El Excel respetará el filtro de fechas actual.');
+    } catch {
+      toast.error('Error', 'No se pudo generar el reporte Excel.');
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
+  const COLORS = ['#3b82f6', '#06b6d4', '#10b981', '#6366f1', '#f59e0b'];
+
+  return (
+    <div className="space-y-6">
+      <div className="section-header flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="section-title">Generador de Reportes</h2>
+          <p className="section-subtitle">Análisis detallado de compras por periodo</p>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={handleExportPdf} disabled={exportingPdf || isLoading} className="btn-secondary">
+            {exportingPdf ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} className="text-copper-500" />}
+            Exportar PDF
+          </button>
+          <button onClick={handleExportExcel} disabled={exportingExcel || isLoading} className="btn-primary">
+            {exportingExcel ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+            Exportar Excel
+          </button>
+        </div>
+      </div>
+
+      {/* Controles de Filtros */}
+      <div className="card p-5 border-l-4 border-l-copper-500">
+        <div className="flex flex-col xl:flex-row gap-6 justify-between">
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider">Filtros Rápidos</label>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setRango('diario')} className="btn-secondary h-10 px-4">Hoy (Diario)</button>
+              <button onClick={() => setRango('semanal')} className="btn-secondary h-10 px-4">Esta Semana</button>
+              <button onClick={() => setRango('mensual')} className="btn-secondary h-10 px-4">Este Mes</button>
+            </div>
+          </div>
+          
+          <div className="flex flex-col md:flex-row gap-4 items-end flex-1 xl:max-w-xl">
+            <div className="flex-1 w-full">
+              <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Fecha Inicio</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
+                <input type="date" className="input-field pl-10" value={dateRange.inicio} onChange={e => setDateRange({...dateRange, inicio: e.target.value})} />
+              </div>
+            </div>
+            <div className="flex-1 w-full">
+              <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Fecha Fin</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
+                <input type="date" className="input-field pl-10" value={dateRange.fin} onChange={e => setDateRange({...dateRange, fin: e.target.value})} />
+              </div>
+            </div>
+            <button onClick={() => refetch()} className="btn-primary whitespace-nowrap h-10 px-6">
+              <Filter size={18} /> Aplicar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="animate-spin text-copper-500" size={48} />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Resumen General */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card bg-mining-900 text-white relative overflow-hidden border-0">
+              <div className="absolute -right-10 -bottom-10 opacity-10"><Activity size={150} /></div>
+              <p className="text-xs font-bold text-mining-400 uppercase tracking-wider mb-2">Gasto Total del Periodo</p>
+              <p className="text-4xl font-black text-copper-400">${parseFloat(reporte?.resumen?.gasto_total || 0).toLocaleString()}</p>
+            </div>
+            <div className="card relative overflow-hidden">
+              <div className="absolute -right-10 -bottom-10 opacity-5 text-white"><ShoppingCart size={150} /></div>
+              <p className="text-xs font-bold text-mining-400 uppercase tracking-wider mb-2">Operaciones de Compra</p>
+              <p className="text-4xl font-black text-white">{reporte?.resumen?.total_operaciones || 0}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Gráfico Gastos por Bocamina */}
+            <div className="card">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-white/5 text-white flex items-center justify-center"><Pickaxe size={20} /></div>
+                <h3 className="text-lg font-bold text-white">Gastos por Bocamina</h3>
+              </div>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart 
+                    data={reporte?.gastos_bocamina?.map((d: any) => ({ ...d, total_gastado: parseFloat(d.total_gastado) || 0 })) || []} 
+                    layout="vertical" 
+                    margin={{ top: 0, right: 30, left: 20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <XAxis type="number" tickFormatter={(val) => `$${(val/1000).toFixed(0)}k`} />
+                    <YAxis dataKey="nombre" type="category" axisLine={false} tickLine={false} width={100} />
+                    <Tooltip cursor={{ fill: 'rgba(255,255,255,0.02)' }} formatter={(value: number) => [`$${value.toLocaleString()}`, 'Gasto']} />
+                    <Bar dataKey="total_gastado" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={24} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Proveedores */}
+            <div className="card flex flex-col">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-white/5 text-copper-400 flex items-center justify-center"><Building2 size={20} /></div>
+                <h3 className="text-lg font-bold text-white">Gastos por Proveedor</h3>
+              </div>
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+                {reporte?.gastos_proveedor?.length > 0 ? reporte.gastos_proveedor.map((p: any, idx: number) => (
+                  <div key={idx} className="flex justify-between items-center p-3 rounded-xl border border-white/5 hover:bg-white/[0.03] transition-colors">
+                    <div>
+                      <p className="font-bold text-white">{p.nombre}</p>
+                      <p className="text-xs text-mining-500">Proveedor</p>
+                    </div>
+                    <div className="font-black text-copper-400">${parseFloat(p.total_gastado).toLocaleString()}</div>
+                  </div>
+                )) : (
+                  <p className="text-mining-400 text-center py-10">No hay datos en este periodo.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Materiales Más Comprados */}
+          <div className="card">
+             <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-white/5 text-emerald-400 flex items-center justify-center"><Package size={20} /></div>
+                <h3 className="text-lg font-bold text-white">Materiales Más Adquiridos</h3>
+              </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-white/5 text-xs font-bold text-mining-400 uppercase">
+                  <tr>
+                    <th className="p-4">Código</th>
+                    <th className="p-4">Material</th>
+                    <th className="p-4 text-center">Cantidad Total</th>
+                    <th className="p-4 text-right">Inversión Total ($)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {reporte?.top_materiales?.map((mat: any, idx: number) => (
+                    <tr key={idx} className="hover:bg-white/[0.02]">
+                      <td className="p-4 font-mono text-xs text-mining-400">{mat.codigo}</td>
+                      <td className="p-4 font-bold text-white">{mat.descripcion}</td>
+                      <td className="p-4 text-center font-medium text-mining-300">{parseFloat(mat.total_cantidad).toLocaleString()}</td>
+                      <td className="p-4 text-right font-bold text-copper-400">${parseFloat(mat.total_gastado).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                  {reporte?.top_materiales?.length === 0 && (
+                    <tr><td colSpan={4} className="p-8 text-center text-mining-400">No hay compras de materiales en este periodo.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
+};
