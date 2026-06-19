@@ -14,7 +14,14 @@ class ReporteController extends Controller
     public function dashboard()
     {
         $totalCompras = Compra::count();
-        $gastoTotal = Compra::sum('total');
+        $gastoTotalCompras = Compra::sum('total');
+        
+        $gastoTotalServicios = 0;
+        $serviciosAll = \App\Models\Servicio::with(['costos', 'repuestos', 'bocamina'])->get();
+        foreach ($serviciosAll as $s) {
+            $gastoTotalServicios += $s->costos->sum('monto') + $s->repuestos->sum(function($r) { return $r->cantidad * $r->costo_unitario; });
+        }
+        $gastoTotal = $gastoTotalCompras + $gastoTotalServicios;
         
         $totalProveedores = \App\Models\Proveedor::count();
         $totalBocaminas = \App\Models\Bocamina::count();
@@ -22,7 +29,23 @@ class ReporteController extends Controller
         $gastosBocamina = Compra::select('bocaminas.nombre', DB::raw('SUM(compras.total) as total_gastado'))
             ->join('bocaminas', 'compras.bocamina_id', '=', 'bocaminas.id')
             ->groupBy('bocaminas.id', 'bocaminas.nombre')
-            ->get();
+            ->get()
+            ->keyBy('nombre');
+            
+        foreach ($serviciosAll as $s) {
+            if ($s->boca_mina_id) {
+                $nombre = $s->bocamina->nombre ?? 'Central';
+                $costo = $s->costos->sum('monto') + $s->repuestos->sum(function($r) { return $r->cantidad * $r->costo_unitario; });
+                if ($costo > 0) {
+                    if (isset($gastosBocamina[$nombre])) {
+                        $gastosBocamina[$nombre]->total_gastado += $costo;
+                    } else {
+                        $gastosBocamina[$nombre] = (object)['nombre' => $nombre, 'total_gastado' => $costo];
+                    }
+                }
+            }
+        }
+        $gastosBocamina = $gastosBocamina->sortByDesc('total_gastado')->values();
             
         $comprasRecientes = Compra::with(['proveedor', 'bocamina'])
             ->orderByDesc('id')
@@ -49,15 +72,40 @@ class ReporteController extends Controller
 
         $comprasQuery = Compra::whereBetween('fecha', [$inicio, $fin]);
 
-        $gastoTotal = $comprasQuery->sum('total');
+        $gastoTotalCompras = $comprasQuery->sum('total');
         $totalOperaciones = $comprasQuery->count();
+
+        $serviciosAll = \App\Models\Servicio::with(['costos', 'repuestos', 'bocamina'])
+            ->whereBetween('fecha', [$inicio, $fin])
+            ->get();
+
+        $gastoTotalServicios = 0;
+        foreach ($serviciosAll as $s) {
+            $gastoTotalServicios += $s->costos->sum('monto') + $s->repuestos->sum(function($r) { return $r->cantidad * $r->costo_unitario; });
+        }
+        $gastoTotal = $gastoTotalCompras + $gastoTotalServicios;
 
         $gastosBocamina = Compra::whereBetween('compras.fecha', [$inicio, $fin])
             ->select('bocaminas.nombre', DB::raw('SUM(compras.total) as total_gastado'))
             ->join('bocaminas', 'compras.bocamina_id', '=', 'bocaminas.id')
             ->groupBy('bocaminas.id', 'bocaminas.nombre')
-            ->orderByDesc('total_gastado')
-            ->get();
+            ->get()
+            ->keyBy('nombre');
+            
+        foreach ($serviciosAll as $s) {
+            if ($s->boca_mina_id) {
+                $nombre = $s->bocamina->nombre ?? 'Central';
+                $costo = $s->costos->sum('monto') + $s->repuestos->sum(function($r) { return $r->cantidad * $r->costo_unitario; });
+                if ($costo > 0) {
+                    if (isset($gastosBocamina[$nombre])) {
+                        $gastosBocamina[$nombre]->total_gastado += $costo;
+                    } else {
+                        $gastosBocamina[$nombre] = (object)['nombre' => $nombre, 'total_gastado' => $costo];
+                    }
+                }
+            }
+        }
+        $gastosBocamina = $gastosBocamina->sortByDesc('total_gastado')->values();
             
         $gastosProveedor = Compra::whereBetween('compras.fecha', [$inicio, $fin])
             ->select('proveedores.nombre', DB::raw('SUM(compras.total) as total_gastado'))
@@ -140,7 +188,19 @@ class ReporteController extends Controller
 
         $compras = $query->get();
 
-        $gastoTotal = $compras->sum('total');
+        $gastoTotalCompras = $compras->sum('total');
+        
+        $queryServicios = \App\Models\Servicio::with(['costos', 'repuestos']);
+        if ($inicio && $fin) {
+            $queryServicios->whereBetween('fecha', [$inicio, $fin]);
+        }
+        $servicios = $queryServicios->get();
+        $gastoTotalServicios = 0;
+        foreach ($servicios as $s) {
+            $gastoTotalServicios += $s->costos->sum('monto') + $s->repuestos->sum(function($r) { return $r->cantidad * $r->costo_unitario; });
+        }
+        
+        $gastoTotal = $gastoTotalCompras + $gastoTotalServicios;
         $fecha = now()->format('d/m/Y H:i');
 
         $html = '<!DOCTYPE html>

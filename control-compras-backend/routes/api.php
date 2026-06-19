@@ -41,6 +41,14 @@ Route::middleware(['auth:sanctum', 'audit'])->group(function () {
         Route::apiResource('compras', CompraController::class);
     });
 
+    // Servicios y Mantenimiento
+    Route::apiResource('maquinaria', \App\Http\Controllers\Api\MaquinariaController::class);
+    Route::apiResource('gruas', \App\Http\Controllers\Api\GruasController::class);
+    Route::apiResource('vehiculos', \App\Http\Controllers\Api\VehiculosController::class);
+    Route::apiResource('servicios', \App\Http\Controllers\Api\ServiciosController::class);
+    Route::apiResource('inspecciones', \App\Http\Controllers\Api\InspeccionController::class);
+    Route::get('/dashboard-servicios', [\App\Http\Controllers\Api\DashboardServiciosController::class, 'index']);
+
     // Reportes (Gerencia / Contabilidad / Admin)
     Route::middleware('role:Gerencia,Contabilidad,Administrador General')->group(function () {
         Route::get('/reportes/gastos', [ReporteController::class, 'gastos']);

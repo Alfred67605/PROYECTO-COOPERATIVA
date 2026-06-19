@@ -9,7 +9,8 @@ import {
   LogOut,
   Settings,
   Activity,
-  Pickaxe
+  Pickaxe,
+  Wrench
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,6 +30,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
     { name: 'Proveedores', path: '/proveedores', icon: <Building2 size={20} />, reqAdmin: true },
     { name: 'Materiales', path: '/inventario', icon: <Package size={20} />, reqAdmin: false },
     { name: 'Compras', path: '/compras', icon: <ShoppingCart size={20} />, reqAdmin: false },
+    { name: 'Servicios', path: '/servicios', icon: <Wrench size={20} />, reqAdmin: false },
     { name: 'Reportes', path: '/reportes', icon: <Activity size={20} />, reqAdmin: false },
     { name: 'Usuarios', path: '/usuarios', icon: <Users size={20} />, reqAdmin: true },
     { name: 'Auditoría', path: '/historial', icon: <Activity size={20} />, reqAdmin: true }

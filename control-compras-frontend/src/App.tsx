@@ -11,6 +11,7 @@ import { UsuariosList } from './features/admin/UsuariosList';
 import { BocaminasList } from './features/admin/BocaminasList';
 import { HistorialList } from './features/admin/HistorialList';
 import { ReportesView } from './features/reportes/ReportesView';
+import { ServiciosDashboard } from './features/servicios/ServiciosDashboard';
 import { MainLayout } from './components/layout/MainLayout';
 import { ToastProvider } from './components/ui/Toast';
 import { AnimatePresence } from 'framer-motion';
@@ -59,6 +60,7 @@ const AnimatedRoutes = () => {
         <Route path="/historial" element={<PrivateRoute requireAdmin><HistorialList /></PrivateRoute>} />
         
         <Route path="/reportes" element={<PrivateRoute><ReportesView /></PrivateRoute>} />
+        <Route path="/servicios/*" element={<PrivateRoute><ServiciosDashboard /></PrivateRoute>} />
         
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
