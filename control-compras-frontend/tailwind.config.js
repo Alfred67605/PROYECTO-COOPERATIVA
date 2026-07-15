@@ -26,17 +26,17 @@ export default {
           700: '#1E2638',
         },
         copper: {
-          50: '#f0f6ff',
-          100: '#e0edff',
-          200: '#bdddff',
-          300: '#90c5ff',
-          400: '#5ba3ff',
-          500: '#3b82f6', // Electric blue
-          600: '#2563eb', // Core blue accent
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#0f172a',
+          50: '#fffbeb', // Warm glow amber-50
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#ea7740', // Core Brand Copper
+          600: '#d97706', // Rich Gold Accent
+          700: '#b45309', // Deep Bronze
+          800: '#92400e', // Dark Bronze / Earth
+          900: '#78350f', // Burnt Iron Ore
+          950: '#451a03',
         },
         teal: {
           400: '#2DD4BF', // Data/Precision accent
@@ -79,7 +79,7 @@ export default {
         }
       },
       boxShadow: {
-        'glow-copper': '0 0 20px rgba(59, 130, 246, 0.25)',
+        'glow-copper': '0 0 20px rgba(234, 119, 64, 0.25)',
         'glow-teal': '0 0 20px rgba(45, 212, 191, 0.25)',
         'glass': '0 8px 32px rgba(0, 0, 0, 0.4)',
         'glass-hover': '0 12px 40px rgba(0, 0, 0, 0.5)',

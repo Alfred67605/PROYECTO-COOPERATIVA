@@ -9,14 +9,22 @@ class InspeccionController extends Controller
 {
     public function index()
     {
-        $inspecciones = \App\Models\Inspeccion::with(['responsable', 'equipo'])
-            ->orderBy('id', 'desc')
-            ->get();
+        $this->authorize('viewAny', \App\Models\Inspeccion::class);
+        $query = \App\Models\Inspeccion::with(['responsable', 'equipo']);
+        
+        $user = auth()->user();
+        if (!in_array($user->rol?->nombre, ['Administrador General', 'Mantenimiento', 'Gerencia'])) {
+            $query->where('firma_responsable_id', $user->id);
+        }
+        
+        $inspecciones = $query->orderBy('id', 'desc')->get();
         return response()->json($inspecciones);
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', \App\Models\Inspeccion::class);
+        
         $validated = $request->validate([
             'equipo_tipo' => 'required|string',
             'equipo_id' => 'required|integer',
@@ -38,12 +46,14 @@ class InspeccionController extends Controller
     public function show(string $id)
     {
         $inspeccion = \App\Models\Inspeccion::with(['responsable', 'equipo'])->findOrFail($id);
+        $this->authorize('view', $inspeccion);
         return response()->json($inspeccion);
     }
 
     public function update(Request $request, string $id)
     {
         $inspeccion = \App\Models\Inspeccion::findOrFail($id);
+        $this->authorize('update', $inspeccion);
         $validated = $request->validate([
             'equipo_tipo' => 'sometimes|required|string',
             'equipo_id' => 'sometimes|required|integer',
@@ -63,6 +73,7 @@ class InspeccionController extends Controller
     public function destroy(string $id)
     {
         $inspeccion = \App\Models\Inspeccion::findOrFail($id);
+        $this->authorize('delete', $inspeccion);
         $inspeccion->delete();
         return response()->json(null, 204);
     }

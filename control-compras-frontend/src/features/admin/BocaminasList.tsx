@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/axios';
 import { Map, Edit, Trash2, X, Loader2, Plus, MapPin, Hash } from 'lucide-react';
@@ -6,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 import { staggerContainer, tableRowVariant } from '../../components/ui/PageTransition';
+import { useAuth } from '../auth/AuthContext';
 
 interface BocaminaForm {
   nombre: string;
@@ -15,6 +17,7 @@ interface BocaminaForm {
 const emptyForm: BocaminaForm = { nombre: '', ubicacion: '' };
 
 export const BocaminasList = () => {
+  const { canWrite } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
   const [showModal, setShowModal] = useState(false);
@@ -81,10 +84,12 @@ export const BocaminasList = () => {
           <h2 className="section-title">Centros de Operación</h2>
           <p className="section-subtitle">Gestión de bocaminas y frentes de trabajo</p>
         </div>
-        <button className="btn-primary" onClick={openCreate}>
-          <Plus size={18} />
-          Nueva Bocamina
-        </button>
+        {canWrite('bocaminas') && (
+          <button className="btn-primary" onClick={openCreate}>
+            <Plus size={18} />
+            Nueva Bocamina
+          </button>
+        )}
       </div>
 
       <div className="card p-0 overflow-hidden">
@@ -134,13 +139,17 @@ export const BocaminasList = () => {
                       </span>
                     </td>
                     <td className="pr-6 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openEdit(b)} className="btn-icon">
-                          <Edit size={16} />
-                        </button>
-                        <button onClick={() => handleDelete(b.id, b.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
-                          <Trash2 size={16} />
-                        </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {canWrite('bocaminas') && (
+                          <>
+                            <button onClick={() => openEdit(b)} className="btn-icon">
+                              <Edit size={16} />
+                            </button>
+                            <button onClick={() => handleDelete(b.id, b.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
@@ -159,58 +168,64 @@ export const BocaminasList = () => {
         )}
       </div>
 
-      <ConfirmDialog
-        isOpen={confirmOpen}
-        title="Inhabilitar Bocamina"
-        message={`¿Estás seguro de que deseas inhabilitar la bocamina "${deleteTarget?.nombre}"?`}
-        confirmLabel="Inhabilitar"
-        cancelLabel="Cancelar"
-        variant="danger"
-        isLoading={deleteMutation.isPending}
-        onConfirm={confirmDelete}
-        onCancel={() => { setConfirmOpen(false); setDeleteTarget(null); }}
-      />
+      {createPortal(
+        <ConfirmDialog
+          isOpen={confirmOpen}
+          title="Inhabilitar Bocamina"
+          message={`¿Estás seguro de que deseas inhabilitar la bocamina "${deleteTarget?.nombre}"?`}
+          confirmLabel="Inhabilitar"
+          cancelLabel="Cancelar"
+          variant="danger"
+          isLoading={deleteMutation.isPending}
+          onConfirm={confirmDelete}
+          onCancel={() => { setConfirmOpen(false); setDeleteTarget(null); }}
+        />,
+        document.body
+      )}
 
-      <AnimatePresence>
-        {showModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeModal}>
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-md shadow-elevated border border-white/10 overflow-hidden" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-                    <Map size={20} />
+      {createPortal(
+        <AnimatePresence>
+          {showModal && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto" onClick={closeModal}>
+              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-md shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                      <Map size={20} />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">{editingId ? 'Editar Bocamina' : 'Nueva Bocamina'}</h3>
                   </div>
-                  <h3 className="text-xl font-bold text-white">{editingId ? 'Editar Bocamina' : 'Nueva Bocamina'}</h3>
+                  <button onClick={closeModal} className="text-mining-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"><X size={20} /></button>
                 </div>
-                <button onClick={closeModal} className="text-mining-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"><X size={20} /></button>
-              </div>
 
-              <div className="p-6">
-                {error && <div className="mb-6 p-4 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20">{error}</div>}
+                <div className="p-6">
+                  {error && <div className="mb-6 p-4 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20">{error}</div>}
 
-                <form onSubmit={e => { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Nombre de Bocamina *</label>
-                    <input className="input-field" required value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} placeholder="Ej: Bocamina San José Nivel 4" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Ubicación Geográfica</label>
-                    <textarea className="input-field" rows={3} value={form.ubicacion} onChange={e => setForm({...form, ubicacion: e.target.value})} placeholder="Coordenadas o descripción de acceso..."></textarea>
-                  </div>
-                  <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
-                    <button type="button" onClick={closeModal} className="btn-secondary">Cancelar</button>
-                    <button type="submit" disabled={saveMutation.isPending} className="btn-primary">
-                      {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Registrar Bocamina')}
-                    </button>
-                  </div>
-                </form>
-              </div>
+                  <form onSubmit={e => { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Nombre de Bocamina *</label>
+                      <input className="input-field" required value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} placeholder="Ej: Bocamina San José Nivel 4" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Ubicación Geográfica</label>
+                      <textarea className="input-field" rows={3} value={form.ubicacion} onChange={e => setForm({...form, ubicacion: e.target.value})} placeholder="Coordenadas o descripción de acceso..."></textarea>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
+                      <button type="button" onClick={closeModal} className="btn-secondary">Cancelar</button>
+                      <button type="submit" disabled={saveMutation.isPending} className="btn-primary">
+                        {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Registrar Bocamina')}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

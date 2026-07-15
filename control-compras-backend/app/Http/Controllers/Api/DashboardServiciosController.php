@@ -7,8 +7,11 @@ use Illuminate\Http\Request;
 
 class DashboardServiciosController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
+        if (!$request->user()->canAccess('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
         $totalMaquinaria = \App\Models\Maquinaria::where('estado', 'operativa')->count();
         $equiposReparacion = \App\Models\Maquinaria::where('estado', 'en_mantenimiento')->count()
                            + \App\Models\Grua::where('estado', 'en_mantenimiento')->count()

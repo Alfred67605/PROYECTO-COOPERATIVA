@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
@@ -54,11 +55,11 @@ const toastConfig = {
   },
   info: {
     icon: Info,
-    bg: 'bg-gradient-to-r from-blue-50 to-white',
-    border: 'border-blue-200',
-    iconColor: 'text-blue-500',
-    titleColor: 'text-blue-800',
-    bar: 'bg-blue-500',
+    bg: 'bg-gradient-to-r from-amber-50 to-white',
+    border: 'border-amber-200',
+    iconColor: 'text-amber-500',
+    titleColor: 'text-amber-800',
+    bar: 'bg-amber-500',
   },
 };
 

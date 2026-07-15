@@ -14,7 +14,7 @@
   body {
     @apply bg-mining-950 text-mining-100 font-sans antialiased overflow-x-hidden;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    background-image: radial-gradient(circle at 50% 0%, #081a3d 0%, #020617 80%);
+    background-image: radial-gradient(circle at 50% 0%, #1e1511 0%, #090807 80%);
     background-attachment: fixed;
   }
 
@@ -51,8 +51,8 @@
   /* ─── Premium Buttons ─── */
   .btn-primary {
     @apply relative overflow-hidden px-5 py-2.5 bg-copper-600/90 backdrop-blur-sm text-white font-semibold rounded-xl
-    border border-copper-400/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),_0_0_20px_rgba(59,130,246,0.3)]
-    hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),_0_0_30px_rgba(59,130,246,0.5)]
+    border border-copper-400/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),_0_0_20px_rgba(234,119,64,0.3)]
+    hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),_0_0_30px_rgba(234,119,64,0.5)]
     hover:bg-copper-500 hover:border-copper-300/50
     transition-all duration-300 ease-out
     active:scale-[0.98] active:shadow-none
@@ -89,7 +89,7 @@
   .input-field {
     @apply w-full px-4 py-2.5 bg-obsidian-900/50 border border-white/10 rounded-xl
     text-mining-100 placeholder-mining-600 shadow-glass-inset
-    focus:outline-none focus:ring-1 focus:ring-teal-500/50 focus:border-teal-500/50 focus:bg-obsidian-900/80
+    focus:outline-none focus:ring-1 focus:ring-copper-500/50 focus:border-copper-500/50 focus:bg-obsidian-900/80
     transition-all duration-300
     disabled:bg-obsidian-900/30 disabled:text-mining-600 disabled:cursor-not-allowed;
   }
@@ -171,3 +171,96 @@
 /* Base utilities */
 .scrollbar-thin::-webkit-scrollbar { width: 4px; }
 .scrollbar-thin::-webkit-scrollbar-thumb { @apply bg-white/10 rounded-full; }
+
+/* Apple Liquid Glass iOS 26 Styles */
+@layer components {
+  .glass-apple-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 28px;
+    box-shadow: 
+      0 20px 40px -10px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass-apple-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .glass-apple-input {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    color: #1F2937;
+    transition: all 300ms ease;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.02);
+  }
+
+  .glass-apple-input:hover {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .glass-apple-input:focus {
+    background: rgba(255, 255, 255, 0.75);
+    border-color: rgba(234, 119, 64, 0.5);
+    box-shadow: 
+      0 0 0 4px rgba(234, 119, 64, 0.15),
+      inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    outline: none;
+  }
+
+  .glass-apple-input::placeholder {
+    color: rgba(31, 41, 55, 0.5);
+  }
+
+  .glass-apple-btn {
+    background: linear-gradient(135deg, #ea7740 0%, #a73c09 100%);
+    color: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 
+      0 8px 20px rgba(234, 119, 64, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass-apple-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .glass-apple-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 12px 25px rgba(234, 119, 64, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+
+  .glass-apple-btn:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 
+      0 4px 10px rgba(234, 119, 64, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}

@@ -37,4 +37,55 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Rol::class);
     }
+
+    public function permisos()
+    {
+        return $this->belongsToMany(Permiso::class);
+    }
+
+    public function hasPermission(string $permiso): bool
+    {
+        if (!$this->estado) {
+            return false;
+        }
+        if ($this->rol?->nombre === 'Administrador General') {
+            return true;
+        }
+        return $this->permisos()->where('nombre', $permiso)->exists();
+    }
+
+    public function canAccess(string $module): bool
+    {
+        if (!$this->estado) {
+            return false;
+        }
+        if ($this->rol?->nombre === 'Administrador General') {
+            return true;
+        }
+
+        $roleDefaults = [
+            'Gerencia' =>            ['materiales', 'compras', 'servicios', 'reportes', 'auditoria'],
+            'Compras' =>             ['proveedores', 'materiales', 'compras'],
+            'Contabilidad' =>        ['materiales', 'compras', 'reportes'],
+            'Supervisor Bocamina' => ['bocaminas', 'materiales', 'servicios'],
+            'Consulta' =>            ['reportes', 'auditoria'],
+        ];
+
+        $defaults = $roleDefaults[$this->rol?->nombre] ?? [];
+        return in_array($module, $defaults) || $this->hasPermission($module);
+    }
+
+    public function canWrite(string $module): bool
+    {
+        if (!$this->estado) {
+            return false;
+        }
+        if ($this->rol?->nombre === 'Consulta') {
+            return false;
+        }
+        if ($this->permisos()->where('nombre', 'solo_lectura')->exists()) {
+            return false;
+        }
+        return $this->canAccess($module);
+    }
 }

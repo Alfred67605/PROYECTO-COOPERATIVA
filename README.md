@@ -61,7 +61,28 @@ El backend gestiona la base de datos, la API y la lógica de negocio.
    ```
    *(Si usas SQLite y no creaste el archivo del paso 5, Laravel te preguntará si deseas crearlo. Responde que "sí" / "yes").*
 
-7. **Iniciar el servidor del Backend**:
+7. **Poblar la base de datos (Seeders)**:
+   Puedes llenar la base de datos con diferentes tipos de datos de prueba o reales:
+   
+   - **Datos iniciales básicos (Roles, Usuarios, Categorías de Inventario)**:
+     ```bash
+     php artisan db:seed
+     ```
+     *(Esto ejecuta el `DatabaseSeeder` principal que ya incluye la estructura básica del inventario y cuentas de prueba).*
+     
+   - **Datos reales de Materiales (Recomendado para producción/pruebas reales)**:
+     Si deseas poblar la tabla con la lista detallada y real de materiales de la cooperativa (más de 200 ítems con precios, códigos reales y unidades):
+     ```bash
+     php artisan db:seed --class=MaterialesRealesSeeder
+     ```
+     
+   - **Cargar Materiales desde un archivo Excel**:
+     Si posees el archivo `inventario.xlsx`, colócalo en `control-compras-backend/storage/app/inventario.xlsx` y ejecuta:
+     ```bash
+     php artisan db:seed --class=MaterialSeeder
+     ```
+
+8. **Iniciar el servidor del Backend**:
    ```bash
    php artisan serve
    ```

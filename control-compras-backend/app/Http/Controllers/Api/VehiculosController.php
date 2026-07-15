@@ -7,14 +7,21 @@ use Illuminate\Http\Request;
 
 class VehiculosController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        if (!$request->user()->canAccess('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
         $vehiculos = \App\Models\Vehiculo::with('conductor')->get();
         return response()->json($vehiculos);
     }
 
     public function store(Request $request)
     {
+        if (!$request->user()->canWrite('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
+
         $validated = $request->validate([
             'tipo' => 'required|string|max:255',
             'placa' => 'required|string|max:255',
@@ -28,14 +35,20 @@ class VehiculosController extends Controller
         return response()->json($vehiculo, 201);
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
+        if (!$request->user()->canAccess('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
         $vehiculo = \App\Models\Vehiculo::with(['conductor', 'servicios.costos', 'servicios.repuestos'])->findOrFail($id);
         return response()->json($vehiculo);
     }
 
     public function update(Request $request, string $id)
     {
+        if (!$request->user()->canWrite('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
         $vehiculo = \App\Models\Vehiculo::findOrFail($id);
         
         $validated = $request->validate([
@@ -51,8 +64,11 @@ class VehiculosController extends Controller
         return response()->json($vehiculo);
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        if (!$request->user()->canWrite('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
         $vehiculo = \App\Models\Vehiculo::findOrFail($id);
         $vehiculo->delete();
         return response()->json(null, 204);

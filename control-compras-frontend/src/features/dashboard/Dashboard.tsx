@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { Package, TrendingUp, AlertTriangle, FileText, Download, Loader2, Pickaxe, Building2, ShoppingCart, Activity } from 'lucide-react';
+import { TrendingUp, FileText, Download, Loader2, Building2, ShoppingCart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area, Cell } from 'recharts';
 import { useToast } from '../../components/ui/Toast';
 import { AnimatedCounter } from '../../components/ui/AnimatedCounter';
 import { SkeletonKPI, SkeletonChart } from '../../components/ui/Skeleton';
 import { TiltCard } from '../../components/ui/TiltCard';
 import { motion } from 'framer-motion';
-import { staggerContainer, staggerItem, fadeInScale } from '../../components/ui/PageTransition';
+import { staggerContainer, staggerItem } from '../../components/ui/PageTransition';
 
 export const Dashboard = () => {
   const toast = useToast();
@@ -71,34 +71,6 @@ export const Dashboard = () => {
       setExportingExcel(false);
     }
   };
-
-  const kpis = [
-    { 
-      title: 'Total Bocaminas', 
-      value: stats?.total_bocaminas || 0, 
-      icon: <Pickaxe size={24} className="text-mining-600" />, 
-      bg: 'bg-mining-100',
-    },
-    { 
-      title: 'Gasto Total Coop.', 
-      value: stats?.gasto_total || 0, 
-      prefix: '$',
-      icon: <TrendingUp size={24} className="text-emerald-600" />, 
-      bg: 'bg-emerald-50',
-    },
-    { 
-      title: 'Total Operaciones', 
-      value: stats?.total_compras || 0, 
-      icon: <Activity size={24} className="text-blue-600" />, 
-      bg: 'bg-blue-50',
-    },
-    { 
-      title: 'Total Proveedores', 
-      value: stats?.total_proveedores || 0, 
-      icon: <Building2 size={24} className="text-copper-600" />, 
-      bg: 'bg-copper-50',
-    },
-  ];
 
   return (
     <div className="space-y-8">

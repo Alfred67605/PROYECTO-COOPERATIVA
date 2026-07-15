@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/axios';
 import { useAuth } from '../auth/AuthContext';
@@ -9,7 +10,9 @@ import { useToast } from '../../components/ui/Toast';
 import { staggerContainer, tableRowVariant } from '../../components/ui/PageTransition';
 
 export const ServiciosList = () => {
-  const { user } = useAuth();
+  const { user, canWrite } = useAuth();
+  const canEdit = canWrite('servicios');
+  const canDelete = canWrite('servicios');
   const queryClient = useQueryClient();
   const toast = useToast();
   const [showModal, setShowModal] = useState(false);
@@ -127,10 +130,12 @@ export const ServiciosList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-white">Historial de Mantenimientos</h2>
-        <button className="btn-primary py-2 text-sm" onClick={openCreate}>
-          <Plus size={16} />
-          Nuevo Mantenimiento
-        </button>
+        {canEdit && (
+          <button className="btn-primary py-2 text-sm" onClick={openCreate}>
+            <Plus size={16} />
+            Nuevo Mantenimiento
+          </button>
+        )}
       </div>
 
       <div className="card p-0 overflow-hidden">
@@ -150,7 +155,7 @@ export const ServiciosList = () => {
                   <th>Equipo</th>
                   <th>Responsable</th>
                   <th>Estado</th>
-                  <th className="pr-6 text-right">Acciones</th>
+                  {canEdit && <th className="pr-6 text-right">Acciones</th>}
                 </tr>
               </thead>
               <motion.tbody variants={staggerContainer} initial="initial" animate="animate">
@@ -174,16 +179,20 @@ export const ServiciosList = () => {
                         {s.estado}
                       </span>
                     </td>
-                    <td className="pr-6 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openEdit(s)} className="btn-icon">
-                          <Edit size={16} />
-                        </button>
-                        <button onClick={() => handleDelete(s.id, s.codigo)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+                    {canEdit && (
+                      <td className="pr-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => openEdit(s)} className="btn-icon">
+                            <Edit size={16} />
+                          </button>
+                          {canDelete && (
+                            <button onClick={() => handleDelete(s.id, s.codigo)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </motion.tr>
                 ))}
                 {(!data || data.length === 0) && (
@@ -200,22 +209,26 @@ export const ServiciosList = () => {
         )}
       </div>
 
-      <ConfirmDialog
-        isOpen={confirmOpen}
-        title="Eliminar Servicio"
-        message={`¿Estás seguro de que deseas eliminar el servicio "${deleteTarget?.nombre}"?`}
-        confirmLabel="Eliminar"
-        cancelLabel="Cancelar"
-        variant="danger"
-        isLoading={deleteMutation.isPending}
-        onConfirm={() => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id); }}
-        onCancel={() => setConfirmOpen(false)}
-      />
+      {createPortal(
+        <ConfirmDialog
+          isOpen={confirmOpen}
+          title="Eliminar Servicio"
+          message={`¿Estás seguro de que deseas eliminar el servicio "${deleteTarget?.nombre}"?`}
+          confirmLabel="Eliminar"
+          cancelLabel="Cancelar"
+          variant="danger"
+          isLoading={deleteMutation.isPending}
+          onConfirm={() => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id); }}
+          onCancel={() => setConfirmOpen(false)}
+        />,
+        document.body
+      )}
 
-      <AnimatePresence>
-        {showModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeModal}>
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-2xl shadow-elevated border border-white/10 overflow-hidden" onClick={e => e.stopPropagation()}>
+      {createPortal(
+        <AnimatePresence>
+          {showModal && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-[60] p-4 overflow-y-auto" onClick={closeModal}>
+              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-2xl shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
                 <h3 className="text-xl font-bold text-white">{editingId ? 'Editar Mantenimiento' : 'Nuevo Mantenimiento'}</h3>
                 <button onClick={closeModal} className="text-mining-400 hover:text-white p-2"><X size={20} /></button>
@@ -402,10 +415,12 @@ export const ServiciosList = () => {
                   </div>
                 </form>
               </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

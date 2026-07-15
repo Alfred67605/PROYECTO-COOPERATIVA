@@ -12,6 +12,7 @@ import { BocaminasList } from './features/admin/BocaminasList';
 import { HistorialList } from './features/admin/HistorialList';
 import { ReportesView } from './features/reportes/ReportesView';
 import { ServiciosDashboard } from './features/servicios/ServiciosDashboard';
+import { AlquilerGruasList } from './features/servicios/AlquilerGruasList';
 import { MainLayout } from './components/layout/MainLayout';
 import { ToastProvider } from './components/ui/Toast';
 import { AnimatePresence } from 'framer-motion';
@@ -25,12 +26,12 @@ const queryClient = new QueryClient({
   },
 });
 
-const PrivateRoute = ({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) => {
-  const { user, token, isLoading } = useAuth();
+const PrivateRoute = ({ children, module }: { children: React.ReactNode, module?: string }) => {
+  const { isAuthenticated, isLoading, canAccess } = useAuth();
   
   if (isLoading) return <div className="min-h-screen bg-[#1a1f2e] flex items-center justify-center">Cargando...</div>;
-  if (!token) return <Navigate to="/login" replace />;
-  if (requireAdmin && user?.rol?.nombre !== 'Administrador General') return <Navigate to="/dashboard" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (module && !canAccess(module)) return <Navigate to="/dashboard" replace />;
   
   return <MainLayout>{children}</MainLayout>;
 };
@@ -38,29 +39,31 @@ const PrivateRoute = ({ children, requireAdmin = false }: { children: React.Reac
 // Route wrapper for animations
 const AnimatedRoutes = () => {
   const location = useLocation();
+  const rootPath = location.pathname.split('/')[1] || 'root';
   
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location} key={rootPath}>
         <Route path="/login" element={<Login />} />
         
         {/* Rutas Base */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/inventario" element={<PrivateRoute><InventarioList /></PrivateRoute>} />
+        <Route path="/inventario" element={<PrivateRoute module="materiales"><InventarioList /></PrivateRoute>} />
         
         {/* Rutas Compras */}
-        <Route path="/compras" element={<PrivateRoute><ComprasHistorial /></PrivateRoute>} />
-        <Route path="/compras/nueva" element={<PrivateRoute><NuevaCompra /></PrivateRoute>} />
+        <Route path="/compras" element={<PrivateRoute module="compras"><ComprasHistorial /></PrivateRoute>} />
+        <Route path="/compras/nueva" element={<PrivateRoute module="compras"><NuevaCompra /></PrivateRoute>} />
 
         {/* Rutas Admin */}
-        <Route path="/proveedores" element={<PrivateRoute requireAdmin><ProveedoresList /></PrivateRoute>} />
-        <Route path="/usuarios" element={<PrivateRoute requireAdmin><UsuariosList /></PrivateRoute>} />
-        <Route path="/bocaminas" element={<PrivateRoute requireAdmin><BocaminasList /></PrivateRoute>} />
-        <Route path="/historial" element={<PrivateRoute requireAdmin><HistorialList /></PrivateRoute>} />
+        <Route path="/proveedores" element={<PrivateRoute module="proveedores"><ProveedoresList /></PrivateRoute>} />
+        <Route path="/usuarios" element={<PrivateRoute module="usuarios"><UsuariosList /></PrivateRoute>} />
+        <Route path="/bocaminas" element={<PrivateRoute module="bocaminas"><BocaminasList /></PrivateRoute>} />
+        <Route path="/historial" element={<PrivateRoute module="auditoria"><HistorialList /></PrivateRoute>} />
         
-        <Route path="/reportes" element={<PrivateRoute><ReportesView /></PrivateRoute>} />
-        <Route path="/servicios/*" element={<PrivateRoute><ServiciosDashboard /></PrivateRoute>} />
+        <Route path="/reportes" element={<PrivateRoute module="reportes"><ReportesView /></PrivateRoute>} />
+        <Route path="/servicios/*" element={<PrivateRoute module="servicios"><ServiciosDashboard /></PrivateRoute>} />
+        <Route path="/alquiler-gruas" element={<PrivateRoute module="servicios"><AlquilerGruasList /></PrivateRoute>} />
         
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

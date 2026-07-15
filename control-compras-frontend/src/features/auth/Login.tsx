@@ -4,9 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import api from '../../lib/axios';
 import { useAuth } from './AuthContext';
-import { motion } from 'framer-motion';
-import { KeyRound, Mail, AlertCircle, Loader2, Pickaxe, ShieldCheck } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { KeyRound, Mail, AlertCircle, Loader2, ShieldCheck, Pickaxe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatedBackground } from '../../components/ui/AnimatedBackground';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -15,37 +16,7 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-// Background particles component
-const ParticlesBackground = () => {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: 20 }).map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute bg-copper-500/10 rounded-full"
-          initial={{
-            width: Math.random() * 100 + 50,
-            height: Math.random() * 100 + 50,
-            x: Math.random() * window.innerWidth,
-            y: window.innerHeight + 100,
-            opacity: Math.random() * 0.5 + 0.1
-          }}
-          animate={{
-            y: -200,
-            x: Math.random() * window.innerWidth,
-            rotate: Math.random() * 360
-          }}
-          transition={{
-            duration: Math.random() * 20 + 15,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          style={{ filter: 'blur(40px)' }}
-        />
-      ))}
-    </div>
-  );
-};
+// Dynamic background component removed in favor of image background
 
 export const Login = () => {
   const { login } = useAuth();
@@ -55,10 +26,10 @@ export const Login = () => {
   const [textIndex, setTextIndex] = useState(0);
 
   const texts = [
-    "Gestión de Inventario",
-    "Control de Compras",
-    "Administración de Bocaminas",
-    "Directorio de Proveedores"
+    "Control Eficiente de Producción",
+    "Trazabilidad de Minerales",
+    "Logística y Despachos Seguros",
+    "Gestión de Inventario Minero"
   ];
 
   useEffect(() => {
@@ -77,10 +48,10 @@ export const Login = () => {
       setIsLoading(true);
       setError('');
       
-      await api.get('http://localhost:8000/sanctum/csrf-cookie', { baseURL: '' });
+      await api.get((import.meta.env.VITE_API_BASE || 'http://localhost:8000') + '/sanctum/csrf-cookie', { baseURL: '' });
       const response = await api.post('/login', data);
       
-      login(response.data.access_token, response.data.user);
+      login(response.data.user);
       navigate('/dashboard');
     } catch (err: unknown) {
       const errorResponse = err as any;
@@ -90,154 +61,208 @@ export const Login = () => {
     }
   };
 
+  const backgroundImages = [
+    '/mining-bg-1.png',
+    '/mining-bg-2.png',
+    '/mining-bg-3.png',
+    '/mining-bg-4.png',
+    '/mining-bg-5.png'
+  ];
+  const [bgIndex, setBgIndex] = useState(0);
+
+  useEffect(() => {
+    const bgInterval = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % backgroundImages.length);
+    }, 10000);
+    return () => clearInterval(bgInterval);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-mining-950 flex relative overflow-hidden font-sans">
-      <ParticlesBackground />
-
-      {/* Left side - Branding (Hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-[55%] relative flex-col justify-between p-12 overflow-hidden border-r border-white/5 bg-gradient-to-br from-mining-950 to-mining-900">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-mining-950 via-mining-950/80 to-transparent"></div>
-        
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-copper-500 to-copper-600 flex items-center justify-center shadow-glow-copper">
-            <Pickaxe size={28} className="text-white" />
-          </div>
-          <span className="text-2xl font-bold text-white tracking-wider">MINERA COP.</span>
-        </div>
-
-        <div className="relative z-10 mb-20">
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden font-sans antialiased select-none text-white">
+      {/* Animated Slideshow Background with Ken Burns Effect */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <AnimatePresence mode="popLayout">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
-              Sistema Empresarial <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-copper-400 to-copper-600">
-                Para Cooperativas Mineras
-              </span>
-            </h1>
-          </motion.div>
-          
-          <div className="h-12 overflow-hidden relative">
-            <motion.p
-              key={textIndex}
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -40, opacity: 0 }}
-              className="text-xl text-mining-300 font-medium absolute"
-            >
-              {texts[textIndex]}
-            </motion.p>
-          </div>
-        </div>
-
-        <div className="relative z-10 flex gap-8 border-t border-white/10 pt-8">
-          <div>
-            <div className="text-3xl font-bold text-white mb-1">100%</div>
-            <div className="text-sm text-mining-400 font-medium">Trazabilidad</div>
-          </div>
-          <div className="w-px h-12 bg-white/10"></div>
-          <div>
-            <div className="text-3xl font-bold text-white mb-1">24/7</div>
-            <div className="text-sm text-mining-400 font-medium">Control de Stock</div>
-          </div>
-        </div>
+            key={bgIndex}
+            initial={{ opacity: 0, scale: 1 }}
+            animate={{ opacity: 1, scale: 1.09 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 3, ease: "easeInOut" },
+              scale: { duration: 10, ease: "linear" }
+            }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${backgroundImages[bgIndex]})` }}
+          />
+        </AnimatePresence>
+        {/* Denser field of embers and ashes for the login page */}
+        <AnimatedBackground dotCount={280} />
+        {/* Dark mineral overlay to ensure contrast */}
+        <div className="absolute inset-0 bg-black/65 pointer-events-none z-10" />
       </div>
 
-      {/* Right side - Login Form */}
-      <div className="w-full lg:w-[45%] flex items-center justify-center p-6 relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.1 }}
-          className="w-full max-w-md"
+      <div className="w-full max-w-[420px] mx-4 relative z-10 flex flex-col items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="glass-apple-card w-full p-8 md:p-10 shadow-2xl relative"
         >
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-copper-500 to-copper-600 flex items-center justify-center shadow-glow-copper mb-4">
-              <Pickaxe size={36} className="text-white" />
+          {/* Glass shine visual sweep effect */}
+          <motion.div
+            className="absolute inset-0 w-[60%] h-full bg-gradient-to-r from-transparent via-white/50 to-transparent skew-x-[-25deg] pointer-events-none z-10"
+            initial={{ left: '-100%' }}
+            animate={{ left: '200%' }}
+            transition={{ duration: 2, ease: "easeInOut", delay: 0.2 }}
+          />
+
+          {/* Logo & Header */}
+          <div className="flex flex-col items-center mb-10 relative z-10">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#ea7740]/80 to-[#92400e]/80 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/30 relative overflow-hidden mb-5 group hover:scale-105 transition-transform duration-300"
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent" />
+              <Pickaxe size={32} className="text-[#FFFFFF] relative z-10 drop-shadow-md" />
+            </motion.div>
+
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-2">
+              Sistema de Control de Productos
+            </span>
+            <h1 className="text-2xl font-bold tracking-tight text-white drop-shadow-sm">
+              Cooperativa Minera
+            </h1>
+
+            {/* Rotating subtitle with medical benefits */}
+            <div className="h-5 overflow-hidden relative w-full flex justify-center mt-2">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={textIndex}
+                  initial={{ y: 15, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -15, opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="text-[13px] text-white/80 font-medium absolute text-center whitespace-nowrap"
+                >
+                  {texts[textIndex]}
+                </motion.p>
+              </AnimatePresence>
             </div>
-            <h2 className="text-3xl font-bold text-white tracking-wider">MINERA COP</h2>
           </div>
 
-          <div className="glass-panel-dark p-8 md:p-10 rounded-3xl shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-copper-400 via-copper-500 to-copper-600"></div>
-            
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2">Bienvenido de nuevo</h2>
-              <p className="text-mining-400 text-sm">Ingresa tus credenciales para acceder al sistema.</p>
-            </div>
-
+          {/* Error Message */}
+          <AnimatePresence>
             {error && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-center gap-3"
+              <motion.div
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
               >
-                <AlertCircle size={20} className="shrink-0" />
-                <span className="text-sm font-medium">{error}</span>
+                <div className="p-3 bg-[#EF4444]/10 border border-[#EF4444]/20 text-[#EF4444] rounded-xl flex items-center gap-3 relative z-10">
+                  <AlertCircle size={18} className="shrink-0" />
+                  <span className="text-[13px] font-medium">{error}</span>
+                </div>
               </motion.div>
             )}
+          </AnimatePresence>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-mining-300 uppercase tracking-wider mb-2">Correo Electrónico</label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-mining-500 group-focus-within:text-copper-400 transition-colors" size={20} />
-                  <input
-                    type="email"
-                    {...register('email')}
-                    className={`w-full pl-12 pr-4 py-3.5 bg-mining-900/50 border border-white/10 rounded-xl text-white placeholder-mining-600 focus:outline-none focus:border-copper-500 focus:ring-1 focus:ring-copper-500 transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500' : ''}`}
-                    placeholder="admin@mineracop.com"
-                  />
-                </div>
-                {errors.email && <p className="mt-1.5 text-xs text-red-400 font-medium">{errors.email.message}</p>}
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 relative z-10">
+            <div>
+              <label className="block text-[11px] font-semibold text-white/80 uppercase tracking-wider mb-2 ml-1 drop-shadow-sm">
+                Correo Electrónico
+              </label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white transition-colors duration-300" size={18} />
+                <input
+                  type="email"
+                  {...register('email')}
+                  className={`w-full pl-12 pr-4 py-3.5 glass-apple-input text-sm text-white placeholder-white/40 ${
+                    errors.email ? 'border-[#EF4444]/50 focus:border-[#EF4444]/50 focus:ring-[#EF4444]/20' : ''
+                  }`}
+                  placeholder="admin@cooperativaminera.com"
+                />
               </div>
+              {errors.email && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-1.5 ml-1 text-[12px] text-[#ff6b6b] font-medium drop-shadow-sm">
+                  {errors.email.message}
+                </motion.p>
+              )}
+            </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-xs font-bold text-mining-300 uppercase tracking-wider">Contraseña</label>
-                  <a href="#" className="text-xs font-medium text-copper-400 hover:text-copper-300 transition-colors">¿Olvidaste tu contraseña?</a>
-                </div>
-                <div className="relative group">
-                  <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-mining-500 group-focus-within:text-copper-400 transition-colors" size={20} />
-                  <input
-                    type="password"
-                    {...register('password')}
-                    className={`w-full pl-12 pr-4 py-3.5 bg-mining-900/50 border border-white/10 rounded-xl text-white placeholder-mining-600 focus:outline-none focus:border-copper-500 focus:ring-1 focus:ring-copper-500 transition-all ${errors.password ? 'border-red-500/50 focus:border-red-500' : ''}`}
-                    placeholder="••••••••"
-                  />
-                </div>
-                {errors.password && <p className="mt-1.5 text-xs text-red-400 font-medium">{errors.password.message}</p>}
+            <div>
+              <div className="flex justify-between items-center mb-2 px-1">
+                <label className="block text-[11px] font-semibold text-white/80 uppercase tracking-wider drop-shadow-sm">
+                  Contraseña
+                </label>
+                <a
+                  href="#"
+                  className="text-[11px] font-medium text-white/70 hover:text-white transition-colors duration-200"
+                >
+                  ¿Olvidaste tu contraseña?
+                </a>
               </div>
+              <div className="relative group">
+                <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white transition-colors duration-300" size={18} />
+                <input
+                  type="password"
+                  {...register('password')}
+                  className={`w-full pl-12 pr-4 py-3.5 glass-apple-input text-sm text-white placeholder-white/40 ${
+                    errors.password ? 'border-[#EF4444]/50 focus:border-[#EF4444]/50 focus:ring-[#EF4444]/20' : ''
+                  }`}
+                  placeholder="••••••••"
+                />
+              </div>
+              {errors.password && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-1.5 ml-1 text-[12px] text-[#ff6b6b] font-medium drop-shadow-sm">
+                  {errors.password.message}
+                </motion.p>
+              )}
+            </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full relative py-3.5 bg-gradient-to-r from-copper-600 to-copper-500 hover:from-copper-500 hover:to-copper-400 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(234,119,64,0.3)] hover:shadow-[0_0_30px_rgba(234,119,64,0.5)] transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none mt-4 overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-white/20 translate-y-[100%] group-hover:translate-y-[0%] transition-transform duration-300"></div>
-                <div className="relative flex items-center justify-center gap-2">
-                  {isLoading ? (
-                    <Loader2 className="animate-spin" size={20} />
-                  ) : (
-                    <>
-                      <span>Iniciar Sesión Segura</span>
-                      <ShieldCheck size={18} />
-                    </>
-                  )}
-                </div>
-              </button>
-            </form>
-          </div>
-          
-          <p className="text-center text-mining-500 text-xs mt-8">
-            &copy; {new Date().getFullYear()} Minera Cop. Todos los derechos reservados.
-          </p>
+            <motion.button
+              type="submit"
+              disabled={isLoading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full relative py-3.5 glass-apple-btn text-[14px] mt-6 disabled:opacity-75 disabled:pointer-events-none flex items-center justify-center gap-2 group"
+            >
+              {/* Button light gloss sweep */}
+              <motion.div
+                className="absolute inset-0 w-[40%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg] pointer-events-none"
+                initial={{ left: '-100%' }}
+                animate={{ left: '200%' }}
+                transition={{ duration: 1.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 4 }}
+              />
+              <div className="relative flex items-center justify-center gap-2">
+                {isLoading ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  <>
+                    <span>Iniciar Sesión Segura</span>
+                    <ShieldCheck size={18} />
+                  </>
+                )}
+              </div>
+            </motion.button>
+          </form>
         </motion.div>
+
+        {/* Footer */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.6 }}
+          className="text-center text-white/50 text-[12px] font-medium mt-8"
+        >
+          &copy; {new Date().getFullYear()} Cooperativa Minera. Todos los derechos reservados.
+        </motion.p>
       </div>
     </div>
   );
 };
+

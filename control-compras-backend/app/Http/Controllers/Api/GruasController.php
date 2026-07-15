@@ -7,14 +7,21 @@ use Illuminate\Http\Request;
 
 class GruasController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        if (!$request->user()->canAccess('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
         $gruas = \App\Models\Grua::with('operador')->get();
         return response()->json($gruas);
     }
 
     public function store(Request $request)
     {
+        if (!$request->user()->canWrite('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
+
         $validated = $request->validate([
             'tipo' => 'required|string|max:255',
             'codigo' => 'required|string|max:255',
@@ -27,14 +34,20 @@ class GruasController extends Controller
         return response()->json($grua, 201);
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
+        if (!$request->user()->canAccess('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
         $grua = \App\Models\Grua::with(['operador', 'servicios.costos', 'servicios.repuestos'])->findOrFail($id);
         return response()->json($grua);
     }
 
     public function update(Request $request, string $id)
     {
+        if (!$request->user()->canWrite('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
         $grua = \App\Models\Grua::findOrFail($id);
         
         $validated = $request->validate([
@@ -49,8 +62,11 @@ class GruasController extends Controller
         return response()->json($grua);
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        if (!$request->user()->canWrite('servicios')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
         $grua = \App\Models\Grua::findOrFail($id);
         $grua->delete();
         return response()->json(null, 204);

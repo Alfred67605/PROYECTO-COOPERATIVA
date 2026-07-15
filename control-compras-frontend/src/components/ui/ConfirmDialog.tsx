@@ -28,10 +28,10 @@ const variantStyles = {
     ringColor: 'ring-amber-500/10',
   },
   info: {
-    iconBg: 'bg-gradient-to-br from-blue-500/20 to-blue-500/10',
-    iconColor: 'text-blue-400',
-    btnBg: 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600',
-    ringColor: 'ring-blue-500/10',
+    iconBg: 'bg-gradient-to-br from-copper-500/20 to-copper-500/10',
+    iconColor: 'text-copper-400',
+    btnBg: 'bg-gradient-to-r from-copper-600 to-copper-500 hover:from-copper-700 hover:to-copper-600',
+    ringColor: 'ring-copper-500/10',
   },
 };
 

@@ -1,9 +1,10 @@
 interface SkeletonProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export const Skeleton = ({ className = '' }: SkeletonProps) => (
-  <div className={`skeleton-shimmer ${className}`} />
+export const Skeleton = ({ className = '', style }: SkeletonProps) => (
+  <div className={`skeleton-shimmer ${className}`} style={style} />
 );
 
 export const SkeletonText = ({ lines = 3, className = '' }: { lines?: number; className?: string }) => (

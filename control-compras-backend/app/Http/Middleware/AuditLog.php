@@ -5,10 +5,27 @@ namespace App\Http\Middleware;
 use App\Models\HistorialOperacion;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuditLog
 {
+    /**
+     * Fields that must NEVER be stored in audit logs.
+     * Contains passwords, tokens, secrets, and other sensitive data.
+     */
+    protected array $sensitiveFields = [
+        'password',
+        'password_confirmation',
+        'current_password',
+        '_token',
+        '_method',
+        'access_token',
+        'token',
+        'secret',
+        'authorization',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         return $next($request);
@@ -37,7 +54,6 @@ class AuditLog
         if ($request->isMethod('PUT')) $accion = 'editar';
         if ($request->isMethod('DELETE')) $accion = 'eliminar';
 
-        // Para evitar errores si hay problemas con el log, lo metemos en un try-catch
         try {
             $registroId = $request->route('id') ?? null;
             
@@ -51,16 +67,26 @@ class AuditLog
                 }
             }
 
+            // Filter out sensitive fields before logging
+            $datosNuevos = $request->isMethod('DELETE')
+                ? null
+                : $request->except($this->sensitiveFields);
+
             HistorialOperacion::create([
                 'usuario_id' => $request->user()->id,
                 'accion' => $accion,
                 'tabla' => $tabla,
                 'registro_id' => $registroId,
-                'datos_nuevos' => $request->isMethod('DELETE') ? null : $request->except(['password', 'password_confirmation']),
+                'datos_nuevos' => $datosNuevos,
                 'ip' => $request->ip(),
             ]);
         } catch (\Exception $e) {
-            // Ignorar errores de auditoría para no afectar la respuesta principal
+            // Log audit failures instead of silently swallowing them
+            Log::warning('Error en auditoría', [
+                'error' => $e->getMessage(),
+                'path' => $path,
+                'user_id' => $request->user()?->id,
+            ]);
         }
     }
 }

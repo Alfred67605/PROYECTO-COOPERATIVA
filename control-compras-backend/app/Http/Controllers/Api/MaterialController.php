@@ -11,16 +11,19 @@ class MaterialController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Material::class);
         $query = Material::query();
 
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where('codigo', 'ilike', "%{$search}%")
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('codigo', 'ilike', "%{$search}%")
                   ->orWhere('descripcion', 'ilike', "%{$search}%");
+            });
         }
 
-        if ($request->has('grupo')) {
-            $query->where('grupo', $request->grupo);
+        if ($request->filled('grupo')) {
+            $query->where('grupo', $request->input('grupo'));
         }
 
         return response()->json(['data' => $query->get()]);
@@ -28,10 +31,12 @@ class MaterialController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Material::class);
+
         $validated = $request->validate([
-            'codigo' => 'required|unique:materiales,codigo',
-            'descripcion' => 'required|string',
-            'grupo' => 'nullable|string',
+            'codigo' => 'required|string|max:50|unique:materiales,codigo',
+            'descripcion' => 'required|string|max:500',
+            'grupo' => 'nullable|string|max:100',
         ]);
 
         $material = Material::create($validated);
@@ -41,18 +46,20 @@ class MaterialController extends Controller
     public function show($id)
     {
         $material = Material::findOrFail($id);
+        $this->authorize('view', $material);
         return response()->json($material);
     }
 
     public function update(Request $request, $id)
     {
         $material = Material::findOrFail($id);
+        $this->authorize('update', $material);
         
         $validated = $request->validate([
-            'codigo' => 'required|unique:materiales,codigo,' . $id,
-            'descripcion' => 'required|string',
-            'grupo' => 'nullable|string',
-            'estado' => 'nullable|string',
+            'codigo' => 'required|string|max:50|unique:materiales,codigo,' . $id,
+            'descripcion' => 'required|string|max:500',
+            'grupo' => 'nullable|string|max:100',
+            'estado' => 'nullable|string|max:20',
         ]);
 
         $material->update($validated);
@@ -62,30 +69,48 @@ class MaterialController extends Controller
     public function destroy($id)
     {
         $material = Material::findOrFail($id);
-        $material->update(['estado' => 'inactivo']);
+        $this->authorize('delete', $material);
+        
+        $rawImagen = $material->getRawOriginal('imagen');
+        if ($rawImagen) {
+            Storage::disk('public')->delete($rawImagen);
+        }
+
+        $material->update([
+            'estado' => 'inactivo',
+            'imagen' => null
+        ]);
+        
         return response()->json(['message' => 'Material marcado como inactivo']);
     }
 
     public function uploadImagen(Request $request, $id)
     {
-        $request->validate(['imagen' => 'required|image|max:2048']);
+        $request->validate([
+            'imagen' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
         $material = Material::findOrFail($id);
+        $this->authorize('update', $material);
 
-        if ($material->imagen) {
-            Storage::disk('public')->delete($material->imagen);
+        $rawImagen = $material->getRawOriginal('imagen');
+        if ($rawImagen) {
+            Storage::disk('public')->delete($rawImagen);
         }
 
         $path = $request->file('imagen')->store('materiales', 'public');
         $material->update(['imagen' => $path]);
 
-        return response()->json(['message' => 'Imagen subida', 'path' => $path]);
+        return response()->json(['message' => 'Imagen subida', 'path' => asset('storage/' . $path)]);
     }
 
     public function deleteImagen($id)
     {
         $material = Material::findOrFail($id);
-        if ($material->imagen) {
-            Storage::disk('public')->delete($material->imagen);
+        $this->authorize('update', $material);
+
+        $rawImagen = $material->getRawOriginal('imagen');
+        if ($rawImagen) {
+            Storage::disk('public')->delete($rawImagen);
             $material->update(['imagen' => null]);
         }
         return response()->json(['message' => 'Imagen eliminada']);

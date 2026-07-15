@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { Building2, Edit, Trash2, X, Loader2, Plus, Mail, Phone, MapPin, Hash } from 'lucide-react';
+import { Building2, Edit, Trash2, X, Loader2, Plus, Mail, Phone, MapPin, Hash, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 import { staggerContainer, tableRowVariant } from '../../components/ui/PageTransition';
+import { useAuth } from '../auth/AuthContext';
 
 interface ProvForm {
   nombre: string;
@@ -18,11 +20,14 @@ interface ProvForm {
 const emptyForm: ProvForm = { nombre: '', nit: '', telefono: '', direccion: '', email: '' };
 
 export const ProveedoresList = () => {
+  const { canWrite } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ProvForm>(emptyForm);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -35,8 +40,23 @@ export const ProveedoresList = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (editingId) return await api.put(`/proveedores/${editingId}`, form);
-      return await api.post('/proveedores', form);
+      let response;
+      if (editingId) {
+        response = await api.put(`/proveedores/${editingId}`, form);
+      } else {
+        response = await api.post('/proveedores', form);
+      }
+      
+      const provId = editingId || response.data.id;
+      
+      if (logoFile && provId) {
+        const formData = new FormData();
+        formData.append('logo', logoFile);
+        await api.post(`/proveedores/${provId}/logo`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proveedores'] });
@@ -68,12 +88,14 @@ export const ProveedoresList = () => {
     }
   });
 
-  const openCreate = () => { setForm(emptyForm); setEditingId(null); setError(''); setShowModal(true); };
+  const openCreate = () => { setForm(emptyForm); setEditingId(null); setError(''); setLogoFile(null); setPreviewUrl(null); setShowModal(true); };
   const openEdit = (p: any) => {
     setForm({ nombre: p.nombre, nit: p.nit || '', telefono: p.telefono || '', direccion: p.direccion || '', email: p.email || '' });
-    setEditingId(p.id); setError(''); setShowModal(true);
+    setEditingId(p.id); setError(''); setLogoFile(null); 
+    setPreviewUrl(p.logo ? `http://localhost:8000/storage/${p.logo}` : null); // Assuming backend serves it from storage
+    setShowModal(true);
   };
-  const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm); setError(''); };
+  const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm); setError(''); setLogoFile(null); setPreviewUrl(null); };
   
   const handleDelete = (id: number, nombre: string) => {
     setDeleteTarget({ id, nombre });
@@ -91,10 +113,12 @@ export const ProveedoresList = () => {
           <h2 className="section-title">Directorio de Proveedores</h2>
           <p className="section-subtitle">Gestión de empresas asociadas a Minera Cop</p>
         </div>
-        <button className="btn-primary" onClick={openCreate}>
-          <Plus size={18} />
-          Nuevo Proveedor
-        </button>
+        {canWrite('proveedores') && (
+          <button className="btn-primary" onClick={openCreate}>
+            <Plus size={18} />
+            Nuevo Proveedor
+          </button>
+        )}
       </div>
 
       <div className="card p-0 overflow-hidden">
@@ -125,9 +149,13 @@ export const ProveedoresList = () => {
                   <motion.tr variants={tableRowVariant} key={p.id} className="group">
                     <td className="pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/5 text-mining-300 flex items-center justify-center font-bold text-sm">
-                          {p.nombre.substring(0, 2).toUpperCase()}
-                        </div>
+                        {p.logo ? (
+                          <img src={`http://localhost:8000/storage/${p.logo}`} alt={p.nombre} className="w-10 h-10 rounded-xl object-cover bg-white/5" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-xl bg-white/5 text-mining-300 flex items-center justify-center font-bold text-sm">
+                            {p.nombre.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
                         <div>
                           <p className="font-bold text-white">{p.nombre}</p>
                           <p className="text-xs text-mining-400 flex items-center gap-1 mt-0.5">
@@ -160,13 +188,17 @@ export const ProveedoresList = () => {
                       </span>
                     </td>
                     <td className="pr-6 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openEdit(p)} className="btn-icon">
-                          <Edit size={16} />
-                        </button>
-                        <button onClick={() => handleDelete(p.id, p.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
-                          <Trash2 size={16} />
-                        </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {canWrite('proveedores') && (
+                          <>
+                            <button onClick={() => openEdit(p)} className="btn-icon">
+                              <Edit size={16} />
+                            </button>
+                            <button onClick={() => handleDelete(p.id, p.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
@@ -185,72 +217,117 @@ export const ProveedoresList = () => {
         )}
       </div>
 
-      <ConfirmDialog
-        isOpen={confirmOpen}
-        title="Inhabilitar Proveedor"
-        message={`¿Estás seguro de que deseas inhabilitar al proveedor "${deleteTarget?.nombre}"?`}
-        confirmLabel="Inhabilitar"
-        cancelLabel="Cancelar"
-        variant="danger"
-        isLoading={deleteMutation.isPending}
-        onConfirm={confirmDelete}
-        onCancel={() => { setConfirmOpen(false); setDeleteTarget(null); }}
-      />
+      {createPortal(
+        <ConfirmDialog
+          isOpen={confirmOpen}
+          title="Inhabilitar Proveedor"
+          message={`¿Estás seguro de que deseas inhabilitar al proveedor "${deleteTarget?.nombre}"?`}
+          confirmLabel="Inhabilitar"
+          cancelLabel="Cancelar"
+          variant="danger"
+          isLoading={deleteMutation.isPending}
+          onConfirm={confirmDelete}
+          onCancel={() => { setConfirmOpen(false); setDeleteTarget(null); }}
+        />,
+        document.body
+      )}
 
-      <AnimatePresence>
-        {showModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeModal}>
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-lg shadow-elevated border border-white/10 overflow-hidden" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-copper-500/10 text-copper-400 flex items-center justify-center">
-                    <Building2 size={20} />
+      {createPortal(
+        <AnimatePresence>
+          {showModal && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto" onClick={closeModal}>
+              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-lg shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-copper-500/10 text-copper-400 flex items-center justify-center">
+                      <Building2 size={20} />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">{editingId ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h3>
                   </div>
-                  <h3 className="text-xl font-bold text-white">{editingId ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h3>
+                  <button onClick={closeModal} className="text-mining-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"><X size={20} /></button>
                 </div>
-                <button onClick={closeModal} className="text-mining-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"><X size={20} /></button>
-              </div>
-              
-              <div className="p-6">
-                {error && <div className="mb-6 p-4 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20">{error}</div>}
                 
-                <form onSubmit={e => { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Nombre o Razón Social *</label>
-                    <input className="input-field" required value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="p-6">
+                  {error && <div className="mb-6 p-4 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20">{error}</div>}
+                  
+                  <form onSubmit={e => { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">NIT / RUC</label>
-                      <input className="input-field" value={form.nit} onChange={e => setForm({...form, nit: e.target.value})} />
+                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Nombre o Razón Social *</label>
+                      <input className="input-field" required value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Logo del Proveedor</label>
+                      <div className="flex items-center gap-4">
+                        {previewUrl ? (
+                          <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-white/10 shrink-0">
+                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                            <button type="button" onClick={() => { setLogoFile(null); setPreviewUrl(null); }} className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl border border-dashed border-white/20 bg-white/[0.02] flex items-center justify-center text-mining-500 shrink-0">
+                            <ImageIcon size={24} />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            id="logo-upload"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={e => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                setLogoFile(file);
+                                setPreviewUrl(window.URL.createObjectURL(file));
+                              }
+                            }}
+                          />
+                          <label htmlFor="logo-upload" className="btn-secondary text-sm cursor-pointer inline-flex w-full justify-center">
+                            <UploadCloud size={16} />
+                            Seleccionar Imagen
+                          </label>
+                          <p className="text-[10px] text-mining-500 mt-1">Formatos: JPG, PNG, WEBP (Max 2MB)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">NIT / RUC</label>
+                        <input className="input-field" value={form.nit} onChange={e => setForm({...form, nit: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Teléfono</label>
+                        <input className="input-field" value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Teléfono</label>
-                      <input className="input-field" value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} />
+                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Email</label>
+                      <input type="email" className="input-field" autoComplete="new-password" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Email</label>
-                    <input type="email" className="input-field" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Dirección</label>
-                    <textarea className="input-field" rows={2} value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})}></textarea>
-                  </div>
-                  <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
-                    <button type="button" onClick={closeModal} className="btn-secondary">Cancelar</button>
-                    <button type="submit" disabled={saveMutation.isPending} className="btn-primary">
-                      {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Registrar Proveedor')}
-                    </button>
-                  </div>
-                </form>
-              </div>
+                    <div>
+                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Dirección</label>
+                      <textarea className="input-field" rows={2} value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})}></textarea>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
+                      <button type="button" onClick={closeModal} className="btn-secondary">Cancelar</button>
+                      <button type="submit" disabled={saveMutation.isPending} className="btn-primary">
+                        {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Registrar Proveedor')}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

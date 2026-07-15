@@ -37,6 +37,7 @@ export const NuevaCompra = () => {
   const [observaciones, setObservaciones] = useState('');
   const [detalles, setDetalles] = useState<DetalleForm[]>([]);
   const [searchMaterial, setSearchMaterial] = useState('');
+  const [continueAdding, setContinueAdding] = useState(false);
 
   const { data: proveedores } = useQuery({ queryKey: ['proveedores'], queryFn: async () => (await api.get('/proveedores')).data });
   const { data: bocaminas } = useQuery({ queryKey: ['bocaminas'], queryFn: async () => (await api.get('/bocaminas')).data });
@@ -68,7 +69,18 @@ export const NuevaCompra = () => {
       toast.success('Compra registrada', 'La compra se ha guardado exitosamente.');
       queryClient.invalidateQueries({ queryKey: ['compras'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      navigate('/compras');
+      
+      if (!continueAdding) {
+        navigate('/compras');
+      } else {
+        setProveedorId('');
+        setBocaminaId('');
+        setNumeroFactura('');
+        setObservaciones('');
+        setDetalles([]);
+        setCurrentStep(1);
+        setContinueAdding(false);
+      }
     },
     onError: (err: any) => {
       toast.error('Error', err.response?.data?.message || 'Error al guardar la compra');
@@ -389,14 +401,24 @@ export const NuevaCompra = () => {
             Siguiente <ArrowRight size={18} />
           </button>
         ) : (
-          <button 
-            onClick={() => saveMutation.mutate()} 
-            disabled={saveMutation.isPending}
-            className="btn-primary bg-emerald-600 hover:from-emerald-700 hover:to-emerald-600 shadow-emerald-600/30"
-          >
-            {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-            Confirmar y Guardar
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => { setContinueAdding(true); saveMutation.mutate(); }} 
+              disabled={saveMutation.isPending}
+              className="btn-secondary"
+            >
+              {saveMutation.isPending && continueAdding ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
+              Guardar y agregar otra
+            </button>
+            <button 
+              onClick={() => { setContinueAdding(false); saveMutation.mutate(); }} 
+              disabled={saveMutation.isPending}
+              className="btn-primary bg-emerald-600 hover:from-emerald-700 hover:to-emerald-600 shadow-emerald-600/30"
+            >
+              {saveMutation.isPending && !continueAdding ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+              Confirmar y Guardar
+            </button>
+          </div>
         )}
       </div>
     </div>

@@ -19,9 +19,11 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RolSeeder::class,
+            PermisoSeeder::class,
             UsuarioSeeder::class,
             ProveedorSeeder::class,
             BocaminaSeeder::class,
+            InventarioInicialSeeder::class,
             // MaterialSeeder will be run separately after importing excel
         ]);
     }

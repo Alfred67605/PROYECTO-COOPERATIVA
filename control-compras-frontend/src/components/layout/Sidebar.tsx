@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '../../features/auth/AuthContext';
 import {
   LayoutDashboard,
@@ -21,8 +22,17 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
-  const { user, logout } = useAuth();
-  const isAdmin = user?.rol?.nombre === 'Administrador General';
+  const { user, logout, canAccess } = useAuth();
+  const location = useLocation();
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(
+    location.pathname.startsWith('/servicios') ? ['Servicios'] : []
+  );
+
+  const toggleMenu = (menuName: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(menuName) ? prev.filter(m => m !== menuName) : [...prev, menuName]
+    );
+  };
 
   const allNavItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} />, reqAdmin: false },
@@ -30,23 +40,48 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
     { name: 'Proveedores', path: '/proveedores', icon: <Building2 size={20} />, reqAdmin: true },
     { name: 'Materiales', path: '/inventario', icon: <Package size={20} />, reqAdmin: false },
     { name: 'Compras', path: '/compras', icon: <ShoppingCart size={20} />, reqAdmin: false },
-    { name: 'Servicios', path: '/servicios', icon: <Wrench size={20} />, reqAdmin: false },
+    { 
+      name: 'Servicios', 
+      path: '/servicios', 
+      icon: <Wrench size={20} />, 
+      reqAdmin: false,
+      subItems: [
+        { name: 'Dashboard', path: '/servicios/dashboard' },
+        { name: 'Maquinaria', path: '/servicios/maquinaria' },
+        { name: 'Grúas', path: '/servicios/gruas' },
+        { name: 'Vehículos', path: '/servicios/vehiculos' },
+        { name: 'Mantenimientos', path: '/servicios/mantenimientos' },
+        { name: 'Inspecciones', path: '/servicios/inspecciones' },
+        { name: 'Alquiler de Grúas', path: '/servicios/alquiler-gruas' },
+      ]
+    },
     { name: 'Reportes', path: '/reportes', icon: <Activity size={20} />, reqAdmin: false },
     { name: 'Usuarios', path: '/usuarios', icon: <Users size={20} />, reqAdmin: true },
     { name: 'Auditoría', path: '/historial', icon: <Activity size={20} />, reqAdmin: true }
   ];
 
-  const visibleItems = allNavItems.filter(item => !item.reqAdmin || isAdmin);
+  const visibleItems = allNavItems.filter(item => {
+    if (item.path === '/dashboard') return true;
+    if (item.path === '/bocaminas') return canAccess('bocaminas');
+    if (item.path === '/proveedores') return canAccess('proveedores');
+    if (item.path === '/inventario') return canAccess('materiales');
+    if (item.path === '/compras') return canAccess('compras');
+    if (item.path === '/servicios') return canAccess('servicios');
+    if (item.path === '/reportes') return canAccess('reportes');
+    if (item.path === '/usuarios') return canAccess('usuarios');
+    if (item.path === '/historial') return canAccess('auditoria');
+    return false;
+  });
 
   const sidebarVariants = {
     open: {
       x: 0,
-      transition: { type: 'spring', stiffness: 300, damping: 30 }
+      transition: { type: 'spring' as const, stiffness: 300, damping: 30 }
     },
     closed: {
       x: isMobile ? '-100%' : 0,
       width: isMobile ? '16rem' : '5rem',
-      transition: { type: 'spring', stiffness: 300, damping: 30 }
+      transition: { type: 'spring' as const, stiffness: 300, damping: 30 }
     }
   };
 
@@ -80,42 +115,106 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
         {(!isOpen && !isMobile) && <div className="text-[10px] font-bold text-mining-500 uppercase tracking-widest text-center mb-2">Menú</div>}
         {(isOpen || isMobile) && <div className="px-3 text-xs font-bold text-mining-500 uppercase tracking-widest mb-2">Menú Principal</div>}
         
-        {visibleItems.map((item) => (
-          <NavLink
-            key={item.path + item.name}
-            to={item.path}
-            onClick={() => isMobile && setIsOpen(false)}
-            className={({ isActive }) =>
-              `relative flex items-center px-3 py-2.5 rounded-xl transition-all duration-300 group ${
-                isActive
-                  ? 'text-white'
-                  : 'text-mining-400 hover:text-white hover:bg-white/[0.04]'
-              } ${!isOpen && !isMobile ? 'justify-center' : 'gap-3'}`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <motion.div
-                    layoutId="active-nav"
-                    className="absolute inset-0 bg-white/10 border border-white/5 shadow-glass-inset rounded-xl -z-10"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-                <div className={`relative ${isActive ? 'text-copper-400 drop-shadow-[0_0_8px_rgba(234,119,64,0.5)]' : 'group-hover:scale-110 group-hover:text-white transition-all'}`}>
-                  {item.icon}
-                  {item.name === 'Dashboard' && isActive && (
-                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-copper-500 rounded-full shadow-glow-copper animate-pulse-glow" />
+        {visibleItems.map((item) => {
+          const hasSubItems = item.subItems && item.subItems.length > 0;
+          const isExpanded = expandedMenus.includes(item.name);
+          const isParentActive = location.pathname.startsWith(item.path);
+
+          return (
+            <div key={item.path + item.name}>
+              {hasSubItems ? (
+                <button
+                  onClick={() => {
+                    if (isMobile) setIsOpen(true);
+                    toggleMenu(item.name);
+                  }}
+                  className={`relative flex w-full items-center px-3 py-2.5 rounded-xl transition-all duration-300 group ${
+                    isParentActive ? 'text-white' : 'text-mining-400 hover:text-white hover:bg-white/[0.04]'
+                  } ${!isOpen && !isMobile ? 'justify-center' : 'justify-between'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`relative ${isParentActive ? 'text-copper-400 drop-shadow-[0_0_8px_rgba(234,119,64,0.5)]' : 'group-hover:scale-110 group-hover:text-white transition-all'}`}>
+                      {item.icon}
+                    </div>
+                    {(isOpen || isMobile) && (
+                      <span className="font-medium truncate">{item.name}</span>
+                    )}
+                  </div>
+                  {(isOpen || isMobile) && (
+                    <svg
+                      className={`w-4 h-4 text-mining-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   )}
-                </div>
-                {(isOpen || isMobile) && (
-                  <span className="font-medium truncate">{item.name}</span>
+                </button>
+              ) : (
+                <NavLink
+                  to={item.path}
+                  onClick={() => isMobile && setIsOpen(false)}
+                  className={({ isActive }) =>
+                    `relative flex items-center px-3 py-2.5 rounded-xl transition-all duration-300 group ${
+                      isActive
+                        ? 'text-white'
+                        : 'text-mining-400 hover:text-white hover:bg-white/[0.04]'
+                    } ${!isOpen && !isMobile ? 'justify-center' : 'gap-3'}`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <motion.div
+                          layoutId="active-nav"
+                          className="absolute inset-0 bg-white/10 border border-white/5 shadow-glass-inset rounded-xl -z-10"
+                          initial={false}
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        />
+                      )}
+                      <div className={`relative ${isActive ? 'text-copper-400 drop-shadow-[0_0_8px_rgba(234,119,64,0.5)]' : 'group-hover:scale-110 group-hover:text-white transition-all'}`}>
+                        {item.icon}
+                        {item.name === 'Dashboard' && isActive && (
+                           <span className="absolute -top-1 -right-1 w-2 h-2 bg-copper-500 rounded-full shadow-glow-copper animate-pulse-glow" />
+                        )}
+                      </div>
+                      {(isOpen || isMobile) && (
+                        <span className="font-medium truncate">{item.name}</span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              )}
+
+              <AnimatePresence>
+                {hasSubItems && isExpanded && (isOpen || isMobile) && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden ml-9 mt-1 space-y-1"
+                  >
+                    {item.subItems.map(sub => (
+                      <NavLink
+                        key={sub.path}
+                        to={sub.path}
+                        onClick={() => isMobile && setIsOpen(false)}
+                        className={({ isActive }) =>
+                          `block px-3 py-2 rounded-lg text-sm transition-all ${
+                            isActive
+                              ? 'text-copper-400 bg-white/5 font-medium'
+                              : 'text-mining-400 hover:text-white hover:bg-white/[0.02]'
+                          }`
+                        }
+                      >
+                        {sub.name}
+                      </NavLink>
+                    ))}
+                  </motion.div>
                 )}
-              </>
-            )}
-          </NavLink>
-        ))}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </nav>
 
       <div className="p-4 border-t border-white/5 bg-obsidian-900/50 backdrop-blur-md relative z-10">

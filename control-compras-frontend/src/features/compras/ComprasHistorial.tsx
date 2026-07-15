@@ -5,14 +5,23 @@ import api from '../../lib/axios';
 import { ShoppingCart, Plus, Search, Calendar, ChevronDown, ChevronRight, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, tableRowVariant } from '../../components/ui/PageTransition';
+import { useAuth } from '../auth/AuthContext';
 
 export const ComprasHistorial = () => {
+  const { canWrite } = useAuth();
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const { data: compras, isLoading } = useQuery({
-    queryKey: ['compras'],
-    queryFn: async () => (await api.get('/compras')).data
+    queryKey: ['compras', search],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (search) {
+        params.append('search', search);
+      }
+      const res = await api.get(`/compras?${params.toString()}`);
+      return res.data;
+    }
   });
 
   // Lazy-load full details (with detalles.material) when a row is expanded
@@ -51,10 +60,12 @@ export const ComprasHistorial = () => {
               className="input-field pl-10 py-2 w-64"
             />
           </div>
-          <Link to="/compras/nueva" className="btn-primary group">
-            <Plus size={18} className="group-hover:rotate-90 transition-transform" />
-            <span className="hidden sm:inline">Nueva Compra</span>
-          </Link>
+          {canWrite('compras') && (
+            <Link to="/compras/nueva" className="btn-primary group">
+              <Plus size={18} className="group-hover:rotate-90 transition-transform" />
+              <span className="hidden sm:inline">Nueva Compra</span>
+            </Link>
+          )}
         </div>
       </div>
 
