@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
     public function login(LoginRequest $request)
     {
         if (!Auth::attempt($request->only('email', 'password'))) {
+            // Generic error message to avoid user enumeration (CWE-204)
             return response()->json([
                 'message' => 'Credenciales incorrectas'
             ], 401);
@@ -19,25 +21,36 @@ class AuthController extends Controller
 
         $user = Auth::user();
         if (!$user->estado) {
+            Auth::logout();
             return response()->json([
-                'message' => 'Usuario inactivo'
+                'message' => 'Usuario inactivo. Contacte al administrador.'
             ], 403);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-        $user->load('rol');
+        // Regenerar sesión solo si está disponible (SPA con cookie) 
+        // En API stateless no hay sesión — se omite para evitar el 500
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
+
+        $user->load(['rol', 'permisos']);
+
+        Log::info('Login exitoso', ['user_id' => $user->id, 'ip' => $request->ip()]);
 
         return response()->json([
             'message' => 'Login exitoso',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user
+            'user'    => $user
         ]);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        Auth::guard('web')->logout();
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->json([
             'message' => 'Sesión cerrada correctamente'
@@ -47,7 +60,8 @@ class AuthController extends Controller
     public function user(Request $request)
     {
         $user = $request->user();
-        $user->load('rol');
+        $user->load(['rol', 'permisos']);
         return response()->json($user);
     }
 }
+

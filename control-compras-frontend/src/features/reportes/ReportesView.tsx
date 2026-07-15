@@ -1,71 +1,84 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { Download, FileText, Loader2, Calendar, Filter, Pickaxe, Building2, Package, Activity, ArrowRight, ShoppingCart } from 'lucide-react';
+import { Download, FileText, Loader2, Calendar, Filter, Pickaxe, Building2, Package, Activity, ShoppingCart, AlertCircle, RefreshCw } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+
+// Formatea una fecha a YYYY-MM-DD usando zona horaria local (evita desfase UTC)
+const formatLocalDate = (d: Date): string => {
+  const year  = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day   = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export const ReportesView = () => {
   const toast = useToast();
   const [exportingPdf, setExportingPdf] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
-  
-  // Rango de fechas por defecto (Este Mes)
-  const [dateRange, setDateRange] = useState({ 
-    inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], 
-    fin: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0] 
+
+  // Rango inicial: mes actual completo (incluye días futuros del mes)
+  const today = new Date();
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastOfMonth  = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  const [dateRange, setDateRange] = useState({
+    inicio: formatLocalDate(firstOfMonth),
+    fin: formatLocalDate(lastOfMonth),
+    bocamina_id: ''
   });
 
-  const { data: reporte, isLoading, refetch } = useQuery({
-    queryKey: ['reporte-generado', dateRange.inicio, dateRange.fin],
+
+  const { data: bocaminas } = useQuery({
+    queryKey: ['bocaminas'],
+    queryFn: async () => (await api.get('/bocaminas')).data
+  });
+
+  const { data: reporte, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['reporte-generado', dateRange.inicio, dateRange.fin, dateRange.bocamina_id],
     queryFn: async () => {
-      const { data } = await api.get(`/reportes/generar?inicio=${dateRange.inicio}&fin=${dateRange.fin}`);
+      const { data } = await api.get(
+        `/reportes/generar?inicio=${dateRange.inicio}&fin=${dateRange.fin}&bocamina_id=${dateRange.bocamina_id}`
+      );
       return data;
-    }
+    },
+    retry: 1,
   });
 
   const setRango = (tipo: 'diario' | 'semanal' | 'mensual') => {
     const hoy = new Date();
-    
-    // Función auxiliar para formatear la fecha a YYYY-MM-DD en la zona horaria local
-    const formatDate = (d: Date) => {
-      const offset = d.getTimezoneOffset();
-      const localDate = new Date(d.getTime() - (offset*60*1000));
-      return localDate.toISOString().split('T')[0];
-    };
+    const daysAgo = (n: number) => { const d = new Date(hoy); d.setDate(hoy.getDate() - n); return d; };
 
     if (tipo === 'diario') {
-      setDateRange({ inicio: formatDate(hoy), fin: formatDate(hoy) });
+      // Solo hoy (el backend usa whereDate >= y <=, cubre todo el día)
+      setDateRange({ ...dateRange, inicio: formatLocalDate(hoy), fin: formatLocalDate(hoy) });
     } else if (tipo === 'semanal') {
-      const day = hoy.getDay();
-      const diffToMonday = hoy.getDate() - day + (day === 0 ? -6 : 1);
-      
-      const primerDia = new Date(hoy);
-      primerDia.setDate(diffToMonday);
-      
-      const ultimoDia = new Date(primerDia);
-      ultimoDia.setDate(primerDia.getDate() + 6);
-      
-      setDateRange({ inicio: formatDate(primerDia), fin: formatDate(ultimoDia) });
+      // Últimos 7 días incluyendo hoy
+      setDateRange({ ...dateRange, inicio: formatLocalDate(daysAgo(6)), fin: formatLocalDate(hoy) });
     } else if (tipo === 'mensual') {
+      // Mes calendario completo (incluye días futuros del mes actual)
       const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
       const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-      setDateRange({ inicio: formatDate(primerDia), fin: formatDate(ultimoDia) });
+      setDateRange({ ...dateRange, inicio: formatLocalDate(primerDia), fin: formatLocalDate(ultimoDia) });
     }
   };
+
 
   const handleExportPdf = async () => {
     setExportingPdf(true);
     try {
       const res = await api.get(`/reportes/exportar/pdf?inicio=${dateRange.inicio}&fin=${dateRange.fin}`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `reporte_compras_${dateRange.inicio}_al_${dateRange.fin}.html`;
+      a.download = `reporte_compras_${dateRange.inicio}_al_${dateRange.fin}.pdf`;
       document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      toast.success('Reporte PDF Generado', 'El documento respetará el filtro de fechas actual.');
+      toast.success('Reporte PDF Generado', 'El documento respeta el filtro de fechas actual.');
     } catch {
       toast.error('Error', 'No se pudo generar el reporte PDF.');
     } finally {
@@ -77,14 +90,16 @@ export const ReportesView = () => {
     setExportingExcel(true);
     try {
       const res = await api.get(`/reportes/exportar/excel?inicio=${dateRange.inicio}&fin=${dateRange.fin}`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `reporte_compras_${dateRange.inicio}_al_${dateRange.fin}.csv`;
+      a.download = `reporte_compras_${dateRange.inicio}_al_${dateRange.fin}.xlsx`;
       document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      toast.success('Reporte Excel Exportado', 'El Excel respetará el filtro de fechas actual.');
+      toast.success('Reporte Excel Exportado', 'El archivo Excel respeta el filtro de fechas actual.');
     } catch {
       toast.error('Error', 'No se pudo generar el reporte Excel.');
     } finally {
@@ -92,7 +107,7 @@ export const ReportesView = () => {
     }
   };
 
-  const COLORS = ['#3b82f6', '#06b6d4', '#10b981', '#6366f1', '#f59e0b'];
+
 
   return (
     <div className="space-y-6">
@@ -125,7 +140,7 @@ export const ReportesView = () => {
             </div>
           </div>
           
-          <div className="flex flex-col md:flex-row gap-4 items-end flex-1 xl:max-w-xl">
+          <div className="flex flex-col md:flex-row gap-4 items-end flex-1 xl:max-w-4xl">
             <div className="flex-1 w-full">
               <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Fecha Inicio</label>
               <div className="relative">
@@ -140,6 +155,18 @@ export const ReportesView = () => {
                 <input type="date" className="input-field pl-10" value={dateRange.fin} onChange={e => setDateRange({...dateRange, fin: e.target.value})} />
               </div>
             </div>
+            <div className="flex-1 w-full">
+              <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Bocamina (Opcional)</label>
+              <div className="relative">
+                <Pickaxe className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
+                <select className="input-field pl-10" value={dateRange.bocamina_id} onChange={e => setDateRange({...dateRange, bocamina_id: e.target.value})}>
+                  <option value="">Todas las bocaminas</option>
+                  {bocaminas?.map((b: any) => (
+                    <option key={b.id} value={b.id}>{b.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
             <button onClick={() => refetch()} className="btn-primary whitespace-nowrap h-10 px-6">
               <Filter size={18} /> Aplicar
             </button>
@@ -147,9 +174,23 @@ export const ReportesView = () => {
         </div>
       </div>
 
+
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin text-copper-500" size={48} />
+        </div>
+      ) : isError ? (
+        <div className="card border border-red-500/20 bg-red-500/5 flex flex-col items-center gap-4 py-16 text-center">
+          <AlertCircle size={48} className="text-red-400" />
+          <div>
+            <p className="text-lg font-bold text-white mb-1">No se pudo cargar el reporte</p>
+            <p className="text-sm text-mining-400 max-w-md">
+              {(error as any)?.response?.data?.message || 'Verifica los filtros de fecha o contacta al administrador.'}
+            </p>
+          </div>
+          <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
+            <RefreshCw size={16} /> Reintentar
+          </button>
         </div>
       ) : (
         <div className="space-y-6">
@@ -184,7 +225,7 @@ export const ReportesView = () => {
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="rgba(255,255,255,0.05)" />
                     <XAxis type="number" tickFormatter={(val) => `$${(val/1000).toFixed(0)}k`} />
                     <YAxis dataKey="nombre" type="category" axisLine={false} tickLine={false} width={100} />
-                    <Tooltip cursor={{ fill: 'rgba(255,255,255,0.02)' }} formatter={(value: number) => [`$${value.toLocaleString()}`, 'Gasto']} />
+                    <Tooltip cursor={{ fill: 'rgba(255,255,255,0.02)' }} formatter={(value: any) => [`$${parseFloat(value || 0).toLocaleString()}`, 'Gasto']} />
                     <Bar dataKey="total_gastado" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
