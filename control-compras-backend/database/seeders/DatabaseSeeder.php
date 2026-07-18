@@ -23,11 +23,10 @@ class DatabaseSeeder extends Seeder
             UsuarioSeeder::class,
             ProveedorSeeder::class,
             BocaminaSeeder::class,
-            InventarioInicialSeeder::class,
+            MaterialSeeder::class,
             CompraSeeder::class,
             ServiciosSeeder::class,
             HistorialSeeder::class,
-            // MaterialSeeder will be run separately after importing excel
         ]);
     }
 }
