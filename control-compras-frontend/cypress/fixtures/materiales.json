@@ -1,0 +1,12 @@
+{
+  "nuevo": {
+    "codigo": "HERR-99",
+    "descripcion": "Pico minero reforzado Cypress",
+    "grupo": "Herramientas"
+  },
+  "editar": {
+    "descripcion": "Pico minero reforzado Editado",
+    "grupo": "Herramientas manuales"
+  },
+  "busqueda": "Pico"
+}

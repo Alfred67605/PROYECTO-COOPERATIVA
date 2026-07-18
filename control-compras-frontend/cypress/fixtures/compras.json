@@ -1,0 +1,7 @@
+{
+  "nueva": {
+    "numero_factura": "F-CYPRESS-001",
+    "observaciones": "Compra de prueba generada por Cypress E2E"
+  },
+  "busqueda": "CYPRESS"
+}

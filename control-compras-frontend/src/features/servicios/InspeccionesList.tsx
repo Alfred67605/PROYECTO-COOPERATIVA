@@ -32,7 +32,6 @@ export const InspeccionesList = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null);
 
   const { data: maquinaria } = useQuery({ queryKey: ['maquinaria'], queryFn: async () => (await api.get('/maquinaria')).data });
-  const { data: gruas } = useQuery({ queryKey: ['gruas'], queryFn: async () => (await api.get('/gruas')).data });
   const { data: vehiculos } = useQuery({ queryKey: ['vehiculos'], queryFn: async () => (await api.get('/vehiculos')).data });
 
   const { data, isLoading } = useQuery({
@@ -96,7 +95,6 @@ export const InspeccionesList = () => {
 
   const getEquipos = () => {
     if (form.equipo_tipo === 'App\\Models\\Maquinaria') return maquinaria || [];
-    if (form.equipo_tipo === 'App\\Models\\Grua') return gruas || [];
     if (form.equipo_tipo === 'App\\Models\\Vehiculo') return vehiculos || [];
     return [];
   };
@@ -104,7 +102,6 @@ export const InspeccionesList = () => {
   const getEquipoLabel = (tipoModelo: string, equipo: any) => {
     if (!equipo) return 'Desconocido';
     if (tipoModelo === 'App\\Models\\Maquinaria') return `${equipo.nombre_codigo} (${equipo.tipo})`;
-    if (tipoModelo === 'App\\Models\\Grua') return `${equipo.codigo} (${equipo.tipo})`;
     if (tipoModelo === 'App\\Models\\Vehiculo') return `${equipo.placa} (${equipo.tipo})`;
     return 'Desconocido';
   };
@@ -224,7 +221,6 @@ export const InspeccionesList = () => {
                         <label className="block text-xs font-bold text-mining-500 uppercase mb-2">Tipo de Equipo *</label>
                         <select className="input-field" required value={form.equipo_tipo} onChange={e => setForm({...form, equipo_tipo: e.target.value, equipo_id: ''})}>
                           <option value="App\Models\Maquinaria">Maquinaria</option>
-                          <option value="App\Models\Grua">Grúa</option>
                           <option value="App\Models\Vehiculo">Vehículo</option>
                         </select>
                       </div>

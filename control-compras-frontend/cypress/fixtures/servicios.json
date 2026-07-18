@@ -1,0 +1,13 @@
+{
+  "nuevo": {
+    "codigo": "SRV-CY01",
+    "estado": "Pendiente",
+    "descripcion": "Cambio de aceite hidráulico y filtros - Prueba Cypress",
+    "observaciones": "Servicio programado de mantenimiento preventivo"
+  },
+  "editar": {
+    "estado": "Finalizado",
+    "descripcion": "Cambio de aceite hidráulico y filtros - COMPLETADO",
+    "observaciones": "Servicio completado sin novedades"
+  }
+}

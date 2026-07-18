@@ -1,0 +1,19 @@
+{
+  "nueva": {
+    "tipo": "Retroexcavadora",
+    "nombre_codigo": "EXC-CY01",
+    "marca": "Caterpillar",
+    "modelo": "320D",
+    "horometro": 1500,
+    "kilometraje": 0,
+    "estado": "operativa"
+  },
+  "editar": {
+    "tipo": "Cargador Frontal",
+    "nombre_codigo": "EXC-CY01",
+    "marca": "Komatsu",
+    "modelo": "WA380",
+    "horometro": 2000,
+    "estado": "en_mantenimiento"
+  }
+}

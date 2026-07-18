@@ -1,0 +1,16 @@
+{
+  "nuevo": {
+    "placa_grua": "GRU-CY99",
+    "capacidad_carga": "15 Toneladas",
+    "nombre_chofer": "Juan Pérez Cypress",
+    "tiempo_trabajo": "8 horas",
+    "costo": "5500.00"
+  },
+  "editar": {
+    "placa_grua": "GRU-CY99",
+    "capacidad_carga": "20 Toneladas",
+    "nombre_chofer": "Carlos Mamani Cypress",
+    "tiempo_trabajo": "12 horas",
+    "costo": "8500.00"
+  }
+}

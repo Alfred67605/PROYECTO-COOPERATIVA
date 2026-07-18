@@ -62,25 +62,37 @@ El backend gestiona la base de datos, la API y la lógica de negocio.
    *(Si usas SQLite y no creaste el archivo del paso 5, Laravel te preguntará si deseas crearlo. Responde que "sí" / "yes").*
 
 7. **Poblar la base de datos (Seeders)**:
-   Puedes llenar la base de datos con diferentes tipos de datos de prueba o reales:
+   El backend cuenta con una serie de seeders estructurados para poblar la base de datos con datos reales e históricos de la Cooperativa Minera.
+
+   Para borrar tablas viejas, aplicar el esquema limpio y cargar todos los datos de prueba y producción enriquecidos en una sola operación:
+   ```bash
+   php artisan migrate:fresh --seed
+   ```
+
+   ### Detalle de Semillas (Seeders) Incluidas en la Carga:
    
-   - **Datos iniciales básicos (Roles, Usuarios, Categorías de Inventario)**:
-     ```bash
-     php artisan db:seed
-     ```
-     *(Esto ejecuta el `DatabaseSeeder` principal que ya incluye la estructura básica del inventario y cuentas de prueba).*
-     
-   - **Datos reales de Materiales (Recomendado para producción/pruebas reales)**:
-     Si deseas poblar la tabla con la lista detallada y real de materiales de la cooperativa (más de 200 ítems con precios, códigos reales y unidades):
-     ```bash
-     php artisan db:seed --class=MaterialesRealesSeeder
-     ```
-     
-   - **Cargar Materiales desde un archivo Excel**:
-     Si posees el archivo `inventario.xlsx`, colócalo en `control-compras-backend/storage/app/inventario.xlsx` y ejecuta:
-     ```bash
-     php artisan db:seed --class=MaterialSeeder
-     ```
+   - **`RolSeeder`**: Define los roles de seguridad (`Administrador General`, `Gerencia`, `Compras`, `Contabilidad`, `Supervisor Bocamina`, `Consulta`).
+   - **`PermisoSeeder`**: Configura los permisos granulares del sistema.
+   - **`UsuarioSeeder`**: Registra la cuenta administrativa por defecto y a los encargados de compras del personal minero:
+     - **Admin**: `admin@cooperativa.com` / `Admin2026!`
+     - **Compradores** (Contraseña general: `Password123!`): *Jose Luis Mencacho*, *Juan Carlos Incata*, *Juan Torrez*, *Waldo Hanco*, *Emilio Torrez*, *Elio Caceres*, *Eloy Canabiri*.
+   - **`ProveedorSeeder`**: Carga los proveedores de insumos principales.
+   - **`BocaminaSeeder`**: Modulado con las 6 bocaminas operativas y vinculadas a sus respectivos supervisores:
+     1. *Huari Huari* (Juan Torrez)
+     2. *Gran Suraga* (Juan Carlos Incata)
+     3. *4 Estrellas* (Jose Luis Mencacho)
+     4. *17 de Junio* (Emilio Torrez)
+     5. *San Lucas* (Waldo Hanco)
+     6. *Bocamina Grande* (Elio Caceres)
+   - **`InventarioInicialSeeder`**: Carga el catálogo inicial de 74 materiales, explosivos (ANFO, Dinamita, Guía) y herramientas.
+   - **`CompraSeeder`**: Genera un histórico robusto de **25 compras reales** completadas/pendientes distribuidas en los últimos 6 meses, asignando compras de insumos específicas de cada encargado a su respectiva bocamina con subtotales y facturas.
+   - **`ServiciosSeeder`**: Configura toda la rama de mantenimiento:
+     - **10 Maquinarias**: Perforadoras Jumbo, Cargadores de bajo perfil (Scooptram), Compresores de Aire, Generadores, Bombas y Guinches.
+     - **10 Vehículos**: Volquetas mineras Volvo/Sinotruk/Shacman, camionetas Toyota Hilux/Nissan/Mitsubishi, y minibuses.
+     - **15 Mantenimientos**: Historial detallado de reparaciones, fallas y soluciones, consumiendo 16 repuestos del inventario y 15 costos de mano de obra/talleres externos.
+     - **15 Inspecciones**: Checks de seguridad periódicos en motor, frenos, aceites, luces y chasis.
+     - **15 Alquileres de Grúas**: Contrataciones a flotas externas (placas ALQ-701 a ALQ-707) vinculadas a las bocaminas.
+   - **`HistorialSeeder`**: Registra **47 registros de auditoría** de acciones (Crear, Editar, Eliminar) para poblar el panel de inmutabilidad y registros históricos.
 
 8. **Iniciar el servidor del Backend**:
    ```bash

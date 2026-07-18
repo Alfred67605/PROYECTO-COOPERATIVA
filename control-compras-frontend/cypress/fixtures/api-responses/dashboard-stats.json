@@ -1,0 +1,33 @@
+{
+  "gasto_total": "125750.50",
+  "total_compras": 48,
+  "compras_recientes": [
+    {
+      "id": 1,
+      "fecha": "2026-07-15",
+      "total": "15200.00",
+      "proveedor": { "nombre": "Minera Proveedora S.A." },
+      "bocamina": { "nombre": "Bocamina San José" }
+    },
+    {
+      "id": 2,
+      "fecha": "2026-07-14",
+      "total": "8500.00",
+      "proveedor": { "nombre": "Ferretería Industrial Ltda." },
+      "bocamina": { "nombre": "Bocamina Santa Rosa" }
+    },
+    {
+      "id": 3,
+      "fecha": "2026-07-12",
+      "total": "22300.00",
+      "proveedor": { "nombre": "Combustibles del Sur" },
+      "bocamina": { "nombre": "Bocamina San José" }
+    }
+  ],
+  "gastos_por_bocamina": [
+    { "nombre": "San José", "total_gastado": 45000 },
+    { "nombre": "Santa Rosa", "total_gastado": 32000 },
+    { "nombre": "El Carmen", "total_gastado": 28500 },
+    { "nombre": "La Esperanza", "total_gastado": 20250 }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "nueva": {
+    "observaciones": "Inspección de rutina pre-operacional - Prueba Cypress",
+    "checklist": {
+      "motor_ok": true,
+      "frenos_ok": true,
+      "aceite_ok": true,
+      "neumaticos_ok": false,
+      "luces_ok": true,
+      "seguridad_ok": true
+    }
+  },
+  "conNovedades": {
+    "observaciones": "Neumático delantero desgastado, requiere cambio urgente",
+    "checklist": {
+      "motor_ok": true,
+      "frenos_ok": false,
+      "aceite_ok": true,
+      "neumaticos_ok": false,
+      "luces_ok": true,
+      "seguridad_ok": false
+    }
+  }
+}

@@ -53,7 +53,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'audit'])->group(function () 
 
     // Servicios y Mantenimiento
     Route::apiResource('maquinaria', \App\Http\Controllers\Api\MaquinariaController::class);
-    Route::apiResource('gruas', \App\Http\Controllers\Api\GruasController::class);
     Route::apiResource('vehiculos', \App\Http\Controllers\Api\VehiculosController::class);
     Route::apiResource('servicios', \App\Http\Controllers\Api\ServiciosController::class);
     Route::apiResource('inspecciones', \App\Http\Controllers\Api\InspeccionController::class);

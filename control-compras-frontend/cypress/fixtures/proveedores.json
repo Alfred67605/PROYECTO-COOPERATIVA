@@ -1,0 +1,16 @@
+{
+  "nuevo": {
+    "nombre": "Minera Proveedora Cypress S.A.",
+    "nit": "1234567890",
+    "telefono": "+591 72345678",
+    "direccion": "Av. Simón Bolívar #1234, Potosí, Bolivia",
+    "email": "proveedor.cypress@test.com"
+  },
+  "editar": {
+    "nombre": "Minera Proveedora Editada S.R.L.",
+    "nit": "9876543210",
+    "telefono": "+591 76543210",
+    "direccion": "Calle Sucre #567, Oruro, Bolivia",
+    "email": "editado.cypress@test.com"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "admin": {
+    "email": "admin@cooperativa.com",
+    "password": "Admin2026!",
+    "nombre": "Admin Cooperativa",
+    "rol": "Administrador General"
+  },
+  "gerencia": {
+    "email": "gerencia@cooperativaminera.com",
+    "password": "Gerencia123!",
+    "nombre": "Gerente Operaciones",
+    "rol": "Gerencia"
+  },
+  "compras": {
+    "email": "compras@cooperativaminera.com",
+    "password": "Compras123!",
+    "nombre": "Encargado Compras",
+    "rol": "Compras"
+  },
+  "consulta": {
+    "email": "consulta@cooperativaminera.com",
+    "password": "Consulta123!",
+    "nombre": "Usuario Consulta",
+    "rol": "Consulta"
+  },
+  "invalid": {
+    "email": "noexiste@cooperativaminera.com",
+    "password": "WrongPass123!",
+    "nombre": "Usuario Inexistente"
+  },
+  "newUser": {
+    "nombre": "Cypress Test User",
+    "email": "cypress.test@cooperativaminera.com",
+    "password": "CypressTest123!",
+    "rol": "Compras"
+  }
+}

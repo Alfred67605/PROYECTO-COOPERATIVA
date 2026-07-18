@@ -48,7 +48,6 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
       subItems: [
         { name: 'Dashboard', path: '/servicios/dashboard' },
         { name: 'Maquinaria', path: '/servicios/maquinaria' },
-        { name: 'Grúas', path: '/servicios/gruas' },
         { name: 'Vehículos', path: '/servicios/vehiculos' },
         { name: 'Mantenimientos', path: '/servicios/mantenimientos' },
         { name: 'Inspecciones', path: '/servicios/inspecciones' },

@@ -14,7 +14,6 @@ class DashboardServiciosController extends Controller
         }
         $totalMaquinaria = \App\Models\Maquinaria::where('estado', 'operativa')->count();
         $equiposReparacion = \App\Models\Maquinaria::where('estado', 'en_mantenimiento')->count()
-                           + \App\Models\Grua::where('estado', 'en_mantenimiento')->count()
                            + \App\Models\Vehiculo::where('estado', 'en_mantenimiento')->count();
         
         $serviciosMes = \App\Models\Servicio::whereMonth('fecha', date('m'))

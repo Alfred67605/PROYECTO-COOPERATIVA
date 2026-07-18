@@ -1,0 +1,16 @@
+{
+  "total_compras": 15,
+  "total_gastado": "87500.00",
+  "compras": [
+    { "id": 1, "fecha": "2026-07-15", "proveedor": "Minera S.A.", "total": "15200.00", "bocamina": "San José" },
+    { "id": 2, "fecha": "2026-07-14", "proveedor": "Ferretería Ltda.", "total": "8500.00", "bocamina": "Santa Rosa" }
+  ],
+  "gastos_por_bocamina": [
+    { "nombre": "San José", "total": 45000 },
+    { "nombre": "Santa Rosa", "total": 32000 }
+  ],
+  "materiales_mas_comprados": [
+    { "descripcion": "Dinamita Industrial", "cantidad": 150 },
+    { "descripcion": "Diesel B5", "cantidad": 2000 }
+  ]
+}

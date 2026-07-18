@@ -1,0 +1,16 @@
+{
+  "nuevo": {
+    "tipo": "Camioneta",
+    "placa": "CYP-1234",
+    "marca": "Toyota",
+    "modelo": "Hilux 2024",
+    "estado": "operativo"
+  },
+  "editar": {
+    "tipo": "Volqueta",
+    "placa": "CYP-1234",
+    "marca": "Volvo",
+    "modelo": "FMX 500",
+    "estado": "en_mantenimiento"
+  }
+}
