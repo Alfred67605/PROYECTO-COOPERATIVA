@@ -171,7 +171,7 @@ export const Login = () => {
           </AnimatePresence>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 relative z-10">
+          <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-5 relative z-10">
             <div>
               <label className="block text-[11px] font-semibold text-white/80 uppercase tracking-wider mb-2 ml-1 drop-shadow-sm">
                 Correo Electrónico

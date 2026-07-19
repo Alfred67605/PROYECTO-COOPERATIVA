@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProveedorController;
 use App\Http\Controllers\Api\ReporteController;
 use App\Http\Controllers\Api\RolController;
 use App\Http\Controllers\Api\UsuarioController;
+use App\Http\Controllers\Api\RespaldoController;
 use Illuminate\Support\Facades\Route;
 
 // Auth públicas — Rate limited para proteger contra brute force
@@ -20,12 +21,19 @@ Route::middleware('throttle:login')->group(function () {
 Route::middleware(['auth:sanctum', 'throttle:api', 'audit'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
 
     // Admin Only — Gestión de usuarios, roles y permisos
     Route::middleware('role:Administrador General')->group(function () {
         Route::apiResource('usuarios', UsuarioController::class);
         Route::get('/roles', [RolController::class, 'index']);
         Route::get('/permisos', [\App\Http\Controllers\Api\PermisoController::class, 'index']);
+        
+        // Respaldos (Backups)
+        Route::get('/respaldos', [RespaldoController::class, 'index']);
+        Route::post('/respaldos/crear', [RespaldoController::class, 'crear']);
+        Route::get('/respaldos/{id}/descargar', [RespaldoController::class, 'descargar']);
+        Route::delete('/respaldos/{id}', [RespaldoController::class, 'destroy']);
     });
 
     // Auditoría / Historial — Admin + Gerencia + permiso auditoria

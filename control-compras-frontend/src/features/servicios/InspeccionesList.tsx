@@ -149,7 +149,7 @@ export const InspeccionesList = () => {
                       <p className="font-medium text-white">{getEquipoLabel(i.equipo_tipo, i.equipo)}</p>
                       <p className="text-xs text-mining-400">{i.equipo_tipo.split('\\').pop()}</p>
                     </td>
-                    <td className="text-sm text-mining-300">{i.firma_responsable?.name || 'N/A'}</td>
+                    <td className="text-sm text-mining-300">{i.responsable?.nombre || 'N/A'}</td>
                     <td>
                       {allChecksOk(i) ? (
                         <span className="badge badge-success"><CheckCircle size={14} className="mr-1"/>Aprobado</span>

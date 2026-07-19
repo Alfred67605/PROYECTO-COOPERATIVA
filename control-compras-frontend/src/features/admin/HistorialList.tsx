@@ -59,19 +59,74 @@ export const HistorialList = () => {
 
   const getActionBadge = (accion: string) => {
     switch (accion.toLowerCase()) {
-      case 'crear': return <span className="badge badge-success"><PlusCircle size={10} /> Creación</span>;
-      case 'actualizar': return <span className="badge badge-warning"><Edit3 size={10} /> Actualización</span>;
-      case 'eliminar': return <span className="badge badge-danger"><Trash2 size={10} /> Eliminación</span>;
+      case 'crear': return <span className="badge badge-success"><PlusCircle size={10} /> crear</span>;
+      case 'actualizar': return <span className="badge badge-warning"><Edit3 size={10} /> actualizar</span>;
+      case 'eliminar': return <span className="badge badge-danger"><Trash2 size={10} /> eliminar</span>;
       default: return <span className="badge badge-neutral"><Eye size={10} /> {accion}</span>;
     }
+  };
+
+  const renderDetalleOperacion = (item: any) => {
+    const { accion, registro_id, datos_nuevos } = item;
+    
+    let detailsList: string[] = [];
+    if (datos_nuevos && typeof datos_nuevos === 'object') {
+      Object.entries(datos_nuevos).forEach(([key, val]) => {
+        if (['id', 'created_at', 'updated_at', 'usuario_id', 'user_id', 'password', 'password_confirmation'].includes(key)) {
+          return;
+        }
+        let fieldName = key.replace(/_/g, ' ');
+        fieldName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+        
+        let displayVal = '';
+        if (val === null || val === undefined) {
+          displayVal = 'nulo';
+        } else if (typeof val === 'object') {
+          displayVal = JSON.stringify(val);
+        } else {
+          displayVal = String(val);
+        }
+        
+        if (displayVal.length > 60) {
+          displayVal = displayVal.substring(0, 57) + '...';
+        }
+        detailsList.push(`${fieldName}: "${displayVal}"`);
+      });
+    }
+
+    let mainActionText = '';
+    if (accion === 'crear') {
+      mainActionText = `Creó registro #${registro_id || ''}`;
+    } else if (accion === 'editar' || accion === 'actualizar') {
+      mainActionText = `Actualizó registro #${registro_id || ''}`;
+    } else if (accion === 'eliminar') {
+      mainActionText = `Eliminó registro #${registro_id || ''}`;
+    } else {
+      mainActionText = `Acción: ${accion}`;
+    }
+
+    return (
+      <div className="space-y-1 py-1">
+        <div className="text-xs font-semibold text-white">
+          {mainActionText}
+        </div>
+        {detailsList.length > 0 ? (
+          <div className="text-[11px] text-mining-400 font-sans max-w-lg leading-relaxed break-words">
+            {detailsList.join(' | ')}
+          </div>
+        ) : (
+          <div className="text-[11px] text-mining-500 italic font-sans">Sin datos adicionales de modificación</div>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="space-y-6">
       <div className="section-header">
         <div>
-          <h2 className="section-title">Auditoría del Sistema</h2>
-          <p className="section-subtitle">Registro inmutable de actividades y cambios de la plataforma</p>
+          <h1 className="section-title">Auditoría</h1>
+          <p className="section-subtitle">Registro detallado de todas las operaciones</p>
         </div>
       </div>
 
@@ -84,7 +139,7 @@ export const HistorialList = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={16} />
             <input 
               type="text" 
-              placeholder="Buscar por usuario, acción, tabla..." 
+              placeholder="Buscar por usuario responsable..." 
               value={search}
               onChange={e => handleSearchChange(e.target.value)}
               className="input-field pl-10 w-full text-sm"
@@ -191,11 +246,7 @@ export const HistorialList = () => {
                           {item.tabla}
                         </div>
                       </td>
-                      <td>
-                        <span className="text-sm text-mining-300 font-mono bg-white/5 px-2 py-1 rounded">
-                          ID afectado: {item.registro_id}
-                        </span>
-                      </td>
+                      <td>{renderDetalleOperacion(item)}</td>
                     </motion.tr>
                   ))}
                   {(!filteredData || filteredData.length === 0) && (
@@ -215,7 +266,7 @@ export const HistorialList = () => {
             {data && data.last_page > 1 && (
               <div className="flex items-center justify-between px-6 py-4 bg-white/[0.02] border-t border-white/5">
                 <span className="text-sm text-mining-400">
-                  Mostrando pág. <strong className="text-white">{data.current_page}</strong> de <strong className="text-white">{data.last_page}</strong> (Total: {data.total} registros)
+                  Mostrando Página <strong className="text-white">{data.current_page}</strong> de <strong className="text-white">{data.last_page}</strong> (Total: {data.total} registros)
                 </span>
                 <div className="flex gap-2">
                   <button 

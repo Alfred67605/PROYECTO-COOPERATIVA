@@ -36,6 +36,7 @@ export const ServiciosList = () => {
 
   const { data: maquinaria } = useQuery({ queryKey: ['maquinaria'], queryFn: async () => (await api.get('/maquinaria')).data });
   const { data: vehiculos } = useQuery({ queryKey: ['vehiculos'], queryFn: async () => (await api.get('/vehiculos')).data });
+  const { data: gruas } = useQuery({ queryKey: ['gruas'], queryFn: async () => (await api.get('/gruas')).data });
   const { data: materiales } = useQuery({ queryKey: ['materiales'], queryFn: async () => (await api.get('/materiales')).data });
 
   const { data, isLoading } = useQuery({
@@ -113,6 +114,7 @@ export const ServiciosList = () => {
   const getEquipos = () => {
     if (form.equipo_tipo === 'App\\Models\\Maquinaria') return maquinaria || [];
     if (form.equipo_tipo === 'App\\Models\\Vehiculo') return vehiculos || [];
+    if (form.equipo_tipo === 'App\\Models\\Grua') return gruas || [];
     return [];
   };
 
@@ -120,6 +122,7 @@ export const ServiciosList = () => {
     if (!equipo) return 'Desconocido';
     if (tipoModelo === 'App\\Models\\Maquinaria') return `${equipo.nombre_codigo} (${equipo.tipo})`;
     if (tipoModelo === 'App\\Models\\Vehiculo') return `${equipo.placa} (${equipo.tipo})`;
+    if (tipoModelo === 'App\\Models\\Grua') return `${equipo.codigo} (${equipo.tipo})`;
     return 'Desconocido';
   };
 
@@ -267,6 +270,7 @@ export const ServiciosList = () => {
                       <label className="block text-xs font-bold text-mining-500 uppercase mb-2">Tipo de Equipo *</label>
                       <select className="input-field" required value={form.equipo_tipo} onChange={e => setForm({...form, equipo_tipo: e.target.value, equipo_id: ''})}>
                         <option value="App\Models\Maquinaria">Maquinaria</option>
+                        <option value="App\Models\Grua">Grúa</option>
                         <option value="App\Models\Vehiculo">Vehículo</option>
                       </select>
                     </div>
@@ -325,7 +329,14 @@ export const ServiciosList = () => {
                               value={rep.material_nombre || ''} 
                               onChange={e => {
                                 const val = e.target.value;
-                                const m = (materiales?.data || materiales)?.find((mat: any) => `${mat.codigo} - ${mat.descripcion}` === val);
+                                const mats = materiales?.data || materiales || [];
+                                let m = mats.find((mat: any) => `${mat.codigo} - ${mat.descripcion}` === val);
+                                if (!m && val.trim().length > 0) {
+                                  m = mats.find((mat: any) => 
+                                    mat.codigo.toLowerCase().includes(val.toLowerCase()) || 
+                                    mat.descripcion.toLowerCase().includes(val.toLowerCase())
+                                  );
+                                }
                                 const newReps = [...form.repuestos];
                                 newReps[idx].material_nombre = val;
                                 if (m) {

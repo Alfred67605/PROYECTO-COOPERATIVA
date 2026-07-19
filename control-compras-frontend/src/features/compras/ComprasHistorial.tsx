@@ -46,7 +46,7 @@ export const ComprasHistorial = () => {
     <div className="space-y-6">
       <div className="section-header">
         <div>
-          <h2 className="section-title">Historial de Compras</h2>
+          <h1 className="section-title">Historial de Compras</h1>
           <p className="section-subtitle">Registro centralizado de adquisiciones para bocaminas</p>
         </div>
         <div className="flex gap-3">

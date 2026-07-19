@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../../features/auth/AuthContext';
 import {
@@ -11,7 +11,8 @@ import {
   Settings,
   Activity,
   Pickaxe,
-  Wrench
+  Wrench,
+  HardDrive
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,6 +24,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
   const { user, logout, canAccess } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(
     location.pathname.startsWith('/servicios') ? ['Servicios'] : []
@@ -56,7 +58,8 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
     },
     { name: 'Reportes', path: '/reportes', icon: <Activity size={20} />, reqAdmin: false },
     { name: 'Usuarios', path: '/usuarios', icon: <Users size={20} />, reqAdmin: true },
-    { name: 'Auditoría', path: '/historial', icon: <Activity size={20} />, reqAdmin: true }
+    { name: 'Auditoría', path: '/historial', icon: <Activity size={20} />, reqAdmin: true },
+    { name: 'Respaldos', path: '/admin/respaldos', icon: <HardDrive size={20} />, reqAdmin: true }
   ];
 
   const visibleItems = allNavItems.filter(item => {
@@ -69,6 +72,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
     if (item.path === '/reportes') return canAccess('reportes');
     if (item.path === '/usuarios') return canAccess('usuarios');
     if (item.path === '/historial') return canAccess('auditoria');
+    if (item.path === '/admin/respaldos') return canAccess('usuarios');
     return false;
   });
 
@@ -110,7 +114,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
         </AnimatePresence>
       </div>
 
-      <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto scrollbar-thin">
+      <nav className="flex-1 pt-6 pb-36 px-3 space-y-1 overflow-y-auto scrollbar-thin">
         {(!isOpen && !isMobile) && <div className="text-[10px] font-bold text-mining-500 uppercase tracking-widest text-center mb-2">Menú</div>}
         {(isOpen || isMobile) && <div className="px-3 text-xs font-bold text-mining-500 uppercase tracking-widest mb-2">Menú Principal</div>}
         
@@ -217,15 +221,19 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
       </nav>
 
       <div className="p-4 border-t border-white/5 bg-obsidian-900/50 backdrop-blur-md relative z-10">
-        <div className={`flex items-center gap-3 ${!isOpen && !isMobile ? 'justify-center' : ''}`}>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-obsidian-800 to-obsidian-700 border border-white/10 flex items-center justify-center shrink-0 shadow-glass-inset">
+        <div 
+          onClick={() => navigate('/perfil')}
+          className={`flex items-center gap-3 cursor-pointer p-1.5 rounded-xl hover:bg-white/5 transition-all group ${!isOpen && !isMobile ? 'justify-center' : ''}`}
+          title="Mi Perfil"
+        >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-obsidian-800 to-obsidian-700 border border-white/10 flex items-center justify-center shrink-0 shadow-glass-inset group-hover:border-copper-500/50 transition-colors">
             <span className="text-white font-bold text-sm">
               {user?.nombre.charAt(0).toUpperCase()}
             </span>
           </div>
           {(isOpen || isMobile) && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{user?.nombre}</p>
+              <p className="text-sm font-semibold text-white truncate group-hover:text-copper-400 transition-colors">{user?.nombre}</p>
               <p className="text-xs text-mining-400 truncate">{user?.rol?.nombre}</p>
             </div>
           )}
@@ -247,6 +255,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
              className="mt-4 w-full flex justify-center py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 hover:shadow-glow-sm border border-transparent hover:border-red-500/20 rounded-xl transition-all"
            >
              <LogOut size={20} />
+             <span className="sr-only">Cerrar Sesión</span>
            </button>
         )}
       </div>

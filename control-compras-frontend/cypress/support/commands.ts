@@ -49,6 +49,15 @@ Cypress.Commands.add('loginByUI', (email: string, password: string) => {
       cy.url().should('include', '/dashboard');
     }
   });
+  cy.visit('/dashboard');
+});
+
+Cypress.Commands.add('loginManually', (email: string, password: string) => {
+  cy.visit('/login');
+  cy.get('input[type="email"]').clear().type(email);
+  cy.get('input[type="password"]').clear().type(password);
+  cy.contains('Iniciar Sesión Segura').click();
+  cy.url().should('include', '/dashboard');
 });
 
 /**

@@ -80,4 +80,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 }
             }
         });
-    })->create();
+    })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('backup:run')->dailyAt('02:00');
+    })
+    ->create();

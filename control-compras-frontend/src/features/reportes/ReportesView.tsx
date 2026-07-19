@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { Download, FileText, Loader2, Calendar, Filter, Pickaxe, Building2, Package, Activity, ShoppingCart, AlertCircle, RefreshCw } from 'lucide-react';
+import { Download, FileText, Loader2, Calendar, Filter, Pickaxe, Building2, Package, Activity, ShoppingCart, AlertCircle, RefreshCw, Wrench } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
@@ -11,6 +11,15 @@ const formatLocalDate = (d: Date): string => {
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day   = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+const formatEquipoTipo = (tipo: string): string => {
+  if (!tipo) return '-';
+  const parts = tipo.split('\\');
+  const base = parts[parts.length - 1];
+  if (base === 'Vehiculo') return 'Vehículo';
+  if (base === 'Maquinaria') return 'Maquinaria';
+  return base;
 };
 
 export const ReportesView = () => {
@@ -26,7 +35,8 @@ export const ReportesView = () => {
   const [dateRange, setDateRange] = useState({
     inicio: formatLocalDate(firstOfMonth),
     fin: formatLocalDate(lastOfMonth),
-    bocamina_id: ''
+    bocamina_id: '',
+    tipo: 'todos' // 'todos', 'compras', 'servicios'
   });
 
 
@@ -36,28 +46,25 @@ export const ReportesView = () => {
   });
 
   const { data: reporte, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['reporte-generado', dateRange.inicio, dateRange.fin, dateRange.bocamina_id],
+    queryKey: ['reporte-generado', dateRange.inicio, dateRange.fin, dateRange.bocamina_id, dateRange.tipo],
     queryFn: async () => {
       const { data } = await api.get(
-        `/reportes/generar?inicio=${dateRange.inicio}&fin=${dateRange.fin}&bocamina_id=${dateRange.bocamina_id}`
+        `/reportes/generar?inicio=${dateRange.inicio}&fin=${dateRange.fin}&bocamina_id=${dateRange.bocamina_id}&tipo=${dateRange.tipo}`
       );
       return data;
     },
     retry: 1,
   });
 
-  const setRango = (tipo: 'diario' | 'semanal' | 'mensual') => {
+  const setRango = (tipoRango: 'diario' | 'semanal' | 'mensual') => {
     const hoy = new Date();
     const daysAgo = (n: number) => { const d = new Date(hoy); d.setDate(hoy.getDate() - n); return d; };
 
-    if (tipo === 'diario') {
-      // Solo hoy (el backend usa whereDate >= y <=, cubre todo el día)
+    if (tipoRango === 'diario') {
       setDateRange({ ...dateRange, inicio: formatLocalDate(hoy), fin: formatLocalDate(hoy) });
-    } else if (tipo === 'semanal') {
-      // Últimos 7 días incluyendo hoy
+    } else if (tipoRango === 'semanal') {
       setDateRange({ ...dateRange, inicio: formatLocalDate(daysAgo(6)), fin: formatLocalDate(hoy) });
-    } else if (tipo === 'mensual') {
-      // Mes calendario completo (incluye días futuros del mes actual)
+    } else if (tipoRango === 'mensual') {
       const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
       const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
       setDateRange({ ...dateRange, inicio: formatLocalDate(primerDia), fin: formatLocalDate(ultimoDia) });
@@ -68,17 +75,17 @@ export const ReportesView = () => {
   const handleExportPdf = async () => {
     setExportingPdf(true);
     try {
-      const res = await api.get(`/reportes/exportar/pdf?inicio=${dateRange.inicio}&fin=${dateRange.fin}`, { responseType: 'blob' });
+      const res = await api.get(`/reportes/exportar/pdf?inicio=${dateRange.inicio}&fin=${dateRange.fin}&bocamina_id=${dateRange.bocamina_id}&tipo=${dateRange.tipo}`, { responseType: 'blob' });
       const blob = new Blob([res.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `reporte_compras_${dateRange.inicio}_al_${dateRange.fin}.pdf`;
+      a.download = `reporte_${dateRange.tipo}_${dateRange.inicio}_al_${dateRange.fin}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      toast.success('Reporte PDF Generado', 'El documento respeta el filtro de fechas actual.');
+      toast.success('Reporte PDF Generado', 'El documento respeta los filtros seleccionados.');
     } catch {
       toast.error('Error', 'No se pudo generar el reporte PDF.');
     } finally {
@@ -89,17 +96,17 @@ export const ReportesView = () => {
   const handleExportExcel = async () => {
     setExportingExcel(true);
     try {
-      const res = await api.get(`/reportes/exportar/excel?inicio=${dateRange.inicio}&fin=${dateRange.fin}`, { responseType: 'blob' });
+      const res = await api.get(`/reportes/exportar/excel?inicio=${dateRange.inicio}&fin=${dateRange.fin}&bocamina_id=${dateRange.bocamina_id}&tipo=${dateRange.tipo}`, { responseType: 'blob' });
       const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `reporte_compras_${dateRange.inicio}_al_${dateRange.fin}.xlsx`;
+      a.download = `reporte_${dateRange.tipo}_${dateRange.inicio}_al_${dateRange.fin}.xlsx`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      toast.success('Reporte Excel Exportado', 'El archivo Excel respeta el filtro de fechas actual.');
+      toast.success('Reporte Excel Exportado', 'El archivo Excel respeta los filtros seleccionados.');
     } catch {
       toast.error('Error', 'No se pudo generar el reporte Excel.');
     } finally {
@@ -113,8 +120,11 @@ export const ReportesView = () => {
     <div className="space-y-6">
       <div className="section-header flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="section-title">Generador de Reportes</h2>
-          <p className="section-subtitle">Análisis detallado de compras por periodo</p>
+          <h1 className="section-title">
+            {dateRange.tipo === 'todos' ? 'Reporte de Compras y Servicios' :
+             dateRange.tipo === 'compras' ? 'Reporte de Compras' : 'Reporte de Servicios'}
+          </h1>
+          <p className="section-subtitle">Análisis detallado de gastos del periodo</p>
         </div>
         <div className="flex gap-3">
           <button onClick={handleExportPdf} disabled={exportingPdf || isLoading} className="btn-secondary">
@@ -130,32 +140,32 @@ export const ReportesView = () => {
 
       {/* Controles de Filtros */}
       <div className="card p-5 border-l-4 border-l-copper-500">
-        <div className="flex flex-col xl:flex-row gap-6 justify-between">
-          <div className="space-y-2">
+        <div className="flex flex-col xl:flex-row gap-6 justify-between items-end">
+          <div className="space-y-2 w-full xl:w-auto">
             <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider">Filtros Rápidos</label>
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => setRango('diario')} className="btn-secondary h-10 px-4">Hoy (Diario)</button>
-              <button onClick={() => setRango('semanal')} className="btn-secondary h-10 px-4">Esta Semana</button>
-              <button onClick={() => setRango('mensual')} className="btn-secondary h-10 px-4">Este Mes</button>
+              <button onClick={() => setRango('diario')} className="btn-secondary h-10 px-4">Diario</button>
+              <button onClick={() => setRango('semanal')} className="btn-secondary h-10 px-4">Semanal</button>
+              <button onClick={() => setRango('mensual')} className="btn-secondary h-10 px-4">Mensual</button>
             </div>
           </div>
           
-          <div className="flex flex-col md:flex-row gap-4 items-end flex-1 xl:max-w-4xl">
-            <div className="flex-1 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end flex-1 w-full">
+            <div className="w-full">
               <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Fecha Inicio</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
                 <input type="date" className="input-field pl-10" value={dateRange.inicio} onChange={e => setDateRange({...dateRange, inicio: e.target.value})} />
               </div>
             </div>
-            <div className="flex-1 w-full">
+            <div className="w-full">
               <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Fecha Fin</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
                 <input type="date" className="input-field pl-10" value={dateRange.fin} onChange={e => setDateRange({...dateRange, fin: e.target.value})} />
               </div>
             </div>
-            <div className="flex-1 w-full">
+            <div className="w-full">
               <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Bocamina (Opcional)</label>
               <div className="relative">
                 <Pickaxe className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
@@ -167,7 +177,18 @@ export const ReportesView = () => {
                 </select>
               </div>
             </div>
-            <button onClick={() => refetch()} className="btn-primary whitespace-nowrap h-10 px-6">
+            <div className="w-full">
+              <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Tipo de Gasto</label>
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
+                <select className="input-field pl-10" value={dateRange.tipo} onChange={e => setDateRange({...dateRange, tipo: e.target.value})}>
+                  <option value="todos">Todos</option>
+                  <option value="compras">Solo Compras</option>
+                  <option value="servicios">Solo Servicios</option>
+                </select>
+              </div>
+            </div>
+            <button onClick={() => refetch()} className="btn-primary whitespace-nowrap h-10 px-6 w-full justify-center">
               <Filter size={18} /> Aplicar
             </button>
           </div>
@@ -255,37 +276,127 @@ export const ReportesView = () => {
           </div>
 
           {/* Materiales Más Comprados */}
-          <div className="card">
-             <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-white/5 text-emerald-400 flex items-center justify-center"><Package size={20} /></div>
-                <h3 className="text-lg font-bold text-white">Materiales Más Adquiridos</h3>
-              </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-white/5 text-xs font-bold text-mining-400 uppercase">
-                  <tr>
-                    <th className="p-4">Código</th>
-                    <th className="p-4">Material</th>
-                    <th className="p-4 text-center">Cantidad Total</th>
-                    <th className="p-4 text-right">Inversión Total ($)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {reporte?.top_materiales?.map((mat: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-white/[0.02]">
-                      <td className="p-4 font-mono text-xs text-mining-400">{mat.codigo}</td>
-                      <td className="p-4 font-bold text-white">{mat.descripcion}</td>
-                      <td className="p-4 text-center font-medium text-mining-300">{parseFloat(mat.total_cantidad).toLocaleString()}</td>
-                      <td className="p-4 text-right font-bold text-copper-400">${parseFloat(mat.total_gastado).toLocaleString()}</td>
+          {dateRange.tipo !== 'servicios' && (
+            <div className="card">
+               <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 text-emerald-400 flex items-center justify-center"><Package size={20} /></div>
+                  <h3 className="text-lg font-bold text-white">Materiales Más Adquiridos</h3>
+                </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-white/5 text-xs font-bold text-mining-400 uppercase">
+                    <tr>
+                      <th className="p-4">Código</th>
+                      <th className="p-4">Material</th>
+                      <th className="p-4 text-center">Cantidad Total</th>
+                      <th className="p-4 text-right">Inversión Total ($)</th>
                     </tr>
-                  ))}
-                  {reporte?.top_materiales?.length === 0 && (
-                    <tr><td colSpan={4} className="p-8 text-center text-mining-400">No hay compras de materiales en este periodo.</td></tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {reporte?.top_materiales?.map((mat: any, idx: number) => (
+                      <tr key={idx} className="hover:bg-white/[0.02]">
+                        <td className="p-4 font-mono text-xs text-mining-400">{mat.codigo}</td>
+                        <td className="p-4 font-bold text-white">{mat.descripcion}</td>
+                        <td className="p-4 text-center font-medium text-mining-300">{parseFloat(mat.total_cantidad).toLocaleString()}</td>
+                        <td className="p-4 text-right font-bold text-copper-400">${parseFloat(mat.total_gastado).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                    {reporte?.top_materiales?.length === 0 && (
+                      <tr><td colSpan={4} className="p-8 text-center text-mining-400">No hay compras de materiales en este periodo.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Compras Table */}
+          {dateRange.tipo !== 'servicios' && (
+            <div className="card">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-white/5 text-copper-400 flex items-center justify-center"><ShoppingCart size={20} /></div>
+                <h3 className="text-lg font-bold text-white">Compras Realizadas</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-white/5 text-xs font-bold text-mining-400 uppercase">
+                    <tr>
+                      <th className="p-4">ID</th>
+                      <th className="p-4">Fecha</th>
+                      <th className="p-4">Proveedor</th>
+                      <th className="p-4">N° Factura</th>
+                      <th className="p-4">Bocamina</th>
+                      <th className="p-4 text-right">Monto ($)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {reporte?.compras?.map((c: any) => (
+                      <tr key={c.id} className="hover:bg-white/[0.02]">
+                        <td className="p-4 font-mono text-xs text-mining-400">#{c.id}</td>
+                        <td className="p-4 font-medium text-white">{new Date(c.fecha).toLocaleDateString()}</td>
+                        <td className="p-4 text-mining-300">{c.proveedor?.nombre || '-'}</td>
+                        <td className="p-4 text-mining-300">{c.numero_factura || '-'}</td>
+                        <td className="p-4 text-mining-300">{c.bocamina?.nombre || 'Central'}</td>
+                        <td className="p-4 text-right font-bold text-copper-400">${parseFloat(c.total).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                    {(!reporte?.compras || reporte.compras.length === 0) && (
+                      <tr><td colSpan={6} className="p-8 text-center text-mining-400">No se encontraron compras en este periodo.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Servicios Table */}
+          {dateRange.tipo !== 'compras' && (
+            <div className="card">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-white/5 text-teal-400 flex items-center justify-center"><Wrench size={20} /></div>
+                <h3 className="text-lg font-bold text-white">Servicios y Mantenimiento</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-white/5 text-xs font-bold text-mining-400 uppercase">
+                    <tr>
+                      <th className="p-4">Código</th>
+                      <th className="p-4">Fecha</th>
+                      <th className="p-4">Equipo</th>
+                      <th className="p-4">Bocamina</th>
+                      <th className="p-4">Responsable</th>
+                      <th className="p-4">Estado</th>
+                      <th className="p-4 text-right">Monto ($)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {reporte?.servicios?.map((s: any) => {
+                      const totalCosto = (s.costos || []).reduce((acc: number, item: any) => acc + parseFloat(item.monto), 0) +
+                                         (s.repuestos || []).reduce((acc: number, item: any) => acc + (parseFloat(item.cantidad) * parseFloat(item.costo_unitario)), 0);
+                      return (
+                        <tr key={s.id} className="hover:bg-white/[0.02]">
+                          <td className="p-4 font-mono text-xs text-mining-400">{s.codigo}</td>
+                          <td className="p-4 font-medium text-white">{new Date(s.fecha).toLocaleDateString()}</td>
+                          <td className="p-4 text-mining-300">{formatEquipoTipo(s.equipo_tipo)} ({s.equipo?.placa || s.equipo?.nombre_codigo || s.equipo?.codigo || '-'})</td>
+                          <td className="p-4 text-mining-300">{s.bocamina?.nombre || 'Central'}</td>
+                          <td className="p-4 text-mining-300">{s.responsable?.nombre || '-'}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                              s.estado === 'completado' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            }`}>{s.estado}</span>
+                          </td>
+                          <td className="p-4 text-right font-bold text-teal-400">${totalCosto.toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
+                    {(!reporte?.servicios || reporte.servicios.length === 0) && (
+                      <tr><td colSpan={7} className="p-8 text-center text-mining-400">No se encontraron servicios en este periodo.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
         </div>
       )}

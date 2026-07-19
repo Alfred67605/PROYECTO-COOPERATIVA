@@ -62,6 +62,17 @@ describe('Reportes - Generación y Exportación de Reportes', () => {
     it('Debe poder seleccionar una bocamina del filtro', () => {
       cy.get('select').first().find('option').should('have.length.greaterThan', 0);
     });
+
+    it('Debe poder seleccionar el tipo de reporte (Solo Servicios, Solo Compras, Todos)', () => {
+      cy.get('select').last().select('servicios');
+      cy.contains('h1', 'Reporte de Servicios').should('be.visible');
+
+      cy.get('select').last().select('compras');
+      cy.contains('h1', 'Reporte de Compras').should('be.visible');
+
+      cy.get('select').last().select('todos');
+      cy.contains('h1', 'Reporte de Compras y Servicios').should('be.visible');
+    });
   });
 
   context('Datos del Reporte', () => {

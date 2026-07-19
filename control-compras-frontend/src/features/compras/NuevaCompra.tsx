@@ -122,11 +122,11 @@ export const NuevaCompra = () => {
 
   const nextStep = () => {
     if (currentStep === 1 && (!proveedorId || !bocaminaId || !fecha)) {
-      toast.warning('Campos incompletos', 'Proveedor, bocamina y fecha son obligatorios.');
+      toast.warning('Campos incompletos', 'Seleccione un proveedor, bocamina y fecha obligatoria.');
       return;
     }
     if (currentStep === 2 && detalles.length === 0) {
-      toast.warning('Sin materiales', 'Agrega al menos un material a la compra.');
+      toast.warning('Sin materiales', 'Agregue al menos un material a la compra.');
       return;
     }
     setCurrentStep(s => Math.min(3, s + 1));
@@ -144,7 +144,7 @@ export const NuevaCompra = () => {
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="section-header">
         <div>
-          <h2 className="section-title">Nueva Compra</h2>
+          <h1 className="section-title">Nueva Compra</h1>
           <p className="section-subtitle">Registro de abastecimiento paso a paso</p>
         </div>
       </div>
@@ -172,7 +172,7 @@ export const NuevaCompra = () => {
                 {step.icon}
               </div>
               <span className={`absolute -bottom-7 text-xs font-bold whitespace-nowrap ${currentStep >= step.id ? 'text-white' : 'text-mining-400'}`}>
-                {step.title}
+                Paso {step.id}: {step.title}
               </span>
             </div>
           ))}
@@ -236,7 +236,7 @@ export const NuevaCompra = () => {
           {currentStep === 2 && (
             <motion.div key="step2" variants={variants} initial="initial" animate="animate" exit="exit" className="space-y-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
-                <h3 className="text-lg font-bold text-white">Agregar Materiales</h3>
+                <h3 className="text-lg font-bold text-white">Detalle de Materiales</h3>
                 <div className="relative w-full md:w-72 z-20">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
                   <input 
@@ -270,9 +270,10 @@ export const NuevaCompra = () => {
                 <table className="w-full text-left">
                   <thead className="bg-white/5 text-xs font-bold text-mining-400 uppercase">
                     <tr>
-                      <th className="p-4">Material</th>
+                      <th className="p-4 w-32">Código</th>
+                      <th className="p-4">Descripción</th>
                       <th className="p-4 w-32">Cantidad</th>
-                      <th className="p-4 w-40">P. Unitario ($)</th>
+                      <th className="p-4 w-40">Precio Unitario ($)</th>
                       <th className="p-4 w-40 text-right">Subtotal</th>
                       <th className="p-4 w-16 text-center"></th>
                     </tr>
@@ -280,9 +281,11 @@ export const NuevaCompra = () => {
                   <tbody className="divide-y divide-white/5">
                     {detalles.map(d => (
                       <tr key={d.material_id} className="hover:bg-white/[0.02]">
-                        <td className="p-4">
-                          <div className="font-bold text-white">{d.descripcion}</div>
-                          <div className="text-xs font-mono text-mining-400">{d.codigo}</div>
+                        <td className="p-4 font-mono text-xs font-bold text-mining-300">
+                          {d.codigo}
+                        </td>
+                        <td className="p-4 text-white font-medium">
+                          {d.descripcion}
                         </td>
                         <td className="p-4">
                           <input type="number" min="0.1" step="any" className="input-field py-1.5 px-3 text-center" value={d.cantidad} onChange={e => updateDetalle(d.material_id, 'cantidad', parseFloat(e.target.value) || 0)} />
@@ -304,13 +307,13 @@ export const NuevaCompra = () => {
                       </tr>
                     ))}
                     {detalles.length === 0 && (
-                      <tr><td colSpan={5} className="p-12 text-center text-mining-400">Busca y selecciona materiales para agregar a la compra.</td></tr>
+                      <tr><td colSpan={6} className="p-12 text-center text-mining-400">Busca y selecciona materiales para agregar a la compra.</td></tr>
                     )}
                   </tbody>
                   {detalles.length > 0 && (
                     <tfoot className="bg-white/5 text-white">
                       <tr>
-                        <td colSpan={3} className="p-4 font-bold text-right uppercase tracking-wider text-sm">Total Compra</td>
+                        <td colSpan={4} className="p-4 font-bold text-right uppercase tracking-wider text-sm">Total Compra</td>
                         <td className="p-4 text-right font-black text-xl text-copper-400">${totalGeneral.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         <td></td>
                       </tr>
@@ -328,7 +331,7 @@ export const NuevaCompra = () => {
                   <CheckCircle2 size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-white">Confirma la Compra</h3>
-                <p className="text-mining-400">Revisa que los datos sean correctos antes de guardar.</p>
+                <p className="text-mining-400">Resumen de la Compra: Revisa que los datos sean correctos antes de guardar.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { TrendingUp, FileText, Download, Loader2, Building2, ShoppingCart } from 'lucide-react';
+import { TrendingUp, Building2, ShoppingCart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area, Cell } from 'recharts';
-import { useToast } from '../../components/ui/Toast';
 import { AnimatedCounter } from '../../components/ui/AnimatedCounter';
 import { SkeletonKPI, SkeletonChart } from '../../components/ui/Skeleton';
 import { TiltCard } from '../../components/ui/TiltCard';
@@ -11,66 +11,22 @@ import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '../../components/ui/PageTransition';
 
 export const Dashboard = () => {
-  const toast = useToast();
-  const [exportingPdf, setExportingPdf] = useState(false);
-  const [exportingExcel, setExportingExcel] = useState(false);
+  const navigate = useNavigate();
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [viewMode, setViewMode] = useState<'mensual' | 'diario'>('mensual');
 
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboard-stats'],
+    queryKey: ['dashboard-stats', selectedYear],
     queryFn: async () => {
-      const { data } = await api.get('/reportes/dashboard');
+      const { data } = await api.get(`/reportes/dashboard?year=${selectedYear}`);
       return data;
     }
   });
 
-  // Mock data for the area chart since we don't have historical data from backend yet
-  const trendData = [
-    { name: 'Ene', gastos: 4000 },
-    { name: 'Feb', gastos: 3000 },
-    { name: 'Mar', gastos: 2000 },
-    { name: 'Abr', gastos: 2780 },
-    { name: 'May', gastos: 1890 },
-    { name: 'Jun', gastos: 2390 },
-    { name: 'Jul', gastos: parseFloat(stats?.gasto_total || '3490') },
-  ];
-
-  const handleExportPdf = async () => {
-    setExportingPdf(true);
-    try {
-      const res = await api.get('/reportes/exportar/pdf', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `reporte_compras_${new Date().toISOString().split('T')[0]}.html`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      toast.success('Reporte exportado', 'El PDF se ha descargado correctamente.');
-    } catch {
-      toast.error('Error', 'No se pudo generar el reporte PDF.');
-    } finally {
-      setExportingPdf(false);
-    }
-  };
-
-  const handleExportExcel = async () => {
-    setExportingExcel(true);
-    try {
-      const res = await api.get('/reportes/exportar/excel', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `reporte_compras_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      toast.success('Reporte exportado', 'El CSV se ha descargado correctamente.');
-    } catch {
-      toast.error('Error', 'No se pudo generar el reporte Excel.');
-    } finally {
-      setExportingExcel(false);
-    }
-  };
+  const trendData = viewMode === 'mensual'
+    ? (stats?.tendencia_mensual || [])
+    : (stats?.tendencia_diaria || []);
 
   return (
     <div className="space-y-8">
@@ -78,17 +34,7 @@ export const Dashboard = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Resumen Ejecutivo</h1>
-          <p className="text-mining-500 text-sm mt-1">Métricas y KPIs del mes actual</p>
-        </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button onClick={handleExportPdf} disabled={exportingPdf} className="btn-secondary flex-1 sm:flex-none bg-white">
-            {exportingPdf ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} className="text-mining-400" />}
-            PDF
-          </button>
-          <button onClick={handleExportExcel} disabled={exportingExcel} className="btn-primary flex-1 sm:flex-none">
-            {exportingExcel ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-            Excel
-          </button>
+          <p className="text-mining-500 text-sm mt-1">Métricas y KPIs del año {selectedYear}</p>
         </div>
       </div>
 
@@ -175,21 +121,57 @@ export const Dashboard = () => {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
         {/* Trend Chart */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
           className="xl:col-span-2 card"
         >
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
               <h3 className="text-lg font-bold text-white">Tendencia de Gastos</h3>
-              <p className="text-sm text-slate-400">Histórico de los últimos 7 meses</p>
+              <p className="text-sm text-slate-400">
+                {viewMode === 'mensual' 
+                  ? `Histórico mensual del año ${selectedYear}` 
+                  : `Histórico diario del año ${selectedYear}`
+                }
+              </p>
             </div>
-            <select className="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none">
-              <option>Este año</option>
-              <option>Año pasado</option>
-            </select>
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              {/* Selector de Granularidad */}
+              <div className="flex rounded-lg p-0.5 bg-slate-900 border border-slate-700">
+                <button
+                  onClick={() => setViewMode('mensual')}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    viewMode === 'mensual'
+                      ? 'bg-teal-500 text-white shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Mensual
+                </button>
+                <button
+                  onClick={() => setViewMode('diario')}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    viewMode === 'diario'
+                      ? 'bg-teal-500 text-white shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Diario
+                </button>
+              </div>
+
+              {/* Selector de Año */}
+              <select 
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none"
+              >
+                <option value={currentYear}>{currentYear}</option>
+                <option value={currentYear - 1}>{currentYear - 1}</option>
+                <option value={currentYear - 2}>{currentYear - 2}</option>
+              </select>
+            </div>
           </div>
           
           {isLoading ? <SkeletonChart /> : (
@@ -214,7 +196,7 @@ export const Dashboard = () => {
                     axisLine={false} 
                     tickLine={false} 
                     tick={{ fill: '#64748b', fontSize: 12 }}
-                    tickFormatter={(value) => `$${value/1000}k`}
+                    tickFormatter={(value) => value >= 1000 ? `$${value/1000}k` : `$${value}`}
                   />
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', backgroundColor: 'rgba(15,23,42,0.9)', backdropFilter: 'blur(8px)' }}
@@ -243,7 +225,7 @@ export const Dashboard = () => {
         >
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold text-white">Compras Recientes</h3>
-            <button className="text-teal-400 text-sm font-semibold hover:text-teal-300">Ver todas</button>
+            <button onClick={() => navigate('/compras')} className="text-teal-400 text-sm font-semibold hover:text-teal-300">Ver todas</button>
           </div>
           
           <div className="space-y-4">

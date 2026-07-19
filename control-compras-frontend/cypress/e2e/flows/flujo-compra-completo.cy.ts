@@ -42,14 +42,14 @@ describe('Flujo E2E - Adquisición de Materiales y Registro de Compra', () => {
             cy.contains('Datos Generales').should('be.visible');
             cy.get('select').first().select(1); // Selecciona primer proveedor (el creado)
             cy.get('select').eq(1).select(1);    // Selecciona primer bocamina
-            cy.get('input[type="text"]').first().clear().type(compra.nueva.numero_factura);
+            cy.get('input[placeholder="Ej. F001-00045"]').clear().type(compra.nueva.numero_factura);
             cy.contains('button', 'Siguiente').click();
 
             // 5. Agregar el repuesto/material en la compra (Paso 2)
             cy.contains('Detalle de Materiales').should('be.visible');
             cy.get('input[placeholder*="Buscar"]').type(mat.busqueda);
             cy.wait(500);
-            cy.get('button').filter(':contains("Agregar"), :has(svg)').first().click({ force: true });
+            cy.get('.absolute.top-full').find('.p-3').first().click();
             
             // Completar cantidad y precio
             cy.get('table tbody tr').first().within(() => {

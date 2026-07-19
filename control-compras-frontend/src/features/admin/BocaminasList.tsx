@@ -81,7 +81,7 @@ export const BocaminasList = () => {
     <div className="space-y-6">
       <div className="section-header">
         <div>
-          <h2 className="section-title">Centros de Operación</h2>
+          <h1 className="section-title">Bocaminas</h1>
           <p className="section-subtitle">Gestión de bocaminas y frentes de trabajo</p>
         </div>
         {canWrite('bocaminas') && (
@@ -105,9 +105,9 @@ export const BocaminasList = () => {
               <thead className="bg-mining-50/80 border-b border-mining-100">
                 <tr>
                   <th className="pl-6 w-20">ID</th>
-                  <th>Identificación</th>
-                  <th>Ubicación / Coordenadas</th>
-                  <th>Estado Operativo</th>
+                  <th>Nombre</th>
+                  <th>Ubicación</th>
+                  <th>Estado</th>
                   <th className="pr-6 text-right">Acciones</th>
                 </tr>
               </thead>
@@ -210,12 +210,12 @@ export const BocaminasList = () => {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Ubicación Geográfica</label>
-                      <textarea className="input-field" rows={3} value={form.ubicacion} onChange={e => setForm({...form, ubicacion: e.target.value})} placeholder="Coordenadas o descripción de acceso..."></textarea>
+                      <input className="input-field" value={form.ubicacion} onChange={e => setForm({...form, ubicacion: e.target.value})} placeholder="Coordenadas o descripción de acceso..." />
                     </div>
                     <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
                       <button type="button" onClick={closeModal} className="btn-secondary">Cancelar</button>
                       <button type="submit" disabled={saveMutation.isPending} className="btn-primary">
-                        {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Registrar Bocamina')}
+                        {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Guardar Bocamina')}
                       </button>
                     </div>
                   </form>

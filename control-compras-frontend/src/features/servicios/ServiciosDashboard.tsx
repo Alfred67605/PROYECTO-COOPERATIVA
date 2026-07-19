@@ -6,6 +6,7 @@ import { staggerContainer, staggerItem } from '../../components/ui/PageTransitio
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { MaquinariaList } from './MaquinariaList';
 import { ServiciosList } from './ServiciosList';
+import { GruasList } from './GruasList';
 
 import { VehiculosList } from './VehiculosList';
 import { InspeccionesList } from './InspeccionesList';
@@ -82,6 +83,7 @@ export const ServiciosDashboard = () => {
           <Route path="maquinaria" element={<MaquinariaList />} />
 
           <Route path="vehiculos" element={<VehiculosList />} />
+          <Route path="gruas" element={<GruasList />} />
           <Route path="mantenimientos" element={<ServiciosList />} />
           <Route path="inspecciones" element={<InspeccionesList />} />
           <Route path="alquiler-gruas" element={<AlquilerGruasList />} />

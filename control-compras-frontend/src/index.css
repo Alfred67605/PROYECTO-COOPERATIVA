@@ -8,13 +8,56 @@
 
 @layer base {
   :root {
+    color-scheme: light;
+    --bg-gradient-start: #fff9f5; /* warm copper glow */
+    --bg-gradient-end: #f4f6fa; /* cool light gray */
+    --text-primary: #1e293b; /* mining-800 */
+    --text-secondary: #334155; /* mining-700 */
+    --text-muted: #64748b; /* mining-500 */
+    --card-bg: rgba(255, 255, 255, 0.65);
+    --border-color: rgba(0, 0, 0, 0.06);
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --input-border: rgba(0, 0, 0, 0.12);
+    --input-focus-bg: #ffffff;
+    --sidebar-bg: rgba(255, 255, 255, 0.95);
+    --topbar-bg: rgba(255, 255, 255, 0.7);
+    --table-header-bg: rgba(0, 0, 0, 0.02);
+    --table-header-color: #475569;
+    --table-row-hover: rgba(0, 0, 0, 0.015);
+    --table-border: rgba(0, 0, 0, 0.06);
+    --badge-neutral-bg: rgba(0, 0, 0, 0.04);
+    --badge-neutral-text: #475569;
+    --badge-neutral-border: rgba(0, 0, 0, 0.08);
+  }
+
+  .dark {
     color-scheme: dark;
+    --bg-gradient-start: #1e1511;
+    --bg-gradient-end: #090807;
+    --text-primary: #f1f5f9; /* mining-100 */
+    --text-secondary: #cbd5e1; /* mining-300 */
+    --text-muted: #94a3b8; /* mining-400 */
+    --card-bg: rgba(255, 255, 255, 0.03);
+    --border-color: rgba(255, 255, 255, 0.05);
+    --input-bg: rgba(11, 15, 25, 0.5);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-focus-bg: rgba(11, 15, 25, 0.8);
+    --sidebar-bg: rgba(9, 8, 7, 0.4);
+    --topbar-bg: rgba(15, 23, 42, 0.4);
+    --table-header-bg: rgba(255, 255, 255, 0.02);
+    --table-header-color: #64748b;
+    --table-row-hover: rgba(255, 255, 255, 0.02);
+    --table-border: rgba(255, 255, 255, 0.05);
+    --badge-neutral-bg: rgba(255, 255, 255, 0.05);
+    --badge-neutral-text: #cbd5e1;
+    --badge-neutral-border: rgba(255, 255, 255, 0.1);
   }
 
   body {
-    @apply bg-mining-950 text-mining-100 font-sans antialiased overflow-x-hidden;
+    @apply bg-mining-950 font-sans antialiased overflow-x-hidden;
+    color: var(--text-primary);
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    background-image: radial-gradient(circle at 50% 0%, #1e1511 0%, #090807 80%);
+    background-image: radial-gradient(circle at 50% 0%, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 80%);
     background-attachment: fixed;
   }
 
@@ -264,3 +307,153 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 }
+
+/* ═══════════════════════════════════════════
+   LIGHT THEME UTILITY OVERRIDES (when html doesn't have .dark class)
+   ═══════════════════════════════════════════ */
+html:not(.dark) {
+  --tw-text-opacity: 1 !important;
+}
+
+html:not(.dark) body {
+  color: var(--text-primary) !important;
+  background-image: radial-gradient(circle at 50% 0%, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 80%) !important;
+}
+
+/* Redefine general text classes in light mode */
+html:not(.dark) .text-white {
+  color: var(--text-primary) !important;
+}
+html:not(.dark) .text-mining-100 {
+  color: var(--text-primary) !important;
+}
+html:not(.dark) .text-mining-200 {
+  color: var(--text-secondary) !important;
+}
+html:not(.dark) .text-mining-300 {
+  color: var(--text-secondary) !important;
+}
+html:not(.dark) .text-mining-400 {
+  color: var(--text-muted) !important;
+}
+html:not(.dark) .text-mining-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Background panel overrides */
+html:not(.dark) .glass-panel,
+html:not(.dark) .card,
+html:not(.dark) .bg-obsidian-900\/60,
+html:not(.dark) .bg-obsidian-900\/40,
+html:not(.dark) .bg-obsidian-900\/50,
+html:not(.dark) .bg-obsidian-800,
+html:not(.dark) .bg-obsidian-900 {
+  background: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), inset 0 1px 0 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+html:not(.dark) header {
+  background: var(--topbar-bg) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+html:not(.dark) aside {
+  background: var(--sidebar-bg) !important;
+  border-right-color: var(--border-color) !important;
+}
+
+/* Sidebar links hover/active */
+html:not(.dark) aside a.active,
+html:not(.dark) aside .active {
+  background: rgba(234, 119, 64, 0.1) !important;
+  color: #ea7740 !important;
+}
+
+html:not(.dark) aside a:hover:not(.active),
+html:not(.dark) aside button:hover {
+  background: rgba(0, 0, 0, 0.03) !important;
+  color: #000000 !important;
+}
+
+html:not(.dark) aside .text-white {
+  color: #0f172a !important;
+}
+
+/* Borders */
+html:not(.dark) .border-white\/5,
+html:not(.dark) .border-white\/10,
+html:not(.dark) .border-mining-100 {
+  border-color: var(--border-color) !important;
+}
+
+/* Inputs */
+html:not(.dark) .input-field {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+}
+html:not(.dark) .input-field:focus {
+  background-color: var(--input-focus-bg) !important;
+  border-color: #ea7740 !important;
+}
+html:not(.dark) .input-field::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Table Premium styling overrides */
+html:not(.dark) .table-premium thead {
+  background-color: var(--table-header-bg) !important;
+  border-bottom-color: var(--table-border) !important;
+}
+html:not(.dark) .table-premium thead th {
+  color: var(--table-header-color) !important;
+}
+html:not(.dark) .table-premium tbody tr {
+  border-bottom-color: var(--table-border) !important;
+}
+html:not(.dark) .table-premium tbody tr:hover {
+  background-color: var(--table-row-hover) !important;
+}
+html:not(.dark) .table-premium tbody td {
+  color: var(--text-primary) !important;
+}
+
+/* Badges neutral overrides */
+html:not(.dark) .badge-neutral {
+  background-color: var(--badge-neutral-bg) !important;
+  color: var(--badge-neutral-text) !important;
+  border-color: var(--badge-neutral-border) !important;
+}
+
+/* Buttons secondary overrides */
+html:not(.dark) .btn-secondary {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  color: var(--text-primary) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
+}
+html:not(.dark) .btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Recharts charts elements overrides */
+html:not(.dark) .recharts-cartesian-grid-horizontal line,
+html:not(.dark) .recharts-cartesian-grid-vertical line {
+  stroke: rgba(0, 0, 0, 0.06) !important;
+}
+html:not(.dark) .recharts-text {
+  fill: var(--text-muted) !important;
+}
+
+/* Tooltip charts container */
+html:not(.dark) .recharts-default-tooltip {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+html:not(.dark) .recharts-tooltip-item {
+  color: var(--text-primary) !important;
+}
+

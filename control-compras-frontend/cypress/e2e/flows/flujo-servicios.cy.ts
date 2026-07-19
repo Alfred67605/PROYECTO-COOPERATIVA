@@ -52,8 +52,8 @@ describe('Flujo E2E - Mantenimiento, Equipos e Inspección Pre-Operacional', () 
                 cy.get('textarea').eq(0).type(srv.nuevo.descripcion);
                 cy.contains('button', 'Añadir Repuesto').click();
                 cy.get('input[list="materiales-list"]').type('HERR', { force: true });
-                cy.get('input[type="number"]').eq(2).clear().type('2'); // Cantidad
-                cy.get('input[type="number"]').eq(3).clear().type('150'); // Costo Unitario
+                cy.get('input[type="number"]').eq(0).clear().type('2'); // Cantidad
+                cy.get('input[type="number"]').eq(1).clear().type('150'); // Costo Unitario
                 cy.contains('button', 'Guardar').click();
               });
               cy.contains('registrado').should('be.visible');

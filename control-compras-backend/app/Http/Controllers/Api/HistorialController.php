@@ -45,12 +45,8 @@ class HistorialController extends Controller
         }
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('accion', 'like', "%{$search}%")
-                  ->orWhere('tabla', 'like', "%{$search}%")
-                  ->orWhereHas('usuario', function($qu) use ($search) {
-                      $qu->where('nombre', 'like', "%{$search}%");
-                  });
+            $query->whereHas('usuario', function($qu) use ($search) {
+                $qu->where('nombre', 'like', "%{$search}%");
             });
         }
 

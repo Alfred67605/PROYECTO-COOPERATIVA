@@ -236,7 +236,7 @@ export const InventarioList = () => {
     <div className="space-y-6">
       <div className="section-header">
         <div>
-          <h1 className="section-title">Materiales</h1>
+          <h1 className="section-title">Inventario de Materiales</h1>
           <p className="section-subtitle">Catálogo maestro de todos los productos de la cooperativa</p>
         </div>
 
@@ -259,7 +259,7 @@ export const InventarioList = () => {
               onChange={(e) => setSelectedGrupo(e.target.value)}
               className="input-field pl-10 pr-10 bg-obsidian-950/50 appearance-none cursor-pointer text-sm w-full"
             >
-              <option value="" className="bg-obsidian-950">Todas las categorías</option>
+              <option value="" className="bg-obsidian-950">Todos los grupos</option>
               {GRUPOS.map(grp => (
                 <option key={grp} value={grp} className="bg-obsidian-950">{grp}</option>
               ))}
@@ -270,7 +270,7 @@ export const InventarioList = () => {
           {canEdit && (
             <button className="btn-primary group" onClick={openCreate}>
               <Plus size={18} className="group-hover:rotate-90 transition-transform" />
-              <span className="hidden sm:inline">Nuevo Producto</span>
+              <span className="hidden sm:inline">Nuevo Material</span>
             </button>
           )}
         </div>
@@ -382,7 +382,7 @@ export const InventarioList = () => {
                     <tr>
                       <td colSpan={canEdit ? 4 : 3} className="py-12 text-center text-mining-500">
                         <Package size={40} className="mx-auto mb-3 opacity-20" />
-                        <p className="text-lg font-medium text-white">No se encontraron productos</p>
+                        <p className="text-lg font-medium text-white">No hay materiales</p>
                         <p className="text-sm mt-1">Ajusta tu búsqueda o agrega un nuevo material.</p>
                       </td>
                     </tr>
@@ -397,9 +397,9 @@ export const InventarioList = () => {
       {createPortal(
         <ConfirmDialog
           isOpen={confirmOpen}
-          title="Inhabilitar Material"
+          title="Eliminar Material"
           message={`¿Estás seguro de que deseas inhabilitar el material "${deleteTarget?.descripcion}"?`}
-          confirmLabel="Inhabilitar"
+          confirmLabel="Eliminar"
           cancelLabel="Cancelar"
           variant="danger"
           isLoading={deleteMutation.isPending}
@@ -505,7 +505,7 @@ export const InventarioList = () => {
                   <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
                     <button type="button" onClick={closeModal} className="btn-secondary">Cancelar</button>
                     <button type="submit" disabled={saveMutation.isPending} className="btn-primary">
-                      {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Registrar Producto')}
+                      {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Guardar Material')}
                     </button>
                   </div>
                 </form>

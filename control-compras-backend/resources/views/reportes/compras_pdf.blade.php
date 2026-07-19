@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte de Compras — Minera Cop</title>
+    <title>{{ $titulo }} — Minera Cop</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -43,7 +43,6 @@
         }
         .summary-box {
             display: table-cell;
-            width: 50%;
             background: #f8fafc;
             border-left: 4px solid #d96a43;
             padding: 12px 16px;
@@ -70,6 +69,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 10px;
+            margin-bottom: 20px;
         }
         thead tr th {
             background: #1a2332;
@@ -118,22 +118,32 @@
 <body>
 
     <div class="header">
-        <h1>&#128203; Reporte de Compras — Minera Cop</h1>
+        <h1>&#128203; {{ $titulo }} — Minera Cop</h1>
         <p>{{ $periodoTexto }} &nbsp;|&nbsp; Generado el {{ $fecha }}</p>
     </div>
 
     <div class="summary">
+        @if(isset($compras) && $compras->count() > 0)
         <div class="summary-box">
             <div class="summary-value">{{ $compras->count() }}</div>
             <div class="summary-label">Total de compras</div>
         </div>
+        @endif
+        @if(isset($servicios) && $servicios->count() > 0)
+        <div class="summary-box">
+            <div class="summary-value">{{ $servicios->count() }}</div>
+            <div class="summary-label">Total de servicios</div>
+        </div>
+        @endif
         <div class="summary-box">
             <div class="summary-value">${{ number_format($gastoTotal, 2) }}</div>
             <div class="summary-label">Gasto Total del Periodo</div>
         </div>
     </div>
 
+    @if(isset($compras) && $compras->count() > 0)
     <div class="table-wrapper">
+        <h3 style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: #1a2332; text-transform: uppercase;">Compras</h3>
         <table>
             <thead>
                 <tr>
@@ -147,7 +157,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($compras as $c)
+                @foreach($compras as $c)
                 <tr>
                     <td class="td-mono">#{{ $c->id }}</td>
                     <td>{{ $c->fecha->format('d/m/Y') }}</td>
@@ -157,21 +167,73 @@
                     <td>{{ $c->usuario->nombre ?? '-' }}</td>
                     <td class="td-right">${{ number_format($c->total, 2) }}</td>
                 </tr>
-                @empty
-                <tr>
-                    <td colspan="7" style="text-align:center; color:#94a3b8; padding: 20px;">
-                        No hay compras en este periodo.
-                    </td>
-                </tr>
-                @endforelse
+                @endforeach
 
                 <tr class="total-row">
-                    <td colspan="6">TOTAL GENERAL</td>
+                    <td colspan="6">TOTAL COMPRAS</td>
+                    <td class="td-right">${{ number_format($gastoTotal - $gastoTotalServicios, 2) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    @endif
+
+    @if(isset($servicios) && $servicios->count() > 0)
+    <div class="table-wrapper">
+        <h3 style="font-size: 12px; font-weight: bold; margin-top: 10px; margin-bottom: 8px; color: #1a2332; text-transform: uppercase;">Servicios y Mantenimiento</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Fecha</th>
+                    <th>Equipo</th>
+                    <th>Bocamina</th>
+                    <th>Responsable</th>
+                    <th>Estado</th>
+                    <th class="text-right">Total ($)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($servicios as $s)
+                @php
+                    $costoTotal = $s->costos->sum('monto') + $s->repuestos->sum(function($r) { return $r->cantidad * $r->costo_unitario; });
+                    $tipoLimpio = class_basename($s->equipo_tipo);
+                    if ($tipoLimpio === 'Vehiculo') {
+                        $tipoLimpio = 'Vehículo';
+                    }
+                @endphp
+                <tr>
+                    <td class="td-mono">{{ $s->codigo }}</td>
+                    <td>{{ \Carbon\Carbon::parse($s->fecha)->format('d/m/Y') }}</td>
+                    <td>{{ $tipoLimpio }} ({{ $s->equipo->placa ?? $s->equipo->nombre_codigo ?? $s->equipo->codigo ?? '-' }})</td>
+                    <td>{{ $s->bocamina->nombre ?? 'Central' }}</td>
+                    <td>{{ $s->responsable->nombre ?? '-' }}</td>
+                    <td>{{ $s->estado }}</td>
+                    <td class="td-right">${{ number_format($costoTotal, 2) }}</td>
+                </tr>
+                @endforeach
+
+                <tr class="total-row">
+                    <td colspan="6">TOTAL SERVICIOS</td>
+                    <td class="td-right">${{ number_format($gastoTotalServicios, 2) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    @endif
+
+    @if(($tipo === 'todos') && isset($compras) && $compras->count() > 0 && isset($servicios) && $servicios->count() > 0)
+    <div class="table-wrapper">
+        <table>
+            <tbody>
+                <tr class="total-row">
+                    <td colspan="6">TOTAL GENERAL (COMPRAS + SERVICIOS)</td>
                     <td class="td-right">${{ number_format($gastoTotal, 2) }}</td>
                 </tr>
             </tbody>
         </table>
     </div>
+    @endif
 
     <div class="footer">
         Reporte generado autom&aacute;ticamente por el Sistema de Control de Compras &mdash; Minera Cop

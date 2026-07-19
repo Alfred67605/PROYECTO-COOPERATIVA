@@ -47,7 +47,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // General API rate limiting: 60 requests per minute per user/IP
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by(
+            $limit = app()->environment('testing', 'local') ? 5000 : 60;
+            return Limit::perMinute($limit)->by(
                 $request->user()?->id ?: $request->ip()
             );
         });
@@ -55,7 +56,8 @@ class AppServiceProvider extends ServiceProvider
         // Login rate limiting: 5 attempts per minute per IP
         // Protects against brute force attacks (CWE-307)
         RateLimiter::for('login', function (Request $request) {
-            return Limit::perMinute(5)->by(
+            $limit = app()->environment('testing', 'local') ? 1000 : 5;
+            return Limit::perMinute($limit)->by(
                 $request->ip()
             )->response(function () {
                 return response()->json([

@@ -23,6 +23,7 @@ export const ProveedoresList = () => {
   const { canWrite } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
+  const BASE_URL = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:8000';
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ProvForm>(emptyForm);
@@ -92,7 +93,7 @@ export const ProveedoresList = () => {
   const openEdit = (p: any) => {
     setForm({ nombre: p.nombre, nit: p.nit || '', telefono: p.telefono || '', direccion: p.direccion || '', email: p.email || '' });
     setEditingId(p.id); setError(''); setLogoFile(null); 
-    setPreviewUrl(p.logo ? `http://localhost:8000/storage/${p.logo}` : null); // Assuming backend serves it from storage
+    setPreviewUrl(p.logo ? `${BASE_URL}/storage/${p.logo}` : null); // Assuming backend serves it from storage
     setShowModal(true);
   };
   const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm); setError(''); setLogoFile(null); setPreviewUrl(null); };
@@ -110,13 +111,13 @@ export const ProveedoresList = () => {
     <div className="space-y-6">
       <div className="section-header">
         <div>
-          <h2 className="section-title">Directorio de Proveedores</h2>
+          <h1 className="section-title">Gestión de Proveedores</h1>
           <p className="section-subtitle">Gestión de empresas asociadas a Minera Cop</p>
         </div>
         {canWrite('proveedores') && (
           <button className="btn-primary" onClick={openCreate}>
             <Plus size={18} />
-            Nuevo Proveedor
+            Registrar Proveedor
           </button>
         )}
       </div>
@@ -150,7 +151,7 @@ export const ProveedoresList = () => {
                     <td className="pl-6">
                       <div className="flex items-center gap-3">
                         {p.logo ? (
-                          <img src={`http://localhost:8000/storage/${p.logo}`} alt={p.nombre} className="w-10 h-10 rounded-xl object-cover bg-white/5" />
+                          <img src={`${BASE_URL}/storage/${p.logo}`} alt={p.nombre} className="w-10 h-10 rounded-xl object-cover bg-white/5" />
                         ) : (
                           <div className="w-10 h-10 rounded-xl bg-white/5 text-mining-300 flex items-center justify-center font-bold text-sm">
                             {p.nombre.substring(0, 2).toUpperCase()}
@@ -254,10 +255,31 @@ export const ProveedoresList = () => {
                   
                   <form onSubmit={e => { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Nombre o Razón Social *</label>
+                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Nombre / Razón Social *</label>
                       <input className="input-field" required value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} />
                     </div>
-                    
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">NIT / RUC</label>
+                        <input className="input-field" value={form.nit} onChange={e => setForm({...form, nit: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Teléfono</label>
+                        <input className="input-field" value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Dirección</label>
+                      <input className="input-field" value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})} />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Email</label>
+                      <input type="email" className="input-field" autoComplete="new-password" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+                    </div>
+
                     <div>
                       <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Logo del Proveedor</label>
                       <div className="flex items-center gap-4">
@@ -296,28 +318,10 @@ export const ProveedoresList = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">NIT / RUC</label>
-                        <input className="input-field" value={form.nit} onChange={e => setForm({...form, nit: e.target.value})} />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Teléfono</label>
-                        <input className="input-field" value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Email</label>
-                      <input type="email" className="input-field" autoComplete="new-password" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Dirección</label>
-                      <textarea className="input-field" rows={2} value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})}></textarea>
-                    </div>
                     <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
                       <button type="button" onClick={closeModal} className="btn-secondary">Cancelar</button>
                       <button type="submit" disabled={saveMutation.isPending} className="btn-primary">
-                        {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Registrar Proveedor')}
+                        {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Guardar Proveedor')}
                       </button>
                     </div>
                   </form>

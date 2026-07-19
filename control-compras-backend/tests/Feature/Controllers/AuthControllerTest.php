@@ -110,4 +110,29 @@ class AuthControllerTest extends TestCase
         $response->assertStatus(200)
                  ->assertJson(['message' => 'Sesión cerrada correctamente']);
     }
+
+    /**
+     * Test updating authenticated user profile.
+     */
+    public function test_update_user_profile(): void
+    {
+        Sanctum::actingAs($this->user);
+        
+        $response = $this->putJson('/api/user/profile', [
+            'nombre' => 'Updated User Name',
+            'email' => 'updateduser@example.com',
+            'password' => 'NewPass123!',
+            'password_confirmation' => 'NewPass123!',
+        ]);
+
+        $response->assertStatus(200)
+                 ->assertJson([
+                     'message' => 'Perfil actualizado correctamente',
+                 ]);
+
+        $this->user->refresh();
+        $this->assertEquals('Updated User Name', $this->user->nombre);
+        $this->assertEquals('updateduser@example.com', $this->user->email);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('NewPass123!', $this->user->password));
+    }
 }

@@ -1,4 +1,5 @@
-import { Bell, Search, Menu, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Menu, ChevronRight, Sun, Moon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -12,8 +13,26 @@ export const Topbar = ({ onMenuClick, isMobile }: TopbarProps) => {
   const pathName = location.pathname.split('/')[1] || 'Dashboard';
   const title = pathName.charAt(0).toUpperCase() + pathName.slice(1);
 
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+      return saved === 'dark';
+    }
+    return document.documentElement.classList.contains('dark');
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
+
   return (
-    <header className="h-20 bg-obsidian-900/40 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30 transition-all">
+    <header className="h-20 bg-obsidian-900/40 dark:bg-obsidian-900/40 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30 transition-all">
       <div className="flex items-center gap-4">
         {isMobile && (
           <button 
@@ -44,29 +63,28 @@ export const Topbar = ({ onMenuClick, isMobile }: TopbarProps) => {
       </div>
       
       <div className="flex items-center gap-4 lg:gap-6">
-        <div className="relative hidden md:block group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-mining-500 group-focus-within:text-teal-400 transition-colors" size={18} />
-          <input 
-            type="text" 
-            placeholder="Buscar en el sistema..." 
-            className="pl-10 pr-12 py-2.5 bg-obsidian-800/50 border border-white/5 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-teal-500/50 focus:border-teal-500/50 focus:bg-obsidian-800 w-64 lg:w-80 transition-all placeholder:text-mining-600 text-mining-100 shadow-glass-inset"
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            <kbd className="hidden lg:inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-mining-500 bg-white/5 border border-white/10 rounded">⌘</kbd>
-            <kbd className="hidden lg:inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-mining-500 bg-white/5 border border-white/10 rounded">K</kbd>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-mining-500 uppercase tracking-widest hidden md:inline">Tema</span>
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="w-12 h-6.5 rounded-full bg-black/10 dark:bg-black/30 border border-black/10 dark:border-white/5 p-0.5 relative flex items-center cursor-pointer transition-all duration-300 focus:outline-none hover:border-black/20 dark:hover:border-white/10 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1),_0_1px_0_rgba(255,255,255,0.05)]"
+            aria-label="Toggle theme"
+          >
+            <div
+              className="w-5.5 h-5.5 rounded-full bg-gradient-to-br from-copper-500 to-copper-600 flex items-center justify-center text-white shadow-glow-copper transition-all duration-300 absolute"
+              style={{
+                transform: isDark ? 'translateX(20px)' : 'translateX(0px)',
+                left: '2px'
+              }}
+            >
+              {isDark ? <Moon size={11} /> : <Sun size={11} />}
+            </div>
+            <div className="w-full flex justify-between px-2 text-[9px] text-mining-500 font-bold select-none pointer-events-none">
+              <span>☀️</span>
+              <span>🌙</span>
+            </div>
+          </button>
         </div>
-        
-        <button className="md:hidden p-2 rounded-xl text-mining-400 hover:bg-white/5 transition-colors">
-          <Search size={20} />
-        </button>
-        
-        <div className="w-px h-6 bg-white/10 hidden md:block"></div>
-        
-        <button className="relative p-2 rounded-xl text-mining-400 hover:bg-white/5 hover:text-white transition-colors group">
-          <Bell size={22} className="group-hover:animate-wiggle" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-copper-500 rounded-full border-2 border-obsidian-900 animate-pulse shadow-[0_0_8px_rgba(234,119,64,0.8)]"></span>
-        </button>
       </div>
     </header>
   );

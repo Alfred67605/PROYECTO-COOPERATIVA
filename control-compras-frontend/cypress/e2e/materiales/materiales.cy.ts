@@ -66,9 +66,7 @@ describe('Materiales - Inventario y Catálogo', () => {
   context('Filtrar por Grupo', () => {
     it('Debe filtrar materiales al seleccionar un grupo', () => {
       cy.get('.animate-pulse', { timeout: 15000 }).should('not.exist');
-      // Open the filter dropdown
-      cy.contains('Todos los grupos').click();
-      cy.contains('Herramientas').click();
+      cy.get('select').first().select('Herramientas');
       cy.wait(500);
       cy.get('[class*="card"]').should('exist');
     });

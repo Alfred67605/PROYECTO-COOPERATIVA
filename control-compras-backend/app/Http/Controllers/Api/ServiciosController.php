@@ -37,7 +37,7 @@ class ServiciosController extends Controller
             'usuario_registro_id' => 'required|exists:users,id',
             'responsable_id' => 'nullable|exists:users,id',
             'estado' => 'required|string|max:20',
-            'equipo_tipo' => 'required|string|in:maquinaria,grua,vehiculo',
+            'equipo_tipo' => 'required|string|in:maquinaria,grua,vehiculo,App\\Models\\Maquinaria,App\\Models\\Vehiculo,App\\Models\\AlquilerGrua',
             'equipo_id' => 'required|integer|min:1',
             'boca_mina_id' => 'nullable|exists:bocaminas,id',
             'ubicacion_detalle' => 'nullable|string|max:500',

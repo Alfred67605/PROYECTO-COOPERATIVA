@@ -17,6 +17,13 @@ declare namespace Cypress {
     loginByUI(email: string, password: string): Chainable<void>;
 
     /**
+     * Login via the UI form bypassing session caching.
+     * @param email - User email
+     * @param password - User password
+     */
+    loginManually(email: string, password: string): Chainable<void>;
+
+    /**
      * Logout via sidebar button.
      */
     logout(): Chainable<void>;

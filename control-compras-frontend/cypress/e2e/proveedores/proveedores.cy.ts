@@ -55,7 +55,7 @@ describe('Proveedores - CRUD de Proveedores', () => {
     it('Debe mostrar los campos obligatorios del formulario', () => {
       cy.contains('button', 'Registrar Proveedor').click();
       cy.contains('Nombre / Razón Social').should('be.visible');
-      cy.contains('NIT / CI').should('be.visible');
+      cy.contains('NIT / RUC').should('be.visible');
       cy.contains('Teléfono').should('be.visible');
       cy.contains('Dirección').should('be.visible');
     });

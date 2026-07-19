@@ -175,7 +175,7 @@ export const UsuariosList = () => {
     <div className="space-y-6">
       <div className="section-header">
         <div>
-          <h2 className="section-title">Gestión de Usuarios</h2>
+          <h1 className="section-title">Gestión de Usuarios</h1>
           <p className="section-subtitle">Control de acceso y roles del sistema</p>
         </div>
         <button className="btn-primary" onClick={openCreate}>
@@ -308,7 +308,7 @@ export const UsuariosList = () => {
                           <input className="input-field" required value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} />
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Email corporativo *</label>
+                          <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Correo Electrónico *</label>
                           <input type="email" className="input-field" required autoComplete="new-password" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
                         </div>
                         <div>
@@ -319,13 +319,10 @@ export const UsuariosList = () => {
                           </p>
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Rol Asignado *</label>
+                          <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Rol del Sistema *</label>
                           <select className="input-field" required value={form.rol_id} onChange={e => setForm({...form, rol_id: e.target.value})}>
                             <option value="">Seleccione un rol</option>
-                            {roles
-                              ?.filter((r: any) => !(data?.some((u: any) => u.rol?.nombre === 'Administrador General' && u.id !== editingId) && r.nombre === 'Administrador General'))
-                              ?.map((r: any) => <option key={r.id} value={r.id}>{r.nombre}</option>)
-                            }
+                            {roles?.map((r: any) => <option key={r.id} value={r.id}>{r.nombre}</option>)}
                           </select>
                         </div>
                         
@@ -369,7 +366,7 @@ export const UsuariosList = () => {
                             return (
                               <div className="bg-copper-500/5 border border-copper-500/20 rounded-xl p-4 text-sm text-copper-300">
                                 <p className="font-bold text-copper-400 mb-1">Administrador General</p>
-                                <p className="text-xs text-mining-400">Este rol tiene acceso total a todos los módulos del sistema. No requiere permisos adicionales.</p>
+                                <p className="text-xs text-mining-400">Este rol tiene Acceso total a todos los módulos del sistema. No requiere permisos adicionales.</p>
                               </div>
                             );
                           }
@@ -467,7 +464,7 @@ export const UsuariosList = () => {
                     <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
                       <button type="button" onClick={closeModal} className="btn-secondary">Cancelar</button>
                       <button type="submit" disabled={saveMutation.isPending} className="btn-primary">
-                        {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Crear Usuario')}
+                        {saveMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : (editingId ? 'Guardar Cambios' : 'Guardar Usuario')}
                       </button>
                     </div>
                   </form>

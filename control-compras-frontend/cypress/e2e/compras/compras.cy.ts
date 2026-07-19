@@ -108,7 +108,7 @@ describe('Compras - Historial y Registro de Compras', () => {
       // Complete Step 1
       cy.get('select').first().select(1);
       cy.get('select').eq(1).select(1);
-      cy.get('input[type="text"]').first().clear().type('F-CY-TEMP');
+      cy.get('input[placeholder="Ej. F001-00045"]').clear().type('F-CY-TEMP');
       cy.contains('button', 'Siguiente').click();
       cy.contains('Paso 2', { timeout: 5000 }).should('be.visible');
     });
@@ -131,8 +131,7 @@ describe('Compras - Historial y Registro de Compras', () => {
     it('Debe poder agregar un material a la compra', () => {
       cy.get('input[placeholder*="Buscar"]').type('HERR');
       cy.wait(1000);
-      // Click first result to add
-      cy.get('button').filter(':contains("Agregar"), :has(svg)').first().click({ force: true });
+      cy.get('.absolute.top-full').find('.p-3').first().click();
     });
 
     it('Debe mostrar la tabla de materiales agregados', () => {

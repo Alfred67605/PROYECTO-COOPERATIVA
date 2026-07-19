@@ -10,10 +10,12 @@ import { ProveedoresList } from './features/admin/ProveedoresList';
 import { UsuariosList } from './features/admin/UsuariosList';
 import { BocaminasList } from './features/admin/BocaminasList';
 import { HistorialList } from './features/admin/HistorialList';
+import { RespaldosView } from './features/admin/RespaldosView';
 import { ReportesView } from './features/reportes/ReportesView';
 import { ServiciosDashboard } from './features/servicios/ServiciosDashboard';
 import { AlquilerGruasList } from './features/servicios/AlquilerGruasList';
 import { MainLayout } from './components/layout/MainLayout';
+import { Perfil } from './features/profile/Perfil';
 import { ToastProvider } from './components/ui/Toast';
 import { AnimatePresence } from 'framer-motion';
 
@@ -49,6 +51,7 @@ const AnimatedRoutes = () => {
         {/* Rutas Base */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
         <Route path="/inventario" element={<PrivateRoute module="materiales"><InventarioList /></PrivateRoute>} />
         
         {/* Rutas Compras */}
@@ -60,6 +63,7 @@ const AnimatedRoutes = () => {
         <Route path="/usuarios" element={<PrivateRoute module="usuarios"><UsuariosList /></PrivateRoute>} />
         <Route path="/bocaminas" element={<PrivateRoute module="bocaminas"><BocaminasList /></PrivateRoute>} />
         <Route path="/historial" element={<PrivateRoute module="auditoria"><HistorialList /></PrivateRoute>} />
+        <Route path="/admin/respaldos" element={<PrivateRoute module="usuarios"><RespaldosView /></PrivateRoute>} />
         
         <Route path="/reportes" element={<PrivateRoute module="reportes"><ReportesView /></PrivateRoute>} />
         <Route path="/servicios/*" element={<PrivateRoute module="servicios"><ServiciosDashboard /></PrivateRoute>} />

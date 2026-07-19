@@ -58,7 +58,7 @@ class CompraSeeder extends Seeder
             $proveedor = $proveedores->random();
             // Dates distributed over the last 6 months
             $fecha = Carbon::now()->subDays(rand(2, 180));
-            $numeroFactura = 'FAC-' . str_pad(rand(100, 99999), 5, '0', STR_PAD_LEFT);
+            $numeroFactura = 'F-' . str_pad(rand(100, 99999), 5, '0', STR_PAD_LEFT);
             
             $observacionesArray = [
                 "Adquisición periódica de herramientas y repuestos de perforación para las labores en {$bocamina->nombre}.",

@@ -51,24 +51,24 @@ describe('Navegación - Sidebar, Topbar y Rutas', () => {
   context('Sidebar - Sub-menú Servicios', () => {
     it('Debe expandir el sub-menú de Servicios al hacer click', () => {
       cy.get('nav').contains('Servicios').click();
-      cy.contains('Maquinaria').should('be.visible');
-      cy.contains('Vehículos').should('be.visible');
-      cy.contains('Mantenimientos').should('be.visible');
-      cy.contains('Inspecciones').should('be.visible');
-      cy.contains('Alquiler de Grúas').should('be.visible');
+      cy.contains('a', 'Maquinaria').scrollIntoView().should('be.visible');
+      cy.contains('a', 'Vehículos').scrollIntoView().should('be.visible');
+      cy.contains('a', 'Mantenimientos').scrollIntoView().should('be.visible');
+      cy.contains('a', 'Inspecciones').scrollIntoView().should('be.visible');
+      cy.contains('a', 'Alquiler de Grúas').scrollIntoView().should('be.visible');
     });
 
     it('Debe colapsar el sub-menú de Servicios al hacer click nuevamente', () => {
       cy.get('nav').contains('Servicios').click();
-      cy.contains('Maquinaria').should('be.visible');
+      cy.contains('a', 'Maquinaria').scrollIntoView().should('be.visible');
       cy.get('nav').contains('Servicios').click();
       // Sub-items should be hidden after collapse animation
-      cy.contains('a', 'Maquinaria').should('not.be.visible');
+      cy.contains('a', 'Maquinaria').should('not.exist');
     });
 
     it('Debe navegar a sub-rutas de servicios', () => {
       cy.get('nav').contains('Servicios').click();
-      cy.contains('a', 'Maquinaria').click();
+      cy.contains('a', 'Maquinaria').scrollIntoView().click();
       cy.url().should('include', '/servicios/maquinaria');
     });
   });
