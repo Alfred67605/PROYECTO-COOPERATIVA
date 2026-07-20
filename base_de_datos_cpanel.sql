@@ -17,10 +17,8 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
 --
 
-CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 
 
 --
@@ -2611,8 +2609,10 @@ CREATE INDEX historial_operaciones_tabla_registro_id_index ON public.historial_o
 
 
 --
+-- Name: idx_users_nombre_trgm; Type: INDEX; Schema: public; Owner: postgres
 --
 
+CREATE INDEX idx_users_nombre_trgm ON public.users USING gin (nombre public.gin_trgm_ops);
 
 
 --
