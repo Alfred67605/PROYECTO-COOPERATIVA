@@ -1,4 +1,0 @@
-proveedor_id,bocamina_id,fecha,numero_factura,observaciones,material_id,cantidad,precio
-1,1,2026-07-19,FACT-PERF-001,Compra automatizada de prueba de carga,1,15,85.50
-1,1,2026-07-19,FACT-PERF-002,Compra automatizada de prueba de carga,1,20,120.00
-1,1,2026-07-19,FACT-PERF-003,Compra automatizada de prueba de carga,1,5,450.00

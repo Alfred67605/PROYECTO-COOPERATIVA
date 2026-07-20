@@ -1,0 +1,27 @@
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# Entorno y archivos temporales
+.env
+.env.backup
+.env.production
+pg.log
+pg2.log
+
+# Pruebas de rendimiento y colecciones de pruebas externas
+performance/
+control_compras_postman_collection.json
+control_compras_postman_environment.json
+
+# Reportes y descargas de Cypress
+control-compras-frontend/cypress/reports/
+control-compras-frontend/cypress/downloads/
+control-compras-frontend/cypress/videos/
+
+# Node & Composer
+node_modules/
+vendor/
