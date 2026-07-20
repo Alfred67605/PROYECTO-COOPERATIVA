@@ -286,108 +286,105 @@ export const InventarioList = () => {
               </tr>
             </thead>
 
-            <AnimatePresence mode="wait">
-              {isLoading ? (
-                <tbody>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="border-b border-mining-50">
-                      <td className="py-4 px-6 w-24">
-                        <div className="w-[60px] h-[60px] rounded-xl bg-mining-100 animate-pulse"></div>
+            {isLoading ? (
+              <tbody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-mining-50">
+                    <td className="py-4 px-6 w-24">
+                      <div className="w-[60px] h-[60px] rounded-xl bg-mining-100 animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="space-y-2">
+                        <div className="h-4 w-48 bg-mining-100 rounded animate-pulse"></div>
+                        <div className="h-3 w-24 bg-mining-100 rounded animate-pulse"></div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <div className="h-6 w-24 bg-mining-100 rounded ml-auto animate-pulse"></div>
+                    </td>
+                    {canEdit && (
+                      <td className="py-4 px-6 text-right w-28">
+                        <div className="h-8 w-16 bg-mining-100 rounded ml-auto animate-pulse"></div>
                       </td>
-                      <td className="py-4 px-6">
-                        <div className="space-y-2">
-                          <div className="h-4 w-48 bg-mining-100 rounded animate-pulse"></div>
-                          <div className="h-3 w-24 bg-mining-100 rounded animate-pulse"></div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="h-6 w-24 bg-mining-100 rounded ml-auto animate-pulse"></div>
-                      </td>
-                      {canEdit && (
-                        <td className="py-4 px-6 text-right w-28">
-                          <div className="h-8 w-16 bg-mining-100 rounded ml-auto animate-pulse"></div>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              ) : (
-                <motion.tbody
-                  variants={staggerContainer}
-                  initial="initial"
-                  animate="animate"
-                  exit={{ opacity: 0 }}
-                >
-                  {data?.data?.map((item: any) => (
-                    <motion.tr
-                      key={item.id}
-                      variants={staggerItem}
-                      className="border-b border-mining-50 hover:bg-mining-50/50 transition-colors group"
-                    >
-                      {/* Imagen Column */}
-                      <td className="py-4 px-6 w-24">
-                        <div className="w-[60px] h-[60px] shrink-0 rounded-xl overflow-hidden bg-obsidian-800 border border-white/5 relative group-hover:shadow-[0_0_15px_rgba(45,212,191,0.3)] transition-all">
-                          <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10" />
-                          {item.imagen ? (
-                            <img src={item.imagen} alt={item.descripcion} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                          ) : (
-                            <img src={getGroupImage(item.grupo)} alt="Grupo" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 filter grayscale-[20%]" />
-                          )}
-                        </div>
-                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            ) : (
+              <motion.tbody
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+              >
+                {data?.data?.map((item: any) => (
+                  <motion.tr
+                    key={item.id}
+                    variants={staggerItem}
+                    className="border-b border-mining-50 hover:bg-mining-50/50 transition-colors group"
+                  >
+                    {/* Imagen Column */}
+                    <td className="py-4 px-6 w-24">
+                      <div className="w-[60px] h-[60px] shrink-0 rounded-xl overflow-hidden bg-obsidian-800 border border-white/5 relative group-hover:shadow-[0_0_15px_rgba(45,212,191,0.3)] transition-all">
+                        <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10" />
+                        {item.imagen ? (
+                          <img src={item.imagen} alt={item.descripcion} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        ) : (
+                          <img src={getGroupImage(item.grupo)} alt="Grupo" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 filter grayscale-[20%]" />
+                        )}
+                      </div>
+                    </td>
 
-                      {/* Producto Column */}
-                      <td className="py-4 px-6">
-                        <div>
-                          <p className="font-semibold text-mining-100 group-hover:text-teal-400 transition-colors">
-                            {item.descripcion}
-                          </p>
-                          {item.grupo && (
-                            <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-copper-400 bg-copper-500/10 border border-copper-500/20 inline-flex px-2 py-0.5 rounded-md">
-                              <Star size={10} className="fill-copper-500" />
-                              {item.grupo}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* SKU Column */}
-                      <td className="py-4 px-6 text-right">
-                        <span className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-mono font-bold bg-white/5 border border-white/10 text-mining-300 rounded-lg whitespace-nowrap shadow-glass-inset">
-                          {item.codigo}
-                        </span>
-                      </td>
-
-                      {/* Acciones Column */}
-                      {canEdit && (
-                        <td className="pr-6 text-right w-28">
-                          <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => openEdit(item)} className="btn-icon">
-                              <Edit size={16} />
-                            </button>
-                            {canDelete && (
-                              <button onClick={() => handleDelete(item.id, item.descripcion)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
-                                <Trash2 size={16} />
-                              </button>
-                            )}
+                    {/* Producto Column */}
+                    <td className="py-4 px-6">
+                      <div>
+                        <p className="font-semibold text-mining-100 group-hover:text-teal-400 transition-colors">
+                          {item.descripcion}
+                        </p>
+                        {item.grupo && (
+                          <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-copper-400 bg-copper-500/10 border border-copper-500/20 inline-flex px-2 py-0.5 rounded-md">
+                            <Star size={10} className="fill-copper-500" />
+                            {item.grupo}
                           </div>
-                        </td>
-                      )}
-                    </motion.tr>
-                  ))}
+                        )}
+                      </div>
+                    </td>
 
-                  {(!data?.data || data.data.length === 0) && (
-                    <tr>
-                      <td colSpan={canEdit ? 4 : 3} className="py-12 text-center text-mining-500">
-                        <Package size={40} className="mx-auto mb-3 opacity-20" />
-                        <p className="text-lg font-medium text-white">No hay materiales</p>
-                        <p className="text-sm mt-1">Ajusta tu búsqueda o agrega un nuevo material.</p>
+                    {/* SKU Column */}
+                    <td className="py-4 px-6 text-right">
+                      <span className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-mono font-bold bg-white/5 border border-white/10 text-mining-300 rounded-lg whitespace-nowrap shadow-glass-inset">
+                        {item.codigo}
+                      </span>
+                    </td>
+
+                    {/* Acciones Column */}
+                    {canEdit && (
+                      <td className="pr-6 text-right w-28">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => openEdit(item)} className="btn-icon">
+                            <Edit size={16} />
+                          </button>
+                          {canDelete && (
+                            <button onClick={() => handleDelete(item.id, item.descripcion)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
-                    </tr>
-                  )}
-                </motion.tbody>
-              )}
-            </AnimatePresence>
+                    )}
+                  </motion.tr>
+                ))}
+
+                {(!data?.data || data.data.length === 0) && (
+                  <tr>
+                    <td colSpan={canEdit ? 4 : 3} className="py-12 text-center text-mining-500">
+                      <Package size={40} className="mx-auto mb-3 opacity-20" />
+                      <p className="text-lg font-medium text-white">No hay materiales</p>
+                      <p className="text-sm mt-1">Ajusta tu búsqueda o agrega un nuevo material.</p>
+                    </td>
+                  </tr>
+                )}
+              </motion.tbody>
+            )}
           </table>
         </div>
       </div>
