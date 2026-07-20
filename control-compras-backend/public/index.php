@@ -25,8 +25,6 @@ if (file_exists($maintenance = $backendDir . '/storage/framework/maintenance.php
 require $backendDir . '/vendor/autoload.php';
 
 // Bootstrap Laravel and handle the request...
-/** @var Application $app */
-$app = require_once $backendDir . '/bootstrap/app.php';
-
-$app->handleRequest(Request::capture());
+(require $backendDir . '/bootstrap/app.php')
+    ->handleRequest(Request::capture());
 
