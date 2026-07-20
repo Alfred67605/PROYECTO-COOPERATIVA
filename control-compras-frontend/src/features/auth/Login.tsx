@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import api from '../../lib/axios';
+import api, { getBackendRootUrl } from '../../lib/axios';
 import { useAuth } from './AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { KeyRound, Mail, AlertCircle, Loader2, ShieldCheck, Pickaxe } from 'lucide-react';
@@ -48,7 +48,7 @@ export const Login = () => {
       setIsLoading(true);
       setError('');
       
-      await api.get((import.meta.env.VITE_API_BASE || 'http://localhost:8000') + '/sanctum/csrf-cookie', { baseURL: '' });
+      await api.get(`${getBackendRootUrl()}/sanctum/csrf-cookie`, { baseURL: '' });
       const response = await api.post('/login', data);
       
       login(response.data.user);

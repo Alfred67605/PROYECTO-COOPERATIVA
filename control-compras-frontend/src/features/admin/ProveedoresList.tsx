@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../../lib/axios';
+import api, { getBackendRootUrl } from '../../lib/axios';
 import { Building2, Edit, Trash2, X, Loader2, Plus, Mail, Phone, MapPin, Hash, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -25,7 +25,7 @@ export const ProveedoresList = () => {
   const { canWrite } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
-  const BASE_URL = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:8000';
+  const BASE_URL = getBackendRootUrl();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ProvForm>(emptyForm);
