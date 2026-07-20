@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { Search, Plus, Package, Star, Edit, Trash2, X, Loader2, UploadCloud, Image as ImageIcon, Filter, ChevronDown } from 'lucide-react';
+import { Search, Plus, Package, Star, Edit, Trash2, X, Loader2, UploadCloud, Image as ImageIcon, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
@@ -95,6 +95,9 @@ export const InventarioList = () => {
     }
   });
 
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   const { data, isLoading } = useQuery({
     queryKey: ['materiales', search, selectedGrupo],
     queryFn: async () => {
@@ -105,6 +108,10 @@ export const InventarioList = () => {
       return res.data;
     }
   });
+
+  const allItems = data?.data || [];
+  const totalPages = Math.ceil(allItems.length / pageSize) || 1;
+  const paginatedItems = allItems.slice((page - 1) * pageSize, page * pageSize);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -212,23 +219,6 @@ export const InventarioList = () => {
     if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
   };
 
-  const getGroupImage = (grupo: string = '') => {
-    const hash = grupo.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const photos = [
-      'https://images.unsplash.com/photo-1587315332822-6b95b8630bb3?q=80&w=200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?q=80&w=200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1581166397007-0bc44d637f1c?q=80&w=200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1620286828590-e54dbf83c185?q=80&w=200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?q=80&w=200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1586942913160-c4e9ed1129b2?q=80&w=200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1508344928928-7137b29de218?q=80&w=200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1562259949-e8e7689d7828?q=80&w=200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1518002054494-3a6f94352e9d?q=80&w=200&auto=format&fit=crop',
-    ];
-    return photos[hash % photos.length];
-  };
-
   return (
     <div className="space-y-6">
       <div className="section-header">
@@ -244,7 +234,7 @@ export const InventarioList = () => {
               type="text"
               placeholder="Buscar material o código..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="input-field pl-10"
             />
           </div>
@@ -253,7 +243,7 @@ export const InventarioList = () => {
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={16} />
             <select
               value={selectedGrupo}
-              onChange={(e) => setSelectedGrupo(e.target.value)}
+              onChange={(e) => { setSelectedGrupo(e.target.value); setPage(1); }}
               className="input-field pl-10 pr-10 bg-obsidian-950/50 appearance-none cursor-pointer text-sm w-full"
             >
               <option value="" className="bg-obsidian-950">Todos los grupos</option>
@@ -311,7 +301,7 @@ export const InventarioList = () => {
               </tbody>
             ) : (
               <tbody>
-                {data?.data?.map((item: any) => (
+                {paginatedItems.map((item: any) => (
                   <tr
                     key={item.id}
                     className="border-b border-mining-50 hover:bg-mining-50/50 transition-colors group"
@@ -323,7 +313,9 @@ export const InventarioList = () => {
                         {item.imagen ? (
                           <img src={item.imagen} alt={item.descripcion} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         ) : (
-                          <img src={getGroupImage(item.grupo)} alt="Grupo" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 filter grayscale-[20%]" />
+                          <div className="w-full h-full flex items-center justify-center bg-obsidian-900 text-teal-400/60 group-hover:text-teal-400 transition-colors">
+                            <Package size={24} />
+                          </div>
                         )}
                       </div>
                     </td>
@@ -368,7 +360,7 @@ export const InventarioList = () => {
                   </tr>
                 ))}
 
-                {(!data?.data || data.data.length === 0) && (
+                {(!allItems || allItems.length === 0) && (
                   <tr>
                     <td colSpan={canEdit ? 4 : 3} className="py-12 text-center text-mining-500">
                       <Package size={40} className="mx-auto mb-3 opacity-20" />
@@ -381,6 +373,33 @@ export const InventarioList = () => {
             )}
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-white/5 bg-obsidian-950/30 text-xs text-mining-400">
+            <div>
+              Mostrando <span className="font-bold text-white">{(page - 1) * pageSize + 1}</span> a <span className="font-bold text-white">{Math.min(page * pageSize, allItems.length)}</span> de <span className="font-bold text-white">{allItems.length}</span> materiales
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1 font-semibold cursor-pointer"
+              >
+                <ChevronLeft size={14} /> Anterior
+              </button>
+              <span className="px-3 py-1.5 font-mono text-mining-300 font-bold">
+                {page} / {totalPages}
+              </span>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1 font-semibold cursor-pointer"
+              >
+                Siguiente <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {createPortal(
