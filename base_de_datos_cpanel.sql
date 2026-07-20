@@ -34,6 +34,7 @@ SET default_table_access_method = heap;
 -- Name: alquiler_gruas; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.alquiler_gruas CASCADE;
 CREATE TABLE public.alquiler_gruas (
     id bigint NOT NULL,
     placa_grua character varying(50) NOT NULL,
@@ -52,6 +53,7 @@ CREATE TABLE public.alquiler_gruas (
 -- Name: alquiler_gruas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.alquiler_gruas_id_seq CASCADE;
 CREATE SEQUENCE public.alquiler_gruas_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -72,6 +74,7 @@ ALTER SEQUENCE public.alquiler_gruas_id_seq OWNED BY public.alquiler_gruas.id;
 -- Name: bocaminas; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.bocaminas CASCADE;
 CREATE TABLE public.bocaminas (
     id bigint NOT NULL,
     nombre character varying(255) NOT NULL,
@@ -89,6 +92,7 @@ CREATE TABLE public.bocaminas (
 -- Name: bocaminas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.bocaminas_id_seq CASCADE;
 CREATE SEQUENCE public.bocaminas_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -109,6 +113,7 @@ ALTER SEQUENCE public.bocaminas_id_seq OWNED BY public.bocaminas.id;
 -- Name: cache; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.cache CASCADE;
 CREATE TABLE public.cache (
     key character varying(255) NOT NULL,
     value text NOT NULL,
@@ -121,6 +126,7 @@ CREATE TABLE public.cache (
 -- Name: cache_locks; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.cache_locks CASCADE;
 CREATE TABLE public.cache_locks (
     key character varying(255) NOT NULL,
     owner character varying(255) NOT NULL,
@@ -133,6 +139,7 @@ CREATE TABLE public.cache_locks (
 -- Name: compras; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.compras CASCADE;
 CREATE TABLE public.compras (
     id bigint NOT NULL,
     proveedor_id bigint NOT NULL,
@@ -153,6 +160,7 @@ CREATE TABLE public.compras (
 -- Name: compras_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.compras_id_seq CASCADE;
 CREATE SEQUENCE public.compras_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -173,6 +181,7 @@ ALTER SEQUENCE public.compras_id_seq OWNED BY public.compras.id;
 -- Name: costo_servicios; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.costo_servicios CASCADE;
 CREATE TABLE public.costo_servicios (
     id bigint NOT NULL,
     servicio_id bigint NOT NULL,
@@ -189,6 +198,7 @@ CREATE TABLE public.costo_servicios (
 -- Name: costo_servicios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.costo_servicios_id_seq CASCADE;
 CREATE SEQUENCE public.costo_servicios_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -209,6 +219,7 @@ ALTER SEQUENCE public.costo_servicios_id_seq OWNED BY public.costo_servicios.id;
 -- Name: detalle_compras; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.detalle_compras CASCADE;
 CREATE TABLE public.detalle_compras (
     id bigint NOT NULL,
     compra_id bigint NOT NULL,
@@ -226,6 +237,7 @@ CREATE TABLE public.detalle_compras (
 -- Name: detalle_compras_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.detalle_compras_id_seq CASCADE;
 CREATE SEQUENCE public.detalle_compras_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -246,6 +258,7 @@ ALTER SEQUENCE public.detalle_compras_id_seq OWNED BY public.detalle_compras.id;
 -- Name: empresa_settings; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.empresa_settings CASCADE;
 CREATE TABLE public.empresa_settings (
     id bigint NOT NULL,
     nombre_empresa character varying(255) DEFAULT 'MINERA COP'::character varying NOT NULL,
@@ -261,6 +274,7 @@ CREATE TABLE public.empresa_settings (
 -- Name: empresa_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.empresa_settings_id_seq CASCADE;
 CREATE SEQUENCE public.empresa_settings_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -281,6 +295,7 @@ ALTER SEQUENCE public.empresa_settings_id_seq OWNED BY public.empresa_settings.i
 -- Name: failed_jobs; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.failed_jobs CASCADE;
 CREATE TABLE public.failed_jobs (
     id bigint NOT NULL,
     uuid character varying(255) NOT NULL,
@@ -297,6 +312,7 @@ CREATE TABLE public.failed_jobs (
 -- Name: failed_jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.failed_jobs_id_seq CASCADE;
 CREATE SEQUENCE public.failed_jobs_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -317,6 +333,7 @@ ALTER SEQUENCE public.failed_jobs_id_seq OWNED BY public.failed_jobs.id;
 -- Name: gruas; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.gruas CASCADE;
 CREATE TABLE public.gruas (
     id bigint NOT NULL,
     tipo character varying(255) NOT NULL,
@@ -334,6 +351,7 @@ CREATE TABLE public.gruas (
 -- Name: gruas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.gruas_id_seq CASCADE;
 CREATE SEQUENCE public.gruas_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -354,6 +372,7 @@ ALTER SEQUENCE public.gruas_id_seq OWNED BY public.gruas.id;
 -- Name: historial_operaciones; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.historial_operaciones CASCADE;
 CREATE TABLE public.historial_operaciones (
     id bigint NOT NULL,
     usuario_id bigint NOT NULL,
@@ -374,6 +393,7 @@ CREATE TABLE public.historial_operaciones (
 -- Name: historial_operaciones_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.historial_operaciones_id_seq CASCADE;
 CREATE SEQUENCE public.historial_operaciones_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -394,6 +414,7 @@ ALTER SEQUENCE public.historial_operaciones_id_seq OWNED BY public.historial_ope
 -- Name: inspeccions; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.inspeccions CASCADE;
 CREATE TABLE public.inspeccions (
     id bigint NOT NULL,
     equipo_tipo character varying(255) NOT NULL,
@@ -417,6 +438,7 @@ CREATE TABLE public.inspeccions (
 -- Name: inspeccions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.inspeccions_id_seq CASCADE;
 CREATE SEQUENCE public.inspeccions_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -437,6 +459,7 @@ ALTER SEQUENCE public.inspeccions_id_seq OWNED BY public.inspeccions.id;
 -- Name: job_batches; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.job_batches CASCADE;
 CREATE TABLE public.job_batches (
     id character varying(255) NOT NULL,
     name character varying(255) NOT NULL,
@@ -456,6 +479,7 @@ CREATE TABLE public.job_batches (
 -- Name: jobs; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.jobs CASCADE;
 CREATE TABLE public.jobs (
     id bigint NOT NULL,
     queue character varying(255) NOT NULL,
@@ -472,6 +496,7 @@ CREATE TABLE public.jobs (
 -- Name: jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.jobs_id_seq CASCADE;
 CREATE SEQUENCE public.jobs_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -492,6 +517,7 @@ ALTER SEQUENCE public.jobs_id_seq OWNED BY public.jobs.id;
 -- Name: maquinarias; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.maquinarias CASCADE;
 CREATE TABLE public.maquinarias (
     id bigint NOT NULL,
     tipo character varying(255) NOT NULL,
@@ -513,6 +539,7 @@ CREATE TABLE public.maquinarias (
 -- Name: maquinarias_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.maquinarias_id_seq CASCADE;
 CREATE SEQUENCE public.maquinarias_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -533,6 +560,7 @@ ALTER SEQUENCE public.maquinarias_id_seq OWNED BY public.maquinarias.id;
 -- Name: materiales; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.materiales CASCADE;
 CREATE TABLE public.materiales (
     id bigint NOT NULL,
     codigo character varying(50) NOT NULL,
@@ -550,6 +578,7 @@ CREATE TABLE public.materiales (
 -- Name: materiales_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.materiales_id_seq CASCADE;
 CREATE SEQUENCE public.materiales_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -570,6 +599,7 @@ ALTER SEQUENCE public.materiales_id_seq OWNED BY public.materiales.id;
 -- Name: migrations; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.migrations CASCADE;
 CREATE TABLE public.migrations (
     id integer NOT NULL,
     migration character varying(255) NOT NULL,
@@ -582,6 +612,7 @@ CREATE TABLE public.migrations (
 -- Name: migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.migrations_id_seq CASCADE;
 CREATE SEQUENCE public.migrations_id_seq
     AS integer
     START WITH 1
@@ -603,6 +634,7 @@ ALTER SEQUENCE public.migrations_id_seq OWNED BY public.migrations.id;
 -- Name: password_reset_tokens; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.password_reset_tokens CASCADE;
 CREATE TABLE public.password_reset_tokens (
     email character varying(255) NOT NULL,
     token character varying(255) NOT NULL,
@@ -615,6 +647,7 @@ CREATE TABLE public.password_reset_tokens (
 -- Name: permiso_user; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.permiso_user CASCADE;
 CREATE TABLE public.permiso_user (
     permiso_id bigint NOT NULL,
     user_id bigint NOT NULL
@@ -626,6 +659,7 @@ CREATE TABLE public.permiso_user (
 -- Name: permisos; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.permisos CASCADE;
 CREATE TABLE public.permisos (
     id bigint NOT NULL,
     nombre character varying(100) NOT NULL,
@@ -640,6 +674,7 @@ CREATE TABLE public.permisos (
 -- Name: permisos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.permisos_id_seq CASCADE;
 CREATE SEQUENCE public.permisos_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -660,6 +695,7 @@ ALTER SEQUENCE public.permisos_id_seq OWNED BY public.permisos.id;
 -- Name: personal_access_tokens; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.personal_access_tokens CASCADE;
 CREATE TABLE public.personal_access_tokens (
     id bigint NOT NULL,
     tokenable_type character varying(255) NOT NULL,
@@ -679,6 +715,7 @@ CREATE TABLE public.personal_access_tokens (
 -- Name: personal_access_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.personal_access_tokens_id_seq CASCADE;
 CREATE SEQUENCE public.personal_access_tokens_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -699,6 +736,7 @@ ALTER SEQUENCE public.personal_access_tokens_id_seq OWNED BY public.personal_acc
 -- Name: proveedores; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.proveedores CASCADE;
 CREATE TABLE public.proveedores (
     id bigint NOT NULL,
     nombre character varying(255) NOT NULL,
@@ -719,6 +757,7 @@ CREATE TABLE public.proveedores (
 -- Name: proveedores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.proveedores_id_seq CASCADE;
 CREATE SEQUENCE public.proveedores_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -739,6 +778,7 @@ ALTER SEQUENCE public.proveedores_id_seq OWNED BY public.proveedores.id;
 -- Name: repuesto_servicios; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.repuesto_servicios CASCADE;
 CREATE TABLE public.repuesto_servicios (
     id bigint NOT NULL,
     servicio_id bigint NOT NULL,
@@ -755,6 +795,7 @@ CREATE TABLE public.repuesto_servicios (
 -- Name: repuesto_servicios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.repuesto_servicios_id_seq CASCADE;
 CREATE SEQUENCE public.repuesto_servicios_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -775,6 +816,7 @@ ALTER SEQUENCE public.repuesto_servicios_id_seq OWNED BY public.repuesto_servici
 -- Name: respaldos; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.respaldos CASCADE;
 CREATE TABLE public.respaldos (
     id bigint NOT NULL,
     nombre_archivo character varying(255) NOT NULL,
@@ -792,6 +834,7 @@ CREATE TABLE public.respaldos (
 -- Name: respaldos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.respaldos_id_seq CASCADE;
 CREATE SEQUENCE public.respaldos_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -812,6 +855,7 @@ ALTER SEQUENCE public.respaldos_id_seq OWNED BY public.respaldos.id;
 -- Name: roles; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.roles CASCADE;
 CREATE TABLE public.roles (
     id bigint NOT NULL,
     nombre character varying(100) NOT NULL,
@@ -826,6 +870,7 @@ CREATE TABLE public.roles (
 -- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.roles_id_seq CASCADE;
 CREATE SEQUENCE public.roles_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -846,6 +891,7 @@ ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 -- Name: servicios; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.servicios CASCADE;
 CREATE TABLE public.servicios (
     id bigint NOT NULL,
     codigo character varying(255) NOT NULL,
@@ -874,6 +920,7 @@ CREATE TABLE public.servicios (
 -- Name: servicios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.servicios_id_seq CASCADE;
 CREATE SEQUENCE public.servicios_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -894,6 +941,7 @@ ALTER SEQUENCE public.servicios_id_seq OWNED BY public.servicios.id;
 -- Name: sessions; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.sessions CASCADE;
 CREATE TABLE public.sessions (
     id character varying(255) NOT NULL,
     user_id bigint,
@@ -909,6 +957,7 @@ CREATE TABLE public.sessions (
 -- Name: tipo_mantenimientos; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.tipo_mantenimientos CASCADE;
 CREATE TABLE public.tipo_mantenimientos (
     id bigint NOT NULL,
     nombre character varying(255) NOT NULL,
@@ -923,6 +972,7 @@ CREATE TABLE public.tipo_mantenimientos (
 -- Name: tipo_mantenimientos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.tipo_mantenimientos_id_seq CASCADE;
 CREATE SEQUENCE public.tipo_mantenimientos_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -943,6 +993,7 @@ ALTER SEQUENCE public.tipo_mantenimientos_id_seq OWNED BY public.tipo_mantenimie
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.users CASCADE;
 CREATE TABLE public.users (
     id bigint NOT NULL,
     nombre character varying(255) CONSTRAINT users_name_not_null NOT NULL,
@@ -963,6 +1014,7 @@ CREATE TABLE public.users (
 -- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.users_id_seq CASCADE;
 CREATE SEQUENCE public.users_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -983,6 +1035,7 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 -- Name: vehiculos; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.vehiculos CASCADE;
 CREATE TABLE public.vehiculos (
     id bigint NOT NULL,
     tipo character varying(255) NOT NULL,
@@ -1002,6 +1055,7 @@ CREATE TABLE public.vehiculos (
 -- Name: vehiculos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
+DROP SEQUENCE IF EXISTS public.vehiculos_id_seq CASCADE;
 CREATE SEQUENCE public.vehiculos_id_seq
     START WITH 1
     INCREMENT BY 1
