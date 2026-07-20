@@ -149,7 +149,7 @@ npm run dev
 
 ## 🌐 Guía Completa para Despliegue en Hosting / Producción
 
-Esta sección contiene las instrucciones paso a paso que debe seguir el encargado de infraestructura o hosting para publicar el sistema en producción.
+Esta sección contiene las instrucciones paso a paso que debe seguir el encargado de infraestructura o hosting para publicar el sistema en producción sin fallos.
 
 ### 📦 Archivos Listos Incluidos en el Proyecto
 1. **Volcado Completo de Base de Datos**: `base_de_datos_produccion.sql` (Ubicado en la raíz del proyecto). Contiene el esquema completo de PostgreSQL y todos los datos iniciales y reales cargados.
@@ -160,27 +160,38 @@ Esta sección contiene las instrucciones paso a paso que debe seguir el encargad
 
 ### ⚙️ Requisitos del Servidor (Hosting / VPS)
 - **Servidor Web**: Nginx o Apache con certificado SSL (HTTPS).
-- **Base de Datos**: PostgreSQL 13 o superior. Debe contar con la extensión `pg_trgm` habilitada (`CREATE EXTENSION IF NOT EXISTS pg_trgm;`).
-- **PHP**: Versión 8.2 o superior con extensiones: `pdo_pgsql`, `pgsql`, `mbstring`, `gd` (o `imagick`), `dom`, `xml`, `zip`.
-- **Acceso SSH**: Para ejecutar comandos de mantenimiento.
+- **Base de Datos**: PostgreSQL 13+ o MySQL 8.0+. Si usas PostgreSQL, asegúrate de habilitar `CREATE EXTENSION IF NOT EXISTS pg_trgm;`.
+- **PHP**: Versión 8.2 o superior con extensiones: `pdo_pgsql` / `pdo_mysql`, `mbstring`, `gd` (o `imagick`), `dom`, `xml`, `zip`.
+- **Acceso SSH / Terminal**: Para ejecutar comandos de optimización.
 
 ---
 
 ### 🚀 1. Despliegue del Backend (Laravel API)
 
 1. Subir la carpeta `control-compras-backend` al servidor.
-2. Importar el archivo `base_de_datos_produccion.sql` en la base de datos PostgreSQL de producción.
-3. Crear y configurar el archivo `.env` en la raíz del backend con los datos de producción:
+2. Importar el archivo `base_de_datos_produccion.sql` en la base de datos de producción.
+3. Crear y configurar el archivo `.env` en la raíz del backend con las credenciales de producción e HTTPS:
    ```ini
    APP_NAME="Empresa Minera"
    APP_ENV=production
    APP_DEBUG=false
-   APP_URL=https://api.tudominio.com
-   FRONTEND_URL=https://tudominio.com
-   SANCTUM_STATEFUL_DOMAINS=tudominio.com,api.tudominio.com
-   SESSION_DOMAIN=.tudominio.com
+   APP_URL=https://alfredo.inginformatica.app
+   FRONTEND_URL=https://alfredo.inginformatica.app
+
+   # Clave de encriptación
+   APP_KEY=base64:D3zgoRqZVx5rs/pkccmnrdSFgpgx9+nugWqGoM4F8Eo=
+
+   # Dominios autorizados para autenticación por cookies Sanctum
+   SANCTUM_STATEFUL_DOMAINS=alfredo.inginformatica.app
+
+   # Configuración de Sesiones e HTTPS
+   SESSION_DRIVER=database
+   SESSION_DOMAIN=alfredo.inginformatica.app
+   SESSION_SECURE_COOKIE=true
+   SESSION_SAME_SITE=lax
    APP_TIMEZONE=America/La_Paz
 
+   # Conexión a Base de Datos
    DB_CONNECTION=pgsql
    DB_HOST=127.0.0.1
    DB_PORT=5432
@@ -202,27 +213,53 @@ Esta sección contiene las instrucciones paso a paso que debe seguir el encargad
 
 ### 🎨 2. Despliegue del Frontend (React / Vite)
 
-1. Subir **todo el contenido de la carpeta `control-compras-frontend/dist/`** a la raíz pública del servidor (ej. `public_html`).
-2. Configurar el archivo `.htaccess` en `public_html` (si usas Apache) para evitar errores 404 al navegar o recargar páginas:
-   ```apache
-   <IfModule mod_rewrite.c>
-     RewriteEngine On
-     RewriteBase /
-     RewriteRule ^index\.html$ - [L]
-     RewriteCond %{REQUEST_FILENAME} !-f
-     RewriteCond %{REQUEST_FILENAME} !-d
-     RewriteRule . /index.html [L]
-     </IfModule>
+1. **Configuración de Entorno**: En el frontend, define en las variables de entorno de compilación:
+   ```env
+   VITE_API_URL=https://alfredo.inginformatica.app
    ```
-   *(Si el servidor es Nginx, agregar en el bloque de servidor: `location / { try_files $uri $uri/ /index.html; }`).*
+   *(El cliente Axios e inicio de sesión resolverán dinámicamente tanto las peticiones a la API `/api/*` como la cookie de autenticación `/sanctum/csrf-cookie` al dominio configurado).*
+
+2. **Publicar Archivos**:
+   - **Opción A (Hosting separado / CDN / Vercel)**: Subir **todo el contenido de `control-compras-frontend/dist/`** a la raíz pública del servidor (ej. `public_html`).
+   - **Opción B (Servir desde Laravel)**: Copiar los archivos compilados de `control-compras-frontend/dist/` dentro de la carpeta `control-compras-backend/public/`.
+
+3. **Reescritura de Rutas de React Router (Evitar 404 al recargar)**:
+   - **Para Apache (`public_html/.htaccess`)**:
+     ```apache
+     <IfModule mod_rewrite.c>
+       RewriteEngine On
+       RewriteBase /
+       RewriteRule ^index\.html$ - [L]
+       RewriteCond %{REQUEST_FILENAME} !-f
+       RewriteCond %{REQUEST_FILENAME} !-d
+       RewriteRule . /index.html [L]
+     </IfModule>
+     ```
+   - **Para Nginx**:
+     ```nginx
+     location / {
+         try_files $uri $uri/ /index.html;
+     }
+     ```
+   - **Para Vercel (`vercel.json`)**:
+     ```json
+     {
+       "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+     }
+     ```
 
 ---
 
-## 🐞 Posibles Problemas Comunes
+### 🐞 Posibles Problemas Comunes y Solución
 
-- **Error: "php no se reconoce como un comando interno o externo"**: 
-  Necesitas agregar la ruta de instalación de PHP a las Variables de Entorno (PATH) de Windows.
+- **Petición a `http://localhost:8000/sanctum/csrf-cookie` (Connection Refused)**:
+  - *Solución*: Ocurre si la variable `VITE_API_URL` no está definida en la compilación del frontend. La aplicación ahora normaliza dinámicamente la URL base mediante `getBackendRootUrl()`, asegurando que Sanctum pida el token CSRF a `https://alfredo.inginformatica.app/sanctum/csrf-cookie`.
+- **Error `401 Unauthorized` al iniciar sesión**:
+  - *Solución*: Revisa que `SANCTUM_STATEFUL_DOMAINS` coincida exactamente con el dominio del frontend (sin `https://`), y que `SESSION_SECURE_COOKIE=true` esté activado para HTTPS.
 - **Error: "CORS" en el frontend**:
-  Asegúrate de que la URL del frontend esté permitida en la configuración CORS del backend de Laravel (`config/cors.php` o archivo `.env` si aplica).
+  - *Solución*: Asegúrate de que `FRONTEND_URL` en el `.env` del backend coincida con la URL exacta del cliente (ej. `https://alfredo.inginformatica.app`).
+- **Las imágenes subidas devuelven error 404**:
+  - *Solución*: Falta ejecutar `php artisan storage:link` en la carpeta del backend.
 - **La base de datos dice "no such table"**:
-  Te faltó correr las migraciones en el backend (`php artisan migrate`) o importar el archivo `base_de_datos_produccion.sql`.
+  - *Solución*: Falta correr las migraciones (`php artisan migrate --force`) o importar el archivo `base_de_datos_produccion.sql`.
+
