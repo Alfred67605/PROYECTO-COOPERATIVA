@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 import { useAuth } from '../auth/AuthContext';
-import { staggerContainer, staggerItem } from '../../components/ui/PageTransition';
 
 const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
 
@@ -311,15 +310,10 @@ export const InventarioList = () => {
                 ))}
               </tbody>
             ) : (
-              <motion.tbody
-                variants={staggerContainer}
-                initial="initial"
-                animate="animate"
-              >
+              <tbody>
                 {data?.data?.map((item: any) => (
-                  <motion.tr
+                  <tr
                     key={item.id}
-                    variants={staggerItem}
                     className="border-b border-mining-50 hover:bg-mining-50/50 transition-colors group"
                   >
                     {/* Imagen Column */}
@@ -371,7 +365,7 @@ export const InventarioList = () => {
                         </div>
                       </td>
                     )}
-                  </motion.tr>
+                  </tr>
                 ))}
 
                 {(!data?.data || data.data.length === 0) && (
@@ -383,7 +377,7 @@ export const InventarioList = () => {
                     </td>
                   </tr>
                 )}
-              </motion.tbody>
+              </tbody>
             )}
           </table>
         </div>
