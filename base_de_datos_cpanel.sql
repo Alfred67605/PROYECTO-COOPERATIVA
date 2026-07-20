@@ -47,7 +47,6 @@ CREATE TABLE public.alquiler_gruas (
 );
 
 
-ALTER TABLE public.alquiler_gruas OWNER TO postgres;
 
 --
 -- Name: alquiler_gruas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -61,7 +60,6 @@ CREATE SEQUENCE public.alquiler_gruas_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.alquiler_gruas_id_seq OWNER TO postgres;
 
 --
 -- Name: alquiler_gruas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -86,7 +84,6 @@ CREATE TABLE public.bocaminas (
 );
 
 
-ALTER TABLE public.bocaminas OWNER TO postgres;
 
 --
 -- Name: bocaminas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -100,7 +97,6 @@ CREATE SEQUENCE public.bocaminas_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.bocaminas_id_seq OWNER TO postgres;
 
 --
 -- Name: bocaminas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -120,7 +116,6 @@ CREATE TABLE public.cache (
 );
 
 
-ALTER TABLE public.cache OWNER TO postgres;
 
 --
 -- Name: cache_locks; Type: TABLE; Schema: public; Owner: postgres
@@ -133,7 +128,6 @@ CREATE TABLE public.cache_locks (
 );
 
 
-ALTER TABLE public.cache_locks OWNER TO postgres;
 
 --
 -- Name: compras; Type: TABLE; Schema: public; Owner: postgres
@@ -154,7 +148,6 @@ CREATE TABLE public.compras (
 );
 
 
-ALTER TABLE public.compras OWNER TO postgres;
 
 --
 -- Name: compras_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -168,7 +161,6 @@ CREATE SEQUENCE public.compras_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.compras_id_seq OWNER TO postgres;
 
 --
 -- Name: compras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -192,7 +184,6 @@ CREATE TABLE public.costo_servicios (
 );
 
 
-ALTER TABLE public.costo_servicios OWNER TO postgres;
 
 --
 -- Name: costo_servicios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -206,7 +197,6 @@ CREATE SEQUENCE public.costo_servicios_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.costo_servicios_id_seq OWNER TO postgres;
 
 --
 -- Name: costo_servicios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -231,7 +221,6 @@ CREATE TABLE public.detalle_compras (
 );
 
 
-ALTER TABLE public.detalle_compras OWNER TO postgres;
 
 --
 -- Name: detalle_compras_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -245,7 +234,6 @@ CREATE SEQUENCE public.detalle_compras_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.detalle_compras_id_seq OWNER TO postgres;
 
 --
 -- Name: detalle_compras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -268,7 +256,6 @@ CREATE TABLE public.empresa_settings (
 );
 
 
-ALTER TABLE public.empresa_settings OWNER TO postgres;
 
 --
 -- Name: empresa_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -282,7 +269,6 @@ CREATE SEQUENCE public.empresa_settings_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.empresa_settings_id_seq OWNER TO postgres;
 
 --
 -- Name: empresa_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -306,7 +292,6 @@ CREATE TABLE public.failed_jobs (
 );
 
 
-ALTER TABLE public.failed_jobs OWNER TO postgres;
 
 --
 -- Name: failed_jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -320,7 +305,6 @@ CREATE SEQUENCE public.failed_jobs_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.failed_jobs_id_seq OWNER TO postgres;
 
 --
 -- Name: failed_jobs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -345,7 +329,6 @@ CREATE TABLE public.gruas (
 );
 
 
-ALTER TABLE public.gruas OWNER TO postgres;
 
 --
 -- Name: gruas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -359,7 +342,6 @@ CREATE SEQUENCE public.gruas_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.gruas_id_seq OWNER TO postgres;
 
 --
 -- Name: gruas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -387,7 +369,6 @@ CREATE TABLE public.historial_operaciones (
 );
 
 
-ALTER TABLE public.historial_operaciones OWNER TO postgres;
 
 --
 -- Name: historial_operaciones_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -401,7 +382,6 @@ CREATE SEQUENCE public.historial_operaciones_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.historial_operaciones_id_seq OWNER TO postgres;
 
 --
 -- Name: historial_operaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -432,7 +412,6 @@ CREATE TABLE public.inspeccions (
 );
 
 
-ALTER TABLE public.inspeccions OWNER TO postgres;
 
 --
 -- Name: inspeccions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -446,7 +425,6 @@ CREATE SEQUENCE public.inspeccions_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.inspeccions_id_seq OWNER TO postgres;
 
 --
 -- Name: inspeccions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -473,7 +451,6 @@ CREATE TABLE public.job_batches (
 );
 
 
-ALTER TABLE public.job_batches OWNER TO postgres;
 
 --
 -- Name: jobs; Type: TABLE; Schema: public; Owner: postgres
@@ -490,7 +467,6 @@ CREATE TABLE public.jobs (
 );
 
 
-ALTER TABLE public.jobs OWNER TO postgres;
 
 --
 -- Name: jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -504,7 +480,6 @@ CREATE SEQUENCE public.jobs_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.jobs_id_seq OWNER TO postgres;
 
 --
 -- Name: jobs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -533,7 +508,6 @@ CREATE TABLE public.maquinarias (
 );
 
 
-ALTER TABLE public.maquinarias OWNER TO postgres;
 
 --
 -- Name: maquinarias_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -547,7 +521,6 @@ CREATE SEQUENCE public.maquinarias_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.maquinarias_id_seq OWNER TO postgres;
 
 --
 -- Name: maquinarias_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -572,7 +545,6 @@ CREATE TABLE public.materiales (
 );
 
 
-ALTER TABLE public.materiales OWNER TO postgres;
 
 --
 -- Name: materiales_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -586,7 +558,6 @@ CREATE SEQUENCE public.materiales_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.materiales_id_seq OWNER TO postgres;
 
 --
 -- Name: materiales_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -606,7 +577,6 @@ CREATE TABLE public.migrations (
 );
 
 
-ALTER TABLE public.migrations OWNER TO postgres;
 
 --
 -- Name: migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -621,7 +591,6 @@ CREATE SEQUENCE public.migrations_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.migrations_id_seq OWNER TO postgres;
 
 --
 -- Name: migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -641,7 +610,6 @@ CREATE TABLE public.password_reset_tokens (
 );
 
 
-ALTER TABLE public.password_reset_tokens OWNER TO postgres;
 
 --
 -- Name: permiso_user; Type: TABLE; Schema: public; Owner: postgres
@@ -653,7 +621,6 @@ CREATE TABLE public.permiso_user (
 );
 
 
-ALTER TABLE public.permiso_user OWNER TO postgres;
 
 --
 -- Name: permisos; Type: TABLE; Schema: public; Owner: postgres
@@ -668,7 +635,6 @@ CREATE TABLE public.permisos (
 );
 
 
-ALTER TABLE public.permisos OWNER TO postgres;
 
 --
 -- Name: permisos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -682,7 +648,6 @@ CREATE SEQUENCE public.permisos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.permisos_id_seq OWNER TO postgres;
 
 --
 -- Name: permisos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -709,7 +674,6 @@ CREATE TABLE public.personal_access_tokens (
 );
 
 
-ALTER TABLE public.personal_access_tokens OWNER TO postgres;
 
 --
 -- Name: personal_access_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -723,7 +687,6 @@ CREATE SEQUENCE public.personal_access_tokens_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.personal_access_tokens_id_seq OWNER TO postgres;
 
 --
 -- Name: personal_access_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -751,7 +714,6 @@ CREATE TABLE public.proveedores (
 );
 
 
-ALTER TABLE public.proveedores OWNER TO postgres;
 
 --
 -- Name: proveedores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -765,7 +727,6 @@ CREATE SEQUENCE public.proveedores_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.proveedores_id_seq OWNER TO postgres;
 
 --
 -- Name: proveedores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -789,7 +750,6 @@ CREATE TABLE public.repuesto_servicios (
 );
 
 
-ALTER TABLE public.repuesto_servicios OWNER TO postgres;
 
 --
 -- Name: repuesto_servicios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -803,7 +763,6 @@ CREATE SEQUENCE public.repuesto_servicios_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.repuesto_servicios_id_seq OWNER TO postgres;
 
 --
 -- Name: repuesto_servicios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -828,7 +787,6 @@ CREATE TABLE public.respaldos (
 );
 
 
-ALTER TABLE public.respaldos OWNER TO postgres;
 
 --
 -- Name: respaldos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -842,7 +800,6 @@ CREATE SEQUENCE public.respaldos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.respaldos_id_seq OWNER TO postgres;
 
 --
 -- Name: respaldos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -864,7 +821,6 @@ CREATE TABLE public.roles (
 );
 
 
-ALTER TABLE public.roles OWNER TO postgres;
 
 --
 -- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -878,7 +834,6 @@ CREATE SEQUENCE public.roles_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.roles_id_seq OWNER TO postgres;
 
 --
 -- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -914,7 +869,6 @@ CREATE TABLE public.servicios (
 );
 
 
-ALTER TABLE public.servicios OWNER TO postgres;
 
 --
 -- Name: servicios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -928,7 +882,6 @@ CREATE SEQUENCE public.servicios_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.servicios_id_seq OWNER TO postgres;
 
 --
 -- Name: servicios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -951,7 +904,6 @@ CREATE TABLE public.sessions (
 );
 
 
-ALTER TABLE public.sessions OWNER TO postgres;
 
 --
 -- Name: tipo_mantenimientos; Type: TABLE; Schema: public; Owner: postgres
@@ -966,7 +918,6 @@ CREATE TABLE public.tipo_mantenimientos (
 );
 
 
-ALTER TABLE public.tipo_mantenimientos OWNER TO postgres;
 
 --
 -- Name: tipo_mantenimientos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -980,7 +931,6 @@ CREATE SEQUENCE public.tipo_mantenimientos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tipo_mantenimientos_id_seq OWNER TO postgres;
 
 --
 -- Name: tipo_mantenimientos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1008,7 +958,6 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO postgres;
 
 --
 -- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1022,7 +971,6 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
 
 --
 -- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1049,7 +997,6 @@ CREATE TABLE public.vehiculos (
 );
 
 
-ALTER TABLE public.vehiculos OWNER TO postgres;
 
 --
 -- Name: vehiculos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1063,7 +1010,6 @@ CREATE SEQUENCE public.vehiculos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.vehiculos_id_seq OWNER TO postgres;
 
 --
 -- Name: vehiculos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
