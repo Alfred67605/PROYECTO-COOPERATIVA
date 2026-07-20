@@ -20,10 +20,10 @@ class ReporteControllerTest extends TestCase
     {
         parent::setUp();
 
-        $role = Rol::firstOrCreate(['nombre' => 'Gerencia']);
+        $role = Rol::firstOrCreate(['nombre' => 'Administrador General']);
         $this->user = User::create([
-            'nombre' => 'Gerente General',
-            'email' => 'gerente_ctrl@example.com',
+            'nombre' => 'Admin General Test',
+            'email' => 'admin_rep_test@example.com',
             'password' => bcrypt('password'),
             'rol_id' => $role->id,
             'estado' => true,

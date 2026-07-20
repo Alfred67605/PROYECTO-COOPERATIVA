@@ -47,6 +47,7 @@ export const ConfirmDialog = ({
   onCancel,
 }: ConfirmDialogProps) => {
   const styles = variantStyles[variant];
+  const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -60,15 +61,15 @@ export const ConfirmDialog = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={isTest ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={isTest ? { duration: 0 } : { duration: 0.2 }}
           className="fixed inset-0 z-[100] flex items-center justify-center p-4"
         >
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={isTest ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -77,10 +78,10 @@ export const ConfirmDialog = ({
 
           {/* Dialog */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={isTest ? false : { opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={isTest ? { duration: 0 } : { type: 'spring', damping: 25, stiffness: 300 }}
             className="relative glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-white/10"
           >
             {/* Close button */}
@@ -96,9 +97,9 @@ export const ConfirmDialog = ({
             <div className="p-6 pt-8 text-center">
               {/* Animated icon */}
               <motion.div
-                initial={{ scale: 0, rotate: -180 }}
+                initial={isTest ? false : { scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.1 }}
+                transition={isTest ? { duration: 0 } : { type: 'spring', damping: 12, stiffness: 200, delay: 0.1 }}
                 className={`w-16 h-16 ${styles.iconBg} rounded-2xl flex items-center justify-center mx-auto mb-5 ring-8 ${styles.ringColor}`}
               >
                 <AlertTriangle size={28} className={styles.iconColor} />

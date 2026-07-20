@@ -12,7 +12,7 @@ class MaterialController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', Material::class);
-        $query = Material::query();
+        $query = Material::where('estado', 'disponible');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -26,7 +26,18 @@ class MaterialController extends Controller
             $query->where('grupo', $request->input('grupo'));
         }
 
-        return response()->json(['data' => $query->get()]);
+        return response()->json(['data' => $query->orderBy('grupo')->orderBy('codigo')->get()]);
+    }
+
+    public function grupos()
+    {
+        return response()->json(
+            Material::where('estado', 'disponible')
+                ->select('grupo')
+                ->distinct()
+                ->orderBy('grupo')
+                ->pluck('grupo')
+        );
     }
 
     public function store(Request $request)

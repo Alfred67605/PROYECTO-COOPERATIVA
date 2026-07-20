@@ -119,7 +119,7 @@ export const ComprasHistorial = () => {
                       </td>
                       <td className="font-medium text-white">{compra.proveedor?.nombre || '-'}</td>
                       <td>{compra.bocamina?.nombre || <span className="text-mining-500 italic">Bodega Central</span>}</td>
-                      <td className="font-bold text-copper-400 drop-shadow-[0_0_8px_rgba(234,119,64,0.3)]">${parseFloat(compra.total).toLocaleString()}</td>
+                      <td className="font-bold text-copper-400 drop-shadow-[0_0_8px_rgba(234,119,64,0.3)]">Bs. {parseFloat(compra.total).toLocaleString()}</td>
                       <td>{getStatusBadge(compra.estado || 'completada')}</td>
                     </motion.tr>
                     
@@ -159,8 +159,8 @@ export const ComprasHistorial = () => {
                                         <td className="px-4 py-3 font-mono text-mining-500 text-xs">{det.material?.codigo}</td>
                                         <td className="px-4 py-3 font-medium text-mining-200">{det.material?.descripcion}</td>
                                         <td className="px-4 py-3 text-center text-mining-300">{det.cantidad}</td>
-                                        <td className="px-4 py-3 text-right text-mining-400">${parseFloat(det.precio).toLocaleString()}</td>
-                                        <td className="px-4 py-3 text-right font-bold text-white drop-shadow-md">${parseFloat(det.subtotal).toLocaleString()}</td>
+                                        <td className="px-4 py-3 text-right text-mining-400">Bs. {parseFloat(det.precio).toLocaleString()}</td>
+                                        <td className="px-4 py-3 text-right font-bold text-white drop-shadow-md">Bs. {parseFloat(det.subtotal).toLocaleString()}</td>
                                       </tr>
                                     ))}
                                     {(!compraDetalle?.detalles || compraDetalle.detalles.length === 0) && (
@@ -170,7 +170,7 @@ export const ComprasHistorial = () => {
                                   <tfoot className="bg-obsidian-950 text-white border-t border-white/10">
                                     <tr>
                                       <td colSpan={4} className="px-4 py-4 font-bold text-right tracking-widest text-mining-400 text-xs uppercase">TOTAL GENERAL</td>
-                                      <td className="px-4 py-4 font-black text-right text-copper-400 text-xl drop-shadow-glow-copper">${parseFloat(compra.total).toLocaleString()}</td>
+                                      <td className="px-4 py-4 font-black text-right text-copper-400 text-xl drop-shadow-glow-copper">Bs. {parseFloat(compra.total).toLocaleString()}</td>
                                     </tr>
                                   </tfoot>
                                 </table>

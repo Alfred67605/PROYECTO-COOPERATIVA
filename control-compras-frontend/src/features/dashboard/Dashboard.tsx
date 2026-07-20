@@ -21,7 +21,9 @@ export const Dashboard = () => {
     queryFn: async () => {
       const { data } = await api.get(`/reportes/dashboard?year=${selectedYear}`);
       return data;
-    }
+    },
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const trendData = viewMode === 'mensual'
@@ -58,7 +60,7 @@ export const Dashboard = () => {
                 <div>
                   <p className="text-sm font-medium text-mining-400 mb-1">Inversión Total</p>
                   <h3 className="text-3xl font-display font-bold text-white tracking-tight">
-                    $<AnimatedCounter value={parseFloat(stats?.gasto_total || '0')} />
+                    Bs. <AnimatedCounter value={parseFloat(stats?.gasto_total || '0')} />
                   </h3>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-copper-500/10 border border-copper-500/20 flex items-center justify-center text-copper-400 shadow-glow-copper">
@@ -196,7 +198,7 @@ export const Dashboard = () => {
                     axisLine={false} 
                     tickLine={false} 
                     tick={{ fill: '#64748b', fontSize: 12 }}
-                    tickFormatter={(value) => value >= 1000 ? `$${value/1000}k` : `$${value}`}
+                    tickFormatter={(value) => value >= 1000 ? `Bs. ${value/1000}k` : `Bs. ${value}`}
                   />
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', backgroundColor: 'rgba(15,23,42,0.9)', backdropFilter: 'blur(8px)' }}
@@ -245,7 +247,7 @@ export const Dashboard = () => {
                       <p className="text-xs text-slate-500 truncate">{compra.bocamina?.nombre || 'Bodega Central'}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-white">${parseFloat(compra.total).toLocaleString()}</p>
+                      <p className="font-bold text-white">Bs. {parseFloat(compra.total).toLocaleString()}</p>
                       <p className="text-[10px] text-slate-500">{new Date(compra.fecha).toLocaleDateString()}</p>
                     </div>
                   </div>
@@ -271,7 +273,7 @@ export const Dashboard = () => {
                 <BarChart data={stats?.gastos_por_bocamina || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e8ec" />
                   <XAxis dataKey="nombre" axisLine={false} tickLine={false} tick={{ fill: '#798d9e', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#798d9e', fontSize: 12 }} tickFormatter={(val) => `$${val/1000}k`} dx={-10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#798d9e', fontSize: 12 }} tickFormatter={(val) => `Bs. ${val/1000}k`} dx={-10} />
                   <Tooltip 
                     cursor={{ fill: 'rgba(255,255,255,0.02)' }}
                     contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', backgroundColor: 'rgba(15,23,42,0.9)', backdropFilter: 'blur(8px)' }}

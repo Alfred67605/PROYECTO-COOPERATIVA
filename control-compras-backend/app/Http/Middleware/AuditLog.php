@@ -79,6 +79,7 @@ class AuditLog
                 'registro_id' => $registroId,
                 'datos_nuevos' => $datosNuevos,
                 'ip' => $request->ip(),
+                'fecha' => now(),
             ]);
         } catch (\Exception $e) {
             // Log audit failures instead of silently swallowing them

@@ -23,7 +23,7 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
-  const { user, logout, canAccess } = useAuth();
+  const { user, logout, canAccess, empresaSettings } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(
@@ -37,7 +37,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
   };
 
   const allNavItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} />, reqAdmin: false },
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} />, reqAdmin: true },
     { name: 'Bocaminas', path: '/bocaminas', icon: <Settings size={20} />, reqAdmin: true },
     { name: 'Proveedores', path: '/proveedores', icon: <Building2 size={20} />, reqAdmin: true },
     { name: 'Materiales', path: '/inventario', icon: <Package size={20} />, reqAdmin: false },
@@ -48,7 +48,6 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
       icon: <Wrench size={20} />, 
       reqAdmin: false,
       subItems: [
-        { name: 'Dashboard', path: '/servicios/dashboard' },
         { name: 'Maquinaria', path: '/servicios/maquinaria' },
         { name: 'Vehículos', path: '/servicios/vehiculos' },
         { name: 'Mantenimientos', path: '/servicios/mantenimientos' },
@@ -63,7 +62,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
   ];
 
   const visibleItems = allNavItems.filter(item => {
-    if (item.path === '/dashboard') return true;
+    if (item.path === '/dashboard') return canAccess('dashboard');
     if (item.path === '/bocaminas') return canAccess('bocaminas');
     if (item.path === '/proveedores') return canAccess('proveedores');
     if (item.path === '/inventario') return canAccess('materiales');
@@ -94,9 +93,15 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
         <motion.div
           animate={{ rotate: isOpen || isMobile ? 0 : 360 }}
           transition={{ duration: 0.5 }}
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-copper-500 to-copper-600 flex items-center justify-center shrink-0 shadow-glow-copper relative z-10"
+          className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-glow-copper relative z-10"
         >
-          <Pickaxe size={24} className="text-white" />
+          {empresaSettings?.logo_url ? (
+            <img src={empresaSettings.logo_url} alt="Logo" className="w-full h-full object-contain" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-copper-500 to-copper-600 flex items-center justify-center">
+              <Pickaxe size={24} className="text-white" />
+            </div>
+          )}
         </motion.div>
         
         <AnimatePresence>
@@ -107,8 +112,8 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
               exit={{ opacity: 0, x: -10 }}
               className="ml-3 whitespace-nowrap overflow-hidden"
             >
-              <h1 className="text-lg font-bold tracking-wider text-white">MINERA COP</h1>
-              <p className="text-[10px] text-copper-300 font-medium tracking-widest uppercase">Sistema Empresarial</p>
+              <h1 className="text-lg font-bold tracking-wider text-white">{empresaSettings?.nombre_empresa || 'MINERA COP'}</h1>
+              <p className="text-[10px] text-copper-300 font-medium tracking-widest uppercase">{empresaSettings?.subtitulo || 'Sistema Empresarial'}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -226,10 +231,16 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
           className={`flex items-center gap-3 cursor-pointer p-1.5 rounded-xl hover:bg-white/5 transition-all group ${!isOpen && !isMobile ? 'justify-center' : ''}`}
           title="Mi Perfil"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-obsidian-800 to-obsidian-700 border border-white/10 flex items-center justify-center shrink-0 shadow-glass-inset group-hover:border-copper-500/50 transition-colors">
-            <span className="text-white font-bold text-sm">
-              {user?.nombre.charAt(0).toUpperCase()}
-            </span>
+          <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center shrink-0 shadow-glass-inset group-hover:border-copper-500/50 transition-colors">
+            {user?.avatar_url ? (
+              <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-tr from-obsidian-800 to-obsidian-700 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {user?.nombre.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
           </div>
           {(isOpen || isMobile) && (
             <div className="flex-1 min-w-0">

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -17,7 +18,21 @@ class User extends Authenticatable
         'password',
         'rol_id',
         'estado',
+        'avatar',
     ];
+
+    protected $appends = ['avatar_url'];
+
+    /**
+     * Get the full URL for the avatar.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (!array_key_exists('avatar', $this->attributes) || !$this->avatar) {
+            return null;
+        }
+        return asset('storage/' . $this->avatar);
+    }
 
     protected $hidden = [
         'password',

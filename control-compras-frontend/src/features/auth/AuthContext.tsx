@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import api from '../../lib/axios';
 
@@ -7,6 +7,8 @@ interface User {
   nombre: string;
   email: string;
   rol_id: number;
+  avatar?: string;
+  avatar_url?: string | null;
   rol?: {
     id: number;
     nombre: string;
@@ -18,6 +20,14 @@ interface User {
   }>;
 }
 
+interface EmpresaSettings {
+  id: number;
+  nombre_empresa: string;
+  subtitulo: string | null;
+  logo: string | null;
+  logo_url: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   login: (user: User) => void;
@@ -27,6 +37,8 @@ interface AuthContextType {
   hasPermission: (perm: string) => boolean;
   canAccess: (module: string) => boolean;
   canWrite: (module: string) => boolean;
+  empresaSettings: EmpresaSettings | null;
+  refreshEmpresaSettings: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,6 +46,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [empresaSettings, setEmpresaSettings] = useState<EmpresaSettings | null>(null);
+
+  const refreshEmpresaSettings = useCallback(async () => {
+    try {
+      const { data } = await api.get('/empresa/settings');
+      setEmpresaSettings(data);
+    } catch {
+      // Ignore — settings not available
+    }
+  }, []);
 
   useEffect(() => {
     // Try to fetch user on load to verify session cookie
@@ -41,6 +63,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const response = await api.get('/user');
         setUser(response.data);
+        // Also load empresa settings
+        await refreshEmpresaSettings();
       } catch (error) {
         setUser(null);
       } finally {
@@ -48,10 +72,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     fetchUser();
-  }, []);
+  }, [refreshEmpresaSettings]);
 
   const login = (newUser: User) => {
     setUser(newUser);
+    refreshEmpresaSettings();
   };
 
   const logout = async () => {
@@ -85,8 +110,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       'Consulta':            ['reportes', 'auditoria'],
     };
 
-    // Admin-only modules (cannot be granted via permissions)
-    if (['usuarios'].includes(module)) {
+    // Admin-only modules (cannot be granted via permissions unless explicitly defined)
+    if (['usuarios', 'dashboard'].includes(module)) {
       return hasPermission(module);
     }
 
@@ -113,7 +138,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         hasPermission,
         canAccess,
-        canWrite
+        canWrite,
+        empresaSettings,
+        refreshEmpresaSettings
       }}
     >
       {children}
@@ -127,4 +154,16 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+export const getDefaultRedirect = (user: any, canAccess: (module: string) => boolean): string => {
+  if (!user) return '/login';
+  if (user.rol?.nombre === 'Administrador General' || canAccess('dashboard')) return '/dashboard';
+  if (canAccess('compras')) return '/compras';
+  if (canAccess('materiales')) return '/inventario';
+  if (canAccess('reportes')) return '/reportes';
+  if (canAccess('servicios')) return '/servicios/mantenimientos';
+  if (canAccess('bocaminas')) return '/bocaminas';
+  if (canAccess('proveedores')) return '/proveedores';
+  return '/perfil';
 };

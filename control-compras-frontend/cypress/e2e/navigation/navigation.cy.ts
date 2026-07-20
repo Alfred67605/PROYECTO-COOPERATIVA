@@ -75,7 +75,7 @@ describe('Navegación - Sidebar, Topbar y Rutas', () => {
 
   context('Topbar - Breadcrumbs', () => {
     it('Debe mostrar el breadcrumb con el nombre de la sección actual', () => {
-      cy.get('header').contains('Minera Cop').should('be.visible');
+      cy.get('header').contains(/Minera Cop/i).should('be.visible');
       cy.get('header').contains('Dashboard').should('be.visible');
     });
 

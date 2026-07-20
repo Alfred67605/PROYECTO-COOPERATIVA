@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\DB;
 
 class UsuarioController extends Controller
 {
@@ -51,9 +52,12 @@ class UsuarioController extends Controller
         $validated['password'] = Hash::make($validated['password']);
         $permisoIds = $validated['permisos'] ?? [];
         unset($validated['permisos']);
-        $user = User::create($validated);
-        
-        $user->permisos()->sync($permisoIds);
+
+        $user = DB::transaction(function () use ($validated, $permisoIds) {
+            $user = User::create($validated);
+            $user->permisos()->sync($permisoIds);
+            return $user;
+        });
         
         return response()->json($user->load(['rol', 'permisos']), 201);
     }
@@ -117,9 +121,11 @@ class UsuarioController extends Controller
 
         $permisoIds = $validated['permisos'] ?? [];
         unset($validated['permisos']);
-        $user->update($validated);
-        
-        $user->permisos()->sync($permisoIds);
+
+        DB::transaction(function () use ($user, $validated, $permisoIds) {
+            $user->update($validated);
+            $user->permisos()->sync($permisoIds);
+        });
         
         return response()->json($user->load(['rol', 'permisos']));
     }

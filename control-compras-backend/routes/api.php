@@ -22,6 +22,11 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'audit'])->group(function () 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/user/avatar', [AuthController::class, 'uploadAvatar']);
+    Route::delete('/user/avatar', [AuthController::class, 'deleteAvatar']);
+
+    // Empresa Settings (read for all authenticated users)
+    Route::get('/empresa/settings', [AuthController::class, 'getEmpresaSettings']);
 
     // Admin Only — Gestión de usuarios, roles y permisos
     Route::middleware('role:Administrador General')->group(function () {
@@ -34,6 +39,11 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'audit'])->group(function () 
         Route::post('/respaldos/crear', [RespaldoController::class, 'crear']);
         Route::get('/respaldos/{id}/descargar', [RespaldoController::class, 'descargar']);
         Route::delete('/respaldos/{id}', [RespaldoController::class, 'destroy']);
+
+        // Empresa Settings (write — admin only)
+        Route::put('/empresa/settings', [AuthController::class, 'updateEmpresaSettings']);
+        Route::post('/empresa/logo', [AuthController::class, 'uploadEmpresaLogo']);
+        Route::delete('/empresa/logo', [AuthController::class, 'deleteEmpresaLogo']);
     });
 
     // Auditoría / Historial — Admin + Gerencia + permiso auditoria
@@ -43,6 +53,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'audit'])->group(function () 
     });
 
     // Materiales
+    Route::get('/materiales/grupos', [MaterialController::class, 'grupos']);
     Route::apiResource('materiales', MaterialController::class);
     Route::post('/materiales/{id}/imagen', [MaterialController::class, 'uploadImagen']);
     Route::delete('/materiales/{id}/imagen', [MaterialController::class, 'deleteImagen']);
@@ -72,11 +83,11 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'audit'])->group(function () 
         Route::get('/reportes/gastos-bocamina', [ReporteController::class, 'gastosBocamina']);
         Route::get('/reportes/materiales', [ReporteController::class, 'materiales']);
         Route::get('/reportes/compras-fecha', [ReporteController::class, 'comprasPorFecha']);
-        Route::get('/reportes/dashboard', [ReporteController::class, 'dashboard']);
         Route::get('/reportes/generar', [ReporteController::class, 'generarReporte']);
         Route::get('/reportes/exportar/pdf', [ReporteController::class, 'exportarPdf']);
         Route::get('/reportes/exportar/excel', [ReporteController::class, 'exportarExcel']);
     });
+    Route::get('/reportes/dashboard', [ReporteController::class, 'dashboard'])->middleware('role:Administrador General,dashboard');
 });
 
 

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $titulo }} — Minera Cop</title>
+    <title>{{ $titulo }} — {{ $nombreEmpresa ?? 'Empresa Minera' }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -118,7 +118,7 @@
 <body>
 
     <div class="header">
-        <h1>&#128203; {{ $titulo }} — Minera Cop</h1>
+        <h1>{{ $titulo }} — {{ $nombreEmpresa ?? 'Empresa Minera' }}</h1>
         <p>{{ $periodoTexto }} &nbsp;|&nbsp; Generado el {{ $fecha }}</p>
     </div>
 
@@ -236,7 +236,7 @@
     @endif
 
     <div class="footer">
-        Reporte generado autom&aacute;ticamente por el Sistema de Control de Compras &mdash; Minera Cop
+        Reporte generado autom&aacute;ticamente por el Sistema de Control de Compras &mdash; {{ $nombreEmpresa ?? 'Empresa Minera' }}
     </div>
 
 </body>

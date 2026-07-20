@@ -9,6 +9,8 @@ import { useToast } from '../../components/ui/Toast';
 import { staggerContainer, tableRowVariant } from '../../components/ui/PageTransition';
 import { useAuth } from '../auth/AuthContext';
 
+const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
+
 export const MaquinariaList = () => {
   const { canWrite } = useAuth();
   const queryClient = useQueryClient();
@@ -191,8 +193,8 @@ export const MaquinariaList = () => {
       {createPortal(
         <AnimatePresence>
           {showModal && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-[60] p-4 overflow-y-auto" onClick={closeModal}>
-              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-lg shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
+            <motion.div initial={isTest ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-[60] p-4 overflow-y-auto" onClick={closeModal}>
+              <motion.div initial={isTest ? false : { scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-lg shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
                   <h3 className="text-xl font-bold text-white">{editingId ? 'Editar Equipo' : 'Nuevo Equipo'}</h3>
                   <button onClick={closeModal} className="text-mining-400 hover:text-white p-2"><X size={20} /></button>

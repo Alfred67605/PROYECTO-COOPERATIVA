@@ -147,6 +147,77 @@ npm run dev
 
 ---
 
+## 🌐 Guía Completa para Despliegue en Hosting / Producción
+
+Esta sección contiene las instrucciones paso a paso que debe seguir el encargado de infraestructura o hosting para publicar el sistema en producción.
+
+### 📦 Archivos Listos Incluidos en el Proyecto
+1. **Volcado Completo de Base de Datos**: `base_de_datos_produccion.sql` (Ubicado en la raíz del proyecto). Contiene el esquema completo de PostgreSQL y todos los datos iniciales y reales cargados.
+2. **Respaldo Completo ZIP (BD + Imágenes)**: `control-compras-backend/storage/app/respaldos/backup_2026-07-19_20-40-07.zip`.
+3. **Frontend Compilado**: `control-compras-frontend/dist/` listo para publicar.
+
+---
+
+### ⚙️ Requisitos del Servidor (Hosting / VPS)
+- **Servidor Web**: Nginx o Apache con certificado SSL (HTTPS).
+- **Base de Datos**: PostgreSQL 13 o superior. Debe contar con la extensión `pg_trgm` habilitada (`CREATE EXTENSION IF NOT EXISTS pg_trgm;`).
+- **PHP**: Versión 8.2 o superior con extensiones: `pdo_pgsql`, `pgsql`, `mbstring`, `gd` (o `imagick`), `dom`, `xml`, `zip`.
+- **Acceso SSH**: Para ejecutar comandos de mantenimiento.
+
+---
+
+### 🚀 1. Despliegue del Backend (Laravel API)
+
+1. Subir la carpeta `control-compras-backend` al servidor.
+2. Importar el archivo `base_de_datos_produccion.sql` en la base de datos PostgreSQL de producción.
+3. Crear y configurar el archivo `.env` en la raíz del backend con los datos de producción:
+   ```ini
+   APP_NAME="Empresa Minera"
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://api.tudominio.com
+   FRONTEND_URL=https://tudominio.com
+   SANCTUM_STATEFUL_DOMAINS=tudominio.com,api.tudominio.com
+   SESSION_DOMAIN=.tudominio.com
+   APP_TIMEZONE=America/La_Paz
+
+   DB_CONNECTION=pgsql
+   DB_HOST=127.0.0.1
+   DB_PORT=5432
+   DB_DATABASE=nombre_bd_prod
+   DB_USERNAME=usuario_bd_prod
+   DB_PASSWORD=contrasena_segura
+   ```
+4. Ejecutar los siguientes comandos en la terminal del servidor (SSH):
+   ```bash
+   composer install --optimize-autoloader --no-dev
+   php artisan storage:link
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   chmod -R 775 storage bootstrap/cache
+   ```
+
+---
+
+### 🎨 2. Despliegue del Frontend (React / Vite)
+
+1. Subir **todo el contenido de la carpeta `control-compras-frontend/dist/`** a la raíz pública del servidor (ej. `public_html`).
+2. Configurar el archivo `.htaccess` en `public_html` (si usas Apache) para evitar errores 404 al navegar o recargar páginas:
+   ```apache
+   <IfModule mod_rewrite.c>
+     RewriteEngine On
+     RewriteBase /
+     RewriteRule ^index\.html$ - [L]
+     RewriteCond %{REQUEST_FILENAME} !-f
+     RewriteCond %{REQUEST_FILENAME} !-d
+     RewriteRule . /index.html [L]
+     </IfModule>
+   ```
+   *(Si el servidor es Nginx, agregar en el bloque de servidor: `location / { try_files $uri $uri/ /index.html; }`).*
+
+---
+
 ## 🐞 Posibles Problemas Comunes
 
 - **Error: "php no se reconoce como un comando interno o externo"**: 
@@ -154,4 +225,4 @@ npm run dev
 - **Error: "CORS" en el frontend**:
   Asegúrate de que la URL del frontend esté permitida en la configuración CORS del backend de Laravel (`config/cors.php` o archivo `.env` si aplica).
 - **La base de datos dice "no such table"**:
-  Te faltó correr las migraciones en el backend (`php artisan migrate`).
+  Te faltó correr las migraciones en el backend (`php artisan migrate`) o importar el archivo `base_de_datos_produccion.sql`.

@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider, useAuth } from './features/auth/AuthContext';
+import { AuthProvider, useAuth, getDefaultRedirect } from './features/auth/AuthContext';
 import { Login } from './features/auth/Login';
 import { Dashboard } from './features/dashboard/Dashboard';
 import { InventarioList } from './features/inventario/InventarioList';
@@ -17,7 +17,7 @@ import { AlquilerGruasList } from './features/servicios/AlquilerGruasList';
 import { MainLayout } from './components/layout/MainLayout';
 import { Perfil } from './features/profile/Perfil';
 import { ToastProvider } from './components/ui/Toast';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, MotionConfig } from 'framer-motion';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,13 +29,20 @@ const queryClient = new QueryClient({
 });
 
 const PrivateRoute = ({ children, module }: { children: React.ReactNode, module?: string }) => {
-  const { isAuthenticated, isLoading, canAccess } = useAuth();
+  const { user, isAuthenticated, isLoading, canAccess } = useAuth();
   
   if (isLoading) return <div className="min-h-screen bg-[#1a1f2e] flex items-center justify-center">Cargando...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (module && !canAccess(module)) return <Navigate to="/dashboard" replace />;
+  if (module && !canAccess(module)) {
+    return <Navigate to={getDefaultRedirect(user, canAccess)} replace />;
+  }
   
   return <MainLayout>{children}</MainLayout>;
+};
+
+const RootRedirect = () => {
+  const { user, canAccess } = useAuth();
+  return <Navigate to={getDefaultRedirect(user, canAccess)} replace />;
 };
 
 // Route wrapper for animations
@@ -49,8 +56,8 @@ const AnimatedRoutes = () => {
         <Route path="/login" element={<Login />} />
         
         {/* Rutas Base */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/dashboard" element={<PrivateRoute module="dashboard"><Dashboard /></PrivateRoute>} />
         <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
         <Route path="/inventario" element={<PrivateRoute module="materiales"><InventarioList /></PrivateRoute>} />
         
@@ -69,22 +76,25 @@ const AnimatedRoutes = () => {
         <Route path="/servicios/*" element={<PrivateRoute module="servicios"><ServiciosDashboard /></PrivateRoute>} />
         <Route path="/alquiler-gruas" element={<PrivateRoute module="servicios"><AlquilerGruasList /></PrivateRoute>} />
         
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<RootRedirect />} />
       </Routes>
     </AnimatePresence>
   );
 };
 
 const App = () => {
+  const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <AuthProvider>
-          <Router>
-            <AnimatedRoutes />
-          </Router>
-        </AuthProvider>
-      </ToastProvider>
+      <MotionConfig transition={isTest ? { duration: 0 } : undefined}>
+        <ToastProvider>
+          <AuthProvider>
+            <Router>
+              <AnimatedRoutes />
+            </Router>
+          </AuthProvider>
+        </ToastProvider>
+      </MotionConfig>
     </QueryClientProvider>
   );
 };

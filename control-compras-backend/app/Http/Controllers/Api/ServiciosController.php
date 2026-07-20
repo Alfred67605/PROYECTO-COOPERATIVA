@@ -37,7 +37,7 @@ class ServiciosController extends Controller
             'usuario_registro_id' => 'required|exists:users,id',
             'responsable_id' => 'nullable|exists:users,id',
             'estado' => 'required|string|max:20',
-            'equipo_tipo' => 'required|string|in:maquinaria,grua,vehiculo,App\\Models\\Maquinaria,App\\Models\\Vehiculo,App\\Models\\AlquilerGrua',
+            'equipo_tipo' => 'required|string|in:maquinaria,vehiculo,App\\Models\\Maquinaria,App\\Models\\Vehiculo',
             'equipo_id' => 'required|integer|min:1',
             'boca_mina_id' => 'nullable|exists:bocaminas,id',
             'ubicacion_detalle' => 'nullable|string|max:500',
@@ -58,10 +58,14 @@ class ServiciosController extends Controller
 
         DB::beginTransaction();
         try {
+            $repuestos = $validated['repuestos'] ?? [];
+            $costos = $validated['costos'] ?? [];
+            unset($validated['repuestos'], $validated['costos']);
+
             $servicio = \App\Models\Servicio::create($validated);
 
-            if (!empty($validated['repuestos'])) {
-                foreach ($validated['repuestos'] as $repuesto) {
+            if (!empty($repuestos)) {
+                foreach ($repuestos as $repuesto) {
                     \App\Models\RepuestoServicio::create([
                         'servicio_id' => $servicio->id,
                         'material_id' => $repuesto['material_id'],
@@ -71,8 +75,8 @@ class ServiciosController extends Controller
                 }
             }
 
-            if (!empty($validated['costos'])) {
-                foreach ($validated['costos'] as $costo) {
+            if (!empty($costos)) {
+                foreach ($costos as $costo) {
                     \App\Models\CostoServicio::create([
                         'servicio_id' => $servicio->id,
                         'tipo_costo' => $costo['tipo_costo'],

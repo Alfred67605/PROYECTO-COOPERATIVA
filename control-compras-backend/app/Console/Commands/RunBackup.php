@@ -162,6 +162,7 @@ class RunBackup extends Command
                     'estado' => 'completado',
                 ],
                 'ip' => request()->ip() ?? '127.0.0.1',
+                'fecha' => now(),
             ]);
 
             $this->info("Respaldo completado con éxito: {$zipFileName} ({$tamano} bytes)");

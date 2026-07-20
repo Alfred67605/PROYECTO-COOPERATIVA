@@ -77,10 +77,14 @@ class ReporteServiceTest extends TestCase
             'monto' => 300.00,
         ]);
 
-        // Add repuestos cost
+        // Add repuestos cost (create a test material first)
+        $material = \App\Models\Material::firstOrCreate(
+            ['codigo' => 'TEST-MAT-001'],
+            ['descripcion' => 'Material de prueba', 'grupo' => 'Otros', 'estado' => 'disponible']
+        );
         RepuestoServicio::create([
             'servicio_id' => $servicio->id,
-            'material_id' => 1, // Assumes material 1 exists or seed basic data
+            'material_id' => $material->id,
             'cantidad' => 2,
             'costo_unitario' => 50.00, // Total 100.00
         ]);

@@ -423,13 +423,15 @@ class ReporteController extends Controller
         }
 
         $gastoTotal = $gastoTotalCompras + $gastoTotalServicios;
-        $fecha = now()->format('d/m/Y H:i');
-        $filename = 'reporte_' . $tipo . '_' . now()->format('Y-m-d') . '.pdf';
+        $tz = config('app.timezone', 'America/La_Paz');
+        $fecha = now()->setTimezone($tz)->format('d/m/Y H:i');
+        $filename = 'reporte_' . $tipo . '_' . now()->setTimezone($tz)->format('Y-m-d') . '.pdf';
 
+        $nombreEmpresa = \App\Models\EmpresaSetting::instance()->nombre_empresa;
         $titulo = 'Reporte de ' . ($tipo === 'todos' ? 'Compras y Servicios' : ($tipo === 'compras' ? 'Compras' : 'Servicios'));
 
         $pdf = Pdf::loadView('reportes.compras_pdf', compact(
-            'compras', 'servicios', 'gastoTotal', 'gastoTotalCompras', 'gastoTotalServicios', 'periodoTexto', 'fecha', 'titulo', 'tipo'
+            'compras', 'servicios', 'gastoTotal', 'gastoTotalCompras', 'gastoTotalServicios', 'periodoTexto', 'fecha', 'titulo', 'tipo', 'nombreEmpresa'
         ))->setPaper('a4', 'landscape');
 
         return $pdf->download($filename);
@@ -444,6 +446,10 @@ class ReporteController extends Controller
             $bocaminaId = null;
         }
         $tipo = $request->query('tipo', 'todos'); // 'todos', 'compras', 'servicios'
+
+        $empresaNombre = mb_strtoupper(\App\Models\EmpresaSetting::instance()->nombre_empresa ?: 'EMPRESA MINERA');
+        $tz = config('app.timezone', 'America/La_Paz');
+        $generadoEl = now()->setTimezone($tz)->format('d/m/Y H:i');
 
         $spreadsheet = new Spreadsheet();
         
@@ -469,7 +475,7 @@ class ReporteController extends Controller
 
             // ── Título ──
             $sheet->mergeCells('A1:J1');
-            $sheet->setCellValue('A1', 'REPORTE DE COMPRAS — MINERA COP');
+            $sheet->setCellValue('A1', 'REPORTE DE COMPRAS — ' . $empresaNombre);
             $sheet->getStyle('A1')->applyFromArray([
                 'font'      => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
                 'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1A2332']],
@@ -487,7 +493,7 @@ class ReporteController extends Controller
             }
 
             $sheet->mergeCells('A2:J2');
-            $sheet->setCellValue('A2', 'Periodo: ' . $periodoTexto . '   |   Generado el: ' . now()->format('d/m/Y H:i'));
+            $sheet->setCellValue('A2', 'Periodo: ' . $periodoTexto . '   |   Generado el: ' . $generadoEl);
             $sheet->getStyle('A2')->applyFromArray([
                 'font'      => ['italic' => true, 'color' => ['rgb' => '64748B']],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -568,7 +574,7 @@ class ReporteController extends Controller
 
             // ── Título ──
             $sheet->mergeCells('A1:H1');
-            $sheet->setCellValue('A1', 'REPORTE DE SERVICIOS Y MANTENIMIENTO — MINERA COP');
+            $sheet->setCellValue('A1', 'REPORTE DE SERVICIOS Y MANTENIMIENTO — ' . $empresaNombre);
             $sheet->getStyle('A1')->applyFromArray([
                 'font'      => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
                 'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1A2332']],
@@ -586,7 +592,7 @@ class ReporteController extends Controller
             }
 
             $sheet->mergeCells('A2:H2');
-            $sheet->setCellValue('A2', 'Periodo: ' . $periodoTexto . '   |   Generado el: ' . now()->format('d/m/Y H:i'));
+            $sheet->setCellValue('A2', 'Periodo: ' . $periodoTexto . '   |   Generado el: ' . $generadoEl);
             $sheet->getStyle('A2')->applyFromArray([
                 'font'      => ['italic' => true, 'color' => ['rgb' => '64748B']],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],

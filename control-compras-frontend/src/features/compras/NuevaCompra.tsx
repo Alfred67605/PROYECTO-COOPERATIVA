@@ -28,6 +28,7 @@ export const NuevaCompra = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const queryClient = useQueryClient();
+  const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [proveedorId, setProveedorId] = useState('');
@@ -183,7 +184,7 @@ export const NuevaCompra = () => {
       <div className="card min-h-[400px] relative overflow-hidden">
         <AnimatePresence mode="wait">
           {currentStep === 1 && (
-            <motion.div key="step1" variants={variants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+            <motion.div key="step1" variants={variants} initial={isTest ? false : "initial"} animate="animate" exit="exit" className="space-y-6">
               <h3 className="text-lg font-bold text-white border-b border-white/5 pb-4">Información del Documento</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -234,7 +235,7 @@ export const NuevaCompra = () => {
           )}
 
           {currentStep === 2 && (
-            <motion.div key="step2" variants={variants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+            <motion.div key="step2" variants={variants} initial={isTest ? false : "initial"} animate="animate" exit="exit" className="space-y-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
                 <h3 className="text-lg font-bold text-white">Detalle de Materiales</h3>
                 <div className="relative w-full md:w-72 z-20">
@@ -273,7 +274,7 @@ export const NuevaCompra = () => {
                       <th className="p-4 w-32">Código</th>
                       <th className="p-4">Descripción</th>
                       <th className="p-4 w-32">Cantidad</th>
-                      <th className="p-4 w-40">Precio Unitario ($)</th>
+                      <th className="p-4 w-40">Precio Unitario (Bs.)</th>
                       <th className="p-4 w-40 text-right">Subtotal</th>
                       <th className="p-4 w-16 text-center"></th>
                     </tr>
@@ -314,7 +315,7 @@ export const NuevaCompra = () => {
                     <tfoot className="bg-white/5 text-white">
                       <tr>
                         <td colSpan={4} className="p-4 font-bold text-right uppercase tracking-wider text-sm">Total Compra</td>
-                        <td className="p-4 text-right font-black text-xl text-copper-400">${totalGeneral.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td className="p-4 text-right font-black text-xl text-copper-400">Bs. {totalGeneral.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         <td></td>
                       </tr>
                     </tfoot>
@@ -325,7 +326,7 @@ export const NuevaCompra = () => {
           )}
 
           {currentStep === 3 && (
-            <motion.div key="step3" variants={variants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+            <motion.div key="step3" variants={variants} initial={isTest ? false : "initial"} animate="animate" exit="exit" className="space-y-6">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 size={32} />
@@ -342,9 +343,9 @@ export const NuevaCompra = () => {
                       <div key={d.material_id} className="flex justify-between items-center bg-white/[0.02] p-3 rounded-xl border border-white/5">
                         <div>
                           <div className="font-bold text-white text-sm">{d.descripcion}</div>
-                          <div className="text-xs text-mining-400">{d.cantidad} unid. x ${d.precio_unitario}</div>
+                          <div className="text-xs text-mining-400">{d.cantidad} unid. x Bs. {d.precio_unitario}</div>
                         </div>
-                        <div className="font-bold text-copper-400">${d.subtotal.toLocaleString()}</div>
+                        <div className="font-bold text-copper-400">Bs. {d.subtotal.toLocaleString()}</div>
                       </div>
                     ))}
                   </div>
@@ -380,7 +381,7 @@ export const NuevaCompra = () => {
 
                   <div className="border-t border-white/10 pt-4">
                     <p className="text-sm text-mining-400 mb-1">Total a Pagar</p>
-                    <p className="text-3xl font-black text-copper-400">${totalGeneral.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                    <p className="text-3xl font-black text-copper-400">Bs. {totalGeneral.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                   </div>
                 </div>
               </div>

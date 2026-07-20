@@ -37,6 +37,7 @@ class RolePermissionTest extends TestCase
 
         // Seed permissions
         $permNames = [
+            'dashboard',
             'bocaminas',
             'proveedores',
             'materiales',
@@ -116,7 +117,7 @@ class RolePermissionTest extends TestCase
 
     public function test_reportes_dashboard_route_permissions(): void
     {
-        // Route is protected by role:Gerencia,Contabilidad,Administrador General,reportes
+        // Route is protected by role:Administrador General,dashboard
 
         // 1. Admin General user (should pass)
         $admin = $this->createUser('Administrador General');
@@ -124,33 +125,21 @@ class RolePermissionTest extends TestCase
         $response = $this->getJson('/api/reportes/dashboard');
         $response->assertStatus(200);
 
-        // 2. Gerencia user (should pass)
+        // 2. Gerencia user without dashboard permission (should fail)
         $gerencia = $this->createUser('Gerencia');
         Sanctum::actingAs($gerencia);
         $response = $this->getJson('/api/reportes/dashboard');
-        $response->assertStatus(200);
+        $response->assertStatus(403);
 
-        // 3. Contabilidad user (should pass)
+        // 3. Contabilidad user without dashboard permission (should fail)
         $contabilidad = $this->createUser('Contabilidad');
         Sanctum::actingAs($contabilidad);
         $response = $this->getJson('/api/reportes/dashboard');
-        $response->assertStatus(200);
-
-        // 4. Consulta user (should pass, because reportes is in defaults)
-        $consulta = $this->createUser('Consulta');
-        Sanctum::actingAs($consulta);
-        $response = $this->getJson('/api/reportes/dashboard');
-        $response->assertStatus(200);
-
-        // 5. Supervisor Bocamina user (should fail, no default reportes)
-        $supervisor = $this->createUser('Supervisor Bocamina');
-        Sanctum::actingAs($supervisor);
-        $response = $this->getJson('/api/reportes/dashboard');
         $response->assertStatus(403);
 
-        // 6. Supervisor Bocamina user with explicit 'reportes' permission (should pass)
-        $supervisorWithPerm = $this->createUser('Supervisor Bocamina', ['reportes']);
-        Sanctum::actingAs($supervisorWithPerm);
+        // 4. Non-admin user with explicit 'dashboard' permission (should pass)
+        $userWithPerm = $this->createUser('Gerencia', ['dashboard']);
+        Sanctum::actingAs($userWithPerm);
         $response = $this->getJson('/api/reportes/dashboard');
         $response->assertStatus(200);
     }

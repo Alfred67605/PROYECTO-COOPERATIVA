@@ -228,7 +228,9 @@ export const HistorialList = () => {
                       <td className="pl-6">
                         <div className="flex items-center gap-2 text-mining-500 text-sm font-medium">
                           <Calendar size={14} className="text-copper-500" />
-                          {new Date(item.fecha || item.created_at).toLocaleString()}
+                          {item.fecha || item.created_at
+                            ? new Date(String(item.fecha || item.created_at).replace(' ', 'T')).toLocaleString()
+                            : '-'}
                         </div>
                       </td>
                       <td>

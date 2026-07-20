@@ -52,7 +52,17 @@ export const Login = () => {
       const response = await api.post('/login', data);
       
       login(response.data.user);
-      navigate('/dashboard');
+      const user = response.data.user;
+      const isAdmin = user.rol?.nombre === 'Administrador General' || user.permisos?.some((p: any) => p.nombre === 'dashboard');
+      if (isAdmin) {
+        navigate('/dashboard');
+      } else if (user.rol?.nombre === 'Supervisor Bocamina') {
+        navigate('/inventario');
+      } else if (['Gerencia', 'Compras', 'Contabilidad'].includes(user.rol?.nombre)) {
+        navigate('/compras');
+      } else {
+        navigate('/reportes');
+      }
     } catch (err: unknown) {
       const errorResponse = err as any;
       setError(errorResponse.response?.data?.message || 'Credenciales incorrectas');

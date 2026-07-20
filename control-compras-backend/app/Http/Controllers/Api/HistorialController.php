@@ -34,19 +34,52 @@ class HistorialController extends Controller
             $timezone = 'UTC';
         }
 
+        $driver = \DB::connection()->getDriverName();
+
         if ($request->filled('fecha')) {
-            $query->whereRaw("(fecha AT TIME ZONE 'UTC' AT TIME ZONE ?)::date = ?", [$timezone, $request->input('fecha')]);
+            if ($driver === 'pgsql') {
+                $query->whereRaw("(fecha AT TIME ZONE 'UTC' AT TIME ZONE ?)::date = ?", [$timezone, $request->input('fecha')]);
+            } else {
+                $query->whereDate('fecha', '=', $request->input('fecha'));
+            }
         }
         if ($request->filled('hora_inicio')) {
-            $query->whereRaw("(fecha AT TIME ZONE 'UTC' AT TIME ZONE ?)::time >= ?", [$timezone, $request->input('hora_inicio')]);
+            $horaInicio = $request->input('hora_inicio');
+            if (strlen($horaInicio) === 5) {
+                $horaInicio .= ':00';
+            }
+            if ($driver === 'pgsql') {
+                $query->whereRaw("(fecha AT TIME ZONE 'UTC' AT TIME ZONE ?)::time >= ?", [$timezone, $horaInicio]);
+            } else {
+                $query->whereTime('fecha', '>=', $horaInicio);
+            }
         }
         if ($request->filled('hora_fin')) {
-            $query->whereRaw("(fecha AT TIME ZONE 'UTC' AT TIME ZONE ?)::time <= ?", [$timezone, $request->input('hora_fin')]);
+            $horaFin = $request->input('hora_fin');
+            if (strlen($horaFin) === 5) {
+                $horaFin .= ':59';
+            }
+            if ($driver === 'pgsql') {
+                $query->whereRaw("(fecha AT TIME ZONE 'UTC' AT TIME ZONE ?)::time <= ?", [$timezone, $horaFin]);
+            } else {
+                $query->whereTime('fecha', '<=', $horaFin);
+            }
         }
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->whereHas('usuario', function($qu) use ($search) {
-                $qu->where('nombre', 'like', "%{$search}%");
+            $query->where(function($q) use ($search, $driver) {
+                $likeOp = $driver === 'pgsql' ? 'ilike' : 'like';
+                $q->whereHas('usuario', function($qu) use ($search, $likeOp) {
+                    $qu->where('nombre', $likeOp, "%{$search}%");
+                })
+                ->orWhere('tabla', $likeOp, "%{$search}%")
+                ->orWhere('accion', $likeOp, "%{$search}%");
+
+                if ($driver === 'pgsql') {
+                    $q->orWhereRaw("datos_nuevos::text ilike ?", ["%{$search}%"]);
+                } else {
+                    $q->orWhere('datos_nuevos', 'like', "%{$search}%");
+                }
             });
         }
 

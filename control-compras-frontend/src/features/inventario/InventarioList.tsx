@@ -9,38 +9,39 @@ import { useToast } from '../../components/ui/Toast';
 import { useAuth } from '../auth/AuthContext';
 import { staggerContainer, staggerItem } from '../../components/ui/PageTransition';
 
-const PREFIX_MAP: { [key: string]: string } = {
-  'Herramientas': 'HERR',
-  'Combustibles': 'COMB',
-  'Cambio de aceite': 'ACEI',
-  'Lubricantes': 'LUB',
-  'Automotores': 'AUTO',
-  'Vehículos registrados': 'VEHI',
-  'Máquina de perforación': 'PERF',
-  'Materiales': 'MAT',
-  'Herramientas manuales': 'MANU',
-  'Maderas': 'MADE',
-  'Reparaciones': 'REPA',
-  'Otros': 'OTRO'
-};
+const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
 
+/**
+ * Auto-generate the next code for a group by inspecting existing materials.
+ * Detects the prefix pattern from existing codes (e.g., G-1/0018 → G-1/0019).
+ */
 const getNextCodeForGroup = (group: string, allMaterials: any[]) => {
-  const prefix = PREFIX_MAP[group] || 'MAT';
   const groupMaterials = allMaterials.filter((m: any) => m.grupo === group);
-  
-  let maxNum = 0;
-  const regex = new RegExp(`^${prefix}-(\\d+)$`, 'i');
-  
-  groupMaterials.forEach((m: any) => {
-    const match = m.codigo.match(regex);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      if (num > maxNum) maxNum = num;
-    }
-  });
-  
-  const nextNum = maxNum > 0 ? maxNum + 1 : groupMaterials.length + 1;
-  return `${prefix}-${String(nextNum).padStart(2, '0')}`;
+  if (groupMaterials.length === 0) return 'MAT-01';
+
+  // Find the last code in this group
+  const lastMat = groupMaterials[groupMaterials.length - 1];
+  const code = lastMat.codigo || '';
+
+  // Try pattern: PREFIX/NNNN (e.g., G-1/0017)
+  const slashMatch = code.match(/^(.+)\/(0*)(\d+)$/);
+  if (slashMatch) {
+    const prefix = slashMatch[1];
+    const padLen = (slashMatch[2] + slashMatch[3]).length;
+    const nextNum = parseInt(slashMatch[3], 10) + 1;
+    return `${prefix}/${String(nextNum).padStart(padLen, '0')}`;
+  }
+
+  // Try pattern: PREFIX-NN (e.g., HERR-05)
+  const dashMatch = code.match(/^(.+)-(\d+)$/);
+  if (dashMatch) {
+    const prefix = dashMatch[1];
+    const padLen = dashMatch[2].length;
+    const nextNum = parseInt(dashMatch[2], 10) + 1;
+    return `${prefix}-${String(nextNum).padStart(padLen, '0')}`;
+  }
+
+  return `${group.substring(0, 3).toUpperCase()}-${String(groupMaterials.length + 1).padStart(2, '0')}`;
 };
 
 interface MaterialForm {
@@ -52,23 +53,8 @@ interface MaterialForm {
 const emptyForm: MaterialForm = {
   codigo: '',
   descripcion: '',
-  grupo: 'Herramientas'
+  grupo: ''
 };
-
-const GRUPOS = [
-  'Herramientas',
-  'Combustibles',
-  'Cambio de aceite',
-  'Lubricantes',
-  'Automotores',
-  'Vehículos registrados',
-  'Máquina de perforación',
-  'Materiales',
-  'Herramientas manuales',
-  'Maderas',
-  'Reparaciones',
-  'Otros'
-];
 
 export const InventarioList = () => {
   const queryClient = useQueryClient();
@@ -90,6 +76,17 @@ export const InventarioList = () => {
 
   const canEdit = canWrite('materiales');
   const canDelete = canWrite('materiales');
+
+  // Fetch groups dynamically from the API
+  const { data: gruposData } = useQuery({
+    queryKey: ['materiales-grupos'],
+    queryFn: async () => {
+      const res = await api.get('/materiales/grupos');
+      return res.data as string[];
+    }
+  });
+
+  const GRUPOS = gruposData || [];
 
   const { data: allMaterialsData } = useQuery({
     queryKey: ['all-materiales'],
@@ -168,11 +165,12 @@ export const InventarioList = () => {
   });
 
   const openCreate = () => {
-    const nextCode = getNextCodeForGroup('Herramientas', allMaterialsData?.data || []);
+    const defaultGroup = GRUPOS[0] || '';
+    const nextCode = getNextCodeForGroup(defaultGroup, allMaterialsData?.data || []);
     setForm({
       codigo: nextCode,
       descripcion: '',
-      grupo: 'Herramientas'
+      grupo: defaultGroup
     });
     setEditingId(null);
     setError('');
@@ -186,7 +184,7 @@ export const InventarioList = () => {
     setForm({
       codigo: m.codigo,
       descripcion: m.descripcion,
-      grupo: m.grupo || 'Herramientas'
+      grupo: m.grupo || GRUPOS[0] || ''
     });
     setEditingId(m.id);
     setError('');
@@ -412,9 +410,9 @@ export const InventarioList = () => {
       {createPortal(
         <AnimatePresence>
           {showModal && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <motion.div initial={isTest ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-[60] p-4 overflow-y-auto" onClick={closeModal}>
-              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              <motion.div initial={isTest ? false : { scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-lg shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
                   <div className="flex items-center gap-3">

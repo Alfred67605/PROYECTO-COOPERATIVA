@@ -8,6 +8,8 @@
 describe('Flujo E2E - Gestión de Seguridad, Roles, Reportes y Auditoría', () => {
   it('Debe crear un usuario con rol específico, validar accesos, consultar reportes e inspeccionar auditoría', () => {
     cy.fixture('users').then((users) => {
+      const uniqueEmail = `cypress.test.${Date.now()}@cooperativaminera.com`;
+
       // 1. Iniciar sesión como Administrador General
       cy.loginManually(users.admin.email, users.admin.password);
 
@@ -17,7 +19,7 @@ describe('Flujo E2E - Gestión de Seguridad, Roles, Reportes y Auditoría', () =
       cy.contains('button', 'Nuevo Usuario').click();
       cy.get('.fixed.inset-0 .glass-panel').within(() => {
         cy.get('input').eq(0).type(users.newUser.nombre);
-        cy.get('input[type="email"]').type(users.newUser.email);
+        cy.get('input[type="email"]').type(uniqueEmail);
         cy.get('input[type="password"]').type(users.newUser.password);
         cy.get('select').first().select(users.newUser.rol); // Rol Compras
         cy.contains('button', 'Guardar').click();
@@ -28,7 +30,7 @@ describe('Flujo E2E - Gestión de Seguridad, Roles, Reportes y Auditoría', () =
       cy.logout();
 
       // 4. Iniciar sesión con el nuevo usuario de Compras
-      cy.loginManually(users.newUser.email, users.newUser.password);
+      cy.loginManually(uniqueEmail, users.newUser.password);
 
       // 5. Verificar que tiene acceso a Compras pero NO a Gestión de Usuarios ni Auditoría
       cy.visit('/compras');

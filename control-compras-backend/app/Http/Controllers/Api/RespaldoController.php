@@ -105,6 +105,7 @@ class RespaldoController extends Controller
                 'tamano' => $respaldo->tamano,
             ],
             'ip' => $request->ip() ?? '127.0.0.1',
+            'fecha' => now(),
         ]);
 
         $respaldo->delete();

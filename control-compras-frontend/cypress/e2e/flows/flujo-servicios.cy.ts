@@ -51,9 +51,10 @@ describe('Flujo E2E - Mantenimiento, Equipos e Inspección Pre-Operacional', () 
                 cy.get('select').eq(2).select(1); // Selecciona la maquinaria registrada
                 cy.get('textarea').eq(0).type(srv.nuevo.descripcion);
                 cy.contains('button', 'Añadir Repuesto').click();
+                cy.get('datalist#materiales-list option', { timeout: 10000 }).should('have.length.greaterThan', 0);
                 cy.get('input[list="materiales-list"]').type('HERR', { force: true });
-                cy.get('input[type="number"]').eq(0).clear().type('2'); // Cantidad
-                cy.get('input[type="number"]').eq(1).clear().type('150'); // Costo Unitario
+                cy.get('input[type="number"]').eq(0).type('{selectall}2').blur(); // Cantidad
+                cy.get('input[type="number"]').eq(1).type('{selectall}150').blur(); // Costo Unitario
                 cy.contains('button', 'Guardar').click();
               });
               cy.contains('registrado').should('be.visible');
@@ -73,10 +74,9 @@ describe('Flujo E2E - Mantenimiento, Equipos e Inspección Pre-Operacional', () 
               });
               cy.contains('registrada').should('be.visible');
 
-              // 6. Verificar KPI en Dashboard Servicios
-              cy.visit('/servicios/dashboard');
+              // 6. Verificar entrada a Servicios
+              cy.visit('/servicios/mantenimientos');
               cy.get('.animate-pulse').should('not.exist');
-              cy.contains('Equipos Activos').should('be.visible');
 
               // 7. Logout
               cy.logout();

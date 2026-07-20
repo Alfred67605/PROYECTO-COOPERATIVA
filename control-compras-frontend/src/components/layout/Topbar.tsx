@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Menu, ChevronRight, Sun, Moon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../features/auth/AuthContext';
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -10,6 +11,7 @@ interface TopbarProps {
 
 export const Topbar = ({ onMenuClick, isMobile }: TopbarProps) => {
   const location = useLocation();
+  const { empresaSettings } = useAuth();
   const pathName = location.pathname.split('/')[1] || 'Dashboard';
   const title = pathName.charAt(0).toUpperCase() + pathName.slice(1);
 
@@ -44,7 +46,7 @@ export const Topbar = ({ onMenuClick, isMobile }: TopbarProps) => {
         )}
         
         <div className="flex items-center text-sm font-medium text-mining-500 hidden sm:flex">
-          <span>Minera Cop</span>
+          <span>{empresaSettings?.nombre_empresa || 'Minera Cop'}</span>
           <ChevronRight size={14} className="mx-2" />
           <motion.span 
             key={title}
@@ -63,23 +65,23 @@ export const Topbar = ({ onMenuClick, isMobile }: TopbarProps) => {
       </div>
       
       <div className="flex items-center gap-4 lg:gap-6">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-mining-500 uppercase tracking-widest hidden md:inline">Tema</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold text-slate-700 dark:text-mining-400 uppercase tracking-widest hidden md:inline">Tema</span>
           <button
             onClick={() => setIsDark(!isDark)}
-            className="w-12 h-6.5 rounded-full bg-black/10 dark:bg-black/30 border border-black/10 dark:border-white/5 p-0.5 relative flex items-center cursor-pointer transition-all duration-300 focus:outline-none hover:border-black/20 dark:hover:border-white/10 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1),_0_1px_0_rgba(255,255,255,0.05)]"
+            className="w-16 h-8 rounded-full bg-slate-200 dark:bg-black/30 border border-slate-300 dark:border-white/10 p-0.5 relative flex items-center cursor-pointer transition-all duration-300 focus:outline-none hover:border-slate-400 dark:hover:border-white/20 shadow-[inset_0_1px_3px_rgba(0,0,0,0.08),_0_1px_0_rgba(255,255,255,0.05)]"
             aria-label="Toggle theme"
           >
             <div
-              className="w-5.5 h-5.5 rounded-full bg-gradient-to-br from-copper-500 to-copper-600 flex items-center justify-center text-white shadow-glow-copper transition-all duration-300 absolute"
+              className="w-7 h-7 rounded-full bg-gradient-to-br from-copper-500 to-copper-600 flex items-center justify-center text-white shadow-glow-copper transition-all duration-300 ease-in-out absolute"
               style={{
-                transform: isDark ? 'translateX(20px)' : 'translateX(0px)',
+                transform: isDark ? 'translateX(30px)' : 'translateX(0px)',
                 left: '2px'
               }}
             >
-              {isDark ? <Moon size={11} /> : <Sun size={11} />}
+              {isDark ? <Moon size={14} /> : <Sun size={14} />}
             </div>
-            <div className="w-full flex justify-between px-2 text-[9px] text-mining-500 font-bold select-none pointer-events-none">
+            <div className="w-full flex justify-between px-1.5 text-sm select-none pointer-events-none">
               <span>☀️</span>
               <span>🌙</span>
             </div>

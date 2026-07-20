@@ -68,18 +68,19 @@ describe('Usuarios - Gestión de Usuarios y Roles', () => {
 
     it('Debe crear un usuario con datos válidos', () => {
       cy.fixture('users').then((users) => {
+        const uniqueEmail = `cypress.test.${Date.now()}@cooperativaminera.com`;
         cy.contains('button', 'Nuevo Usuario').click();
 
         cy.get('.fixed.inset-0 .glass-panel').within(() => {
           cy.get('input').eq(0).clear().type(users.newUser.nombre);
-          cy.get('input[type="email"]').clear().type(users.newUser.email);
+          cy.get('input[type="email"]').clear().type(uniqueEmail);
           cy.get('input[type="password"]').clear().type(users.newUser.password);
           cy.get('select').first().select(users.newUser.rol);
           cy.contains('button', 'Guardar').click();
         });
 
-        // Should show success toast
-        cy.contains('registrado', { timeout: 10000 }).should('be.visible');
+        // Should show success toast (title = 'Usuario creado')
+        cy.contains('Usuario creado', { timeout: 10000 }).should('be.visible');
       });
     });
   });

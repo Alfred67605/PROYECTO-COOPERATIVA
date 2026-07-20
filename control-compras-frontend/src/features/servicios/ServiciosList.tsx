@@ -9,6 +9,15 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 import { staggerContainer, tableRowVariant } from '../../components/ui/PageTransition';
 
+interface RepuestoItem {
+  material_id: string | number;
+  material_nombre?: string;
+  cantidad: number;
+  costo_unitario: number;
+}
+
+const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
+
 export const ServiciosList = () => {
   const { user, canWrite } = useAuth();
   const canEdit = canWrite('servicios');
@@ -27,7 +36,7 @@ export const ServiciosList = () => {
     equipo_id: '',
     descripcion: '',
     observaciones: '',
-    repuestos: [] as any[]
+    repuestos: [] as RepuestoItem[]
   });
   const [error, setError] = useState('');
 
@@ -36,7 +45,6 @@ export const ServiciosList = () => {
 
   const { data: maquinaria } = useQuery({ queryKey: ['maquinaria'], queryFn: async () => (await api.get('/maquinaria')).data });
   const { data: vehiculos } = useQuery({ queryKey: ['vehiculos'], queryFn: async () => (await api.get('/vehiculos')).data });
-  const { data: gruas } = useQuery({ queryKey: ['gruas'], queryFn: async () => (await api.get('/gruas')).data });
   const { data: materiales } = useQuery({ queryKey: ['materiales'], queryFn: async () => (await api.get('/materiales')).data });
 
   const { data, isLoading } = useQuery({
@@ -114,7 +122,6 @@ export const ServiciosList = () => {
   const getEquipos = () => {
     if (form.equipo_tipo === 'App\\Models\\Maquinaria') return maquinaria || [];
     if (form.equipo_tipo === 'App\\Models\\Vehiculo') return vehiculos || [];
-    if (form.equipo_tipo === 'App\\Models\\Grua') return gruas || [];
     return [];
   };
 
@@ -122,7 +129,6 @@ export const ServiciosList = () => {
     if (!equipo) return 'Desconocido';
     if (tipoModelo === 'App\\Models\\Maquinaria') return `${equipo.nombre_codigo} (${equipo.tipo})`;
     if (tipoModelo === 'App\\Models\\Vehiculo') return `${equipo.placa} (${equipo.tipo})`;
-    if (tipoModelo === 'App\\Models\\Grua') return `${equipo.codigo} (${equipo.tipo})`;
     return 'Desconocido';
   };
 
@@ -227,8 +233,8 @@ export const ServiciosList = () => {
       {createPortal(
         <AnimatePresence>
           {showModal && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-[60] p-4 overflow-y-auto" onClick={closeModal}>
-              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-2xl shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
+            <motion.div initial={isTest ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-[60] p-4 overflow-y-auto" onClick={closeModal}>
+              <motion.div initial={isTest ? false : { scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-2xl shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
                 <h3 className="text-xl font-bold text-white">{editingId ? 'Editar Mantenimiento' : 'Nuevo Mantenimiento'}</h3>
                 <button onClick={closeModal} className="text-mining-400 hover:text-white p-2"><X size={20} /></button>
@@ -270,7 +276,6 @@ export const ServiciosList = () => {
                       <label className="block text-xs font-bold text-mining-500 uppercase mb-2">Tipo de Equipo *</label>
                       <select className="input-field" required value={form.equipo_tipo} onChange={e => setForm({...form, equipo_tipo: e.target.value, equipo_id: ''})}>
                         <option value="App\Models\Maquinaria">Maquinaria</option>
-                        <option value="App\Models\Grua">Grúa</option>
                         <option value="App\Models\Vehiculo">Vehículo</option>
                       </select>
                     </div>

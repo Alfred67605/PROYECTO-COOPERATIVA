@@ -220,7 +220,7 @@ export const ReportesView = () => {
             <div className="card bg-mining-900 text-white relative overflow-hidden border-0">
               <div className="absolute -right-10 -bottom-10 opacity-10"><Activity size={150} /></div>
               <p className="text-xs font-bold text-mining-400 uppercase tracking-wider mb-2">Gasto Total del Periodo</p>
-              <p className="text-4xl font-black text-copper-400">${parseFloat(reporte?.resumen?.gasto_total || 0).toLocaleString()}</p>
+              <p className="text-4xl font-black text-copper-400">Bs. {parseFloat(reporte?.resumen?.gasto_total || 0).toLocaleString()}</p>
             </div>
             <div className="card relative overflow-hidden">
               <div className="absolute -right-10 -bottom-10 opacity-5 text-white"><ShoppingCart size={150} /></div>
@@ -244,9 +244,9 @@ export const ReportesView = () => {
                     margin={{ top: 0, right: 30, left: 20, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis type="number" tickFormatter={(val) => `$${(val/1000).toFixed(0)}k`} />
+                    <XAxis type="number" tickFormatter={(val) => `Bs. ${(val/1000).toFixed(0)}k`} />
                     <YAxis dataKey="nombre" type="category" axisLine={false} tickLine={false} width={100} />
-                    <Tooltip cursor={{ fill: 'rgba(255,255,255,0.02)' }} formatter={(value: any) => [`$${parseFloat(value || 0).toLocaleString()}`, 'Gasto']} />
+                    <Tooltip cursor={{ fill: 'rgba(255,255,255,0.02)' }} formatter={(value: any) => [`Bs. ${parseFloat(value || 0).toLocaleString()}`, 'Gasto']} />
                     <Bar dataKey="total_gastado" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -266,7 +266,7 @@ export const ReportesView = () => {
                       <p className="font-bold text-white">{p.nombre}</p>
                       <p className="text-xs text-mining-500">Proveedor</p>
                     </div>
-                    <div className="font-black text-copper-400">${parseFloat(p.total_gastado).toLocaleString()}</div>
+                    <div className="font-black text-copper-400">Bs. {parseFloat(p.total_gastado).toLocaleString()}</div>
                   </div>
                 )) : (
                   <p className="text-mining-400 text-center py-10">No hay datos en este periodo.</p>
@@ -289,7 +289,7 @@ export const ReportesView = () => {
                       <th className="p-4">Código</th>
                       <th className="p-4">Material</th>
                       <th className="p-4 text-center">Cantidad Total</th>
-                      <th className="p-4 text-right">Inversión Total ($)</th>
+                      <th className="p-4 text-right">Inversión Total (Bs.)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -298,7 +298,7 @@ export const ReportesView = () => {
                         <td className="p-4 font-mono text-xs text-mining-400">{mat.codigo}</td>
                         <td className="p-4 font-bold text-white">{mat.descripcion}</td>
                         <td className="p-4 text-center font-medium text-mining-300">{parseFloat(mat.total_cantidad).toLocaleString()}</td>
-                        <td className="p-4 text-right font-bold text-copper-400">${parseFloat(mat.total_gastado).toLocaleString()}</td>
+                        <td className="p-4 text-right font-bold text-copper-400">Bs. {parseFloat(mat.total_gastado).toLocaleString()}</td>
                       </tr>
                     ))}
                     {reporte?.top_materiales?.length === 0 && (
@@ -326,7 +326,7 @@ export const ReportesView = () => {
                       <th className="p-4">Proveedor</th>
                       <th className="p-4">N° Factura</th>
                       <th className="p-4">Bocamina</th>
-                      <th className="p-4 text-right">Monto ($)</th>
+                      <th className="p-4 text-right">Monto (Bs.)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -337,7 +337,7 @@ export const ReportesView = () => {
                         <td className="p-4 text-mining-300">{c.proveedor?.nombre || '-'}</td>
                         <td className="p-4 text-mining-300">{c.numero_factura || '-'}</td>
                         <td className="p-4 text-mining-300">{c.bocamina?.nombre || 'Central'}</td>
-                        <td className="p-4 text-right font-bold text-copper-400">${parseFloat(c.total).toLocaleString()}</td>
+                        <td className="p-4 text-right font-bold text-copper-400">Bs. {parseFloat(c.total).toLocaleString()}</td>
                       </tr>
                     ))}
                     {(!reporte?.compras || reporte.compras.length === 0) && (
@@ -366,7 +366,7 @@ export const ReportesView = () => {
                       <th className="p-4">Bocamina</th>
                       <th className="p-4">Responsable</th>
                       <th className="p-4">Estado</th>
-                      <th className="p-4 text-right">Monto ($)</th>
+                      <th className="p-4 text-right">Monto (Bs.)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -385,7 +385,7 @@ export const ReportesView = () => {
                               s.estado === 'completado' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                             }`}>{s.estado}</span>
                           </td>
-                          <td className="p-4 text-right font-bold text-teal-400">${totalCosto.toLocaleString()}</td>
+                          <td className="p-4 text-right font-bold text-teal-400">Bs. {totalCosto.toLocaleString()}</td>
                         </tr>
                       );
                     })}

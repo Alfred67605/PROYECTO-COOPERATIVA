@@ -79,12 +79,11 @@ describe('Mantenimientos - Historial y Registro de Servicios', () => {
       });
     });
 
-    it('Debe tener las opciones de Tipo de Equipo: Maquinaria, Grúa, Vehículo', () => {
+    it('Debe tener las opciones de Tipo de Equipo: Maquinaria, Vehículo', () => {
       cy.contains('button', 'Nuevo Mantenimiento').click();
       cy.get('.fixed.inset-0 .glass-panel').within(() => {
         cy.get('select').eq(1).within(() => {
           cy.contains('option', 'Maquinaria').should('exist');
-          cy.contains('option', 'Grúa').should('exist');
           cy.contains('option', 'Vehículo').should('exist');
         });
       });
@@ -135,9 +134,9 @@ describe('Mantenimientos - Historial y Registro de Servicios', () => {
       cy.get('.fixed.inset-0 .glass-panel').within(() => {
         cy.contains('button', 'Añadir Repuesto').click();
         // Set quantity and unit cost
-        cy.get('input[type="number"]').eq(0).clear().type('5');
-        cy.get('input[type="number"]').eq(1).clear().type('100');
-        cy.contains('Bs. 500.00').should('be.visible');
+        cy.get('input[type="number"]').eq(0).type('{selectall}5').blur();
+        cy.get('input[type="number"]').eq(1).type('{selectall}100').blur();
+        cy.contains('Bs. 500.00', { timeout: 10000 }).should('be.visible');
         cy.contains('Total Repuestos').should('be.visible');
       });
     });

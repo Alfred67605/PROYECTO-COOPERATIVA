@@ -9,6 +9,8 @@ import { useToast } from '../../components/ui/Toast';
 import { staggerContainer, tableRowVariant } from '../../components/ui/PageTransition';
 import { useAuth } from '../auth/AuthContext';
 
+const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
+
 export const AlquilerGruasList = () => {
   const { canWrite } = useAuth();
   const queryClient = useQueryClient();
@@ -154,7 +156,7 @@ export const AlquilerGruasList = () => {
                       {a.tiempo_trabajo || '-'}
                     </td>
                     <td className="font-medium text-emerald-400">
-                      {a.costo ? `$${parseFloat(a.costo).toLocaleString()}` : 'Por definir'}
+                      {a.costo ? `Bs. ${parseFloat(a.costo).toLocaleString()}` : 'Por definir'}
                     </td>
                     <td className="pr-6 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -204,8 +206,8 @@ export const AlquilerGruasList = () => {
       {createPortal(
         <AnimatePresence>
           {showModal && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-[60] p-4 overflow-y-auto" onClick={closeModal}>
-              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-lg shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
+            <motion.div initial={isTest ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center z-[60] p-4 overflow-y-auto" onClick={closeModal}>
+              <motion.div initial={isTest ? false : { scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-panel bg-obsidian-900/95 backdrop-blur-xl rounded-2xl w-full max-w-lg shadow-elevated border border-white/10 overflow-hidden my-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
                   <h3 className="text-xl font-bold text-white">{editingId ? 'Editar Alquiler de Grúa' : 'Nuevo Alquiler de Grúa'}</h3>
                   <button onClick={closeModal} className="text-mining-400 hover:text-white p-2"><X size={20} /></button>
@@ -247,7 +249,7 @@ export const AlquilerGruasList = () => {
                         <input className="input-field" value={form.tiempo_trabajo} onChange={e => setForm({...form, tiempo_trabajo: e.target.value})} placeholder="Ej: 5 días, 10 horas" />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-mining-500 uppercase mb-2">Costo ($)</label>
+                        <label className="block text-xs font-bold text-mining-500 uppercase mb-2">Costo (Bs.)</label>
                         <input type="number" step="0.01" min="0" className="input-field" value={form.costo} onChange={e => setForm({...form, costo: e.target.value})} placeholder="Monto total a pagar" />
                       </div>
                     </div>

@@ -49,7 +49,7 @@ describe('Alquiler de Grúas - CRUD de Servicios de Alquiler', () => {
         cy.contains('Nombre del Chófer').should('be.visible');
         cy.contains('Bocamina Destino').should('be.visible');
         cy.contains('Tiempo de Trabajo').should('be.visible');
-        cy.contains('Costo ($)').should('be.visible');
+        cy.contains('Costo (Bs.)').should('be.visible');
       });
     });
 

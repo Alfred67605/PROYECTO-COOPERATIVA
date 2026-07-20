@@ -22,16 +22,16 @@ class BocaminaPolicy
      */
     public function create(User $user): bool
     {
-        return $user->canWrite('bocaminas');
+        return $user->rol?->nombre === 'Administrador General';
     }
 
     public function update(User $user, Bocamina $bocamina): bool
     {
-        return $user->canWrite('bocaminas');
+        return $user->rol?->nombre === 'Administrador General';
     }
 
     public function delete(User $user, Bocamina $bocamina): bool
     {
-        return $user->canWrite('bocaminas');
+        return $user->rol?->nombre === 'Administrador General';
     }
 }

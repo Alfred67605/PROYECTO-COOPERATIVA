@@ -6,12 +6,24 @@
 // ============================================================
 
 describe('Seguridad - Control de Acceso por Roles y Permisos', () => {
+  beforeEach(() => {
+    cy.intercept('GET', '**/api/empresa/settings', {
+      statusCode: 200,
+      body: {
+        id: 1,
+        nombre_empresa: 'Minera Cop',
+        subtitulo: 'Sistema',
+        logo: null,
+        logo_url: null
+      }
+    }).as('getSettings');
+  });
 
   context('Acceso sin autenticación', () => {
     const protectedRoutes = [
       '/dashboard', '/inventario', '/compras', '/compras/nueva',
       '/proveedores', '/usuarios', '/bocaminas', '/historial',
-      '/reportes', '/servicios/dashboard', '/servicios/maquinaria'
+      '/reportes', '/servicios/mantenimientos', '/servicios/maquinaria'
     ];
 
     protectedRoutes.forEach((route) => {

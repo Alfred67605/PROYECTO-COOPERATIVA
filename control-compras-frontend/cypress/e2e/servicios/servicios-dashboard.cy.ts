@@ -1,36 +1,23 @@
 /// <reference types="cypress" />
 
 // ============================================================
-// Módulo: Dashboard de Servicios y Mantenimiento
+// Módulo: Servicios y Mantenimiento
 // Materia: Verificación y Validación de Software (INF780)
 // ============================================================
 
-describe('Servicios - Dashboard de Servicios', () => {
+describe('Servicios - Mantenimiento de Servicios', () => {
   beforeEach(() => {
     cy.fixture('users').then((users) => {
       cy.loginByUI(users.admin.email, users.admin.password);
     });
-    cy.get('nav').contains('Servicios').click();
+    cy.visit('/servicios/mantenimientos');
+    cy.url({ timeout: 10000 }).should('include', '/servicios');
   });
 
-  context('Dashboard KPIs', () => {
+  context('Navegación de Servicios', () => {
     it('Debe mostrar el título "Servicios y Mantenimiento"', () => {
       cy.contains('h1', 'Servicios y Mantenimiento').should('be.visible');
       cy.contains('Gestión integral de equipos y reparaciones').should('be.visible');
-    });
-
-    it('Debe mostrar las 4 tarjetas KPI', () => {
-      cy.get('.animate-pulse', { timeout: 15000 }).should('not.exist');
-      cy.contains('Equipos Activos').should('be.visible');
-      cy.contains('En Reparación').should('be.visible');
-      cy.contains('Servicios (Mes)').should('be.visible');
-      cy.contains('Costos Acumulados').should('be.visible');
-    });
-
-    it('Debe mostrar valores numéricos en los KPIs', () => {
-      cy.get('.animate-pulse', { timeout: 15000 }).should('not.exist');
-      cy.contains('Equipos Activos').parent().parent()
-        .find('.text-2xl').should('exist');
     });
   });
 

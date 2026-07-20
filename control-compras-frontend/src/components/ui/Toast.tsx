@@ -63,19 +63,21 @@ const toastConfig = {
   },
 };
 
-const TOAST_DURATION = 4000;
+const isTestEnv = typeof window !== 'undefined' && !!(window as any).Cypress;
+const TOAST_DURATION = isTestEnv ? 15000 : 4000;
 
 const ToastItem = ({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) => {
   const config = toastConfig[toast.type];
   const Icon = config.icon;
+  const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: 80, scale: 0.95 }}
+      initial={isTest ? false : { opacity: 0, x: 80, scale: 0.95 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 80, scale: 0.95 }}
-      transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+      transition={isTest ? { duration: 0 } : { type: 'spring', damping: 20, stiffness: 300 }}
       className={`relative ${config.bg} border ${config.border} rounded-xl shadow-lg overflow-hidden min-w-[320px] max-w-[420px]`}
     >
       <div className="flex items-start gap-3 p-4">

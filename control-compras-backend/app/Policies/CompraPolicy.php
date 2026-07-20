@@ -21,7 +21,7 @@ class CompraPolicy
      */
     public function view(User $user, Compra $compra): bool
     {
-        return true;
+        return $user->canAccess('compras');
     }
 
     public function create(User $user): bool
@@ -43,6 +43,6 @@ class CompraPolicy
      */
     public function delete(User $user, Compra $compra): bool
     {
-        return $user->canWrite('compras');
+        return $user->rol?->nombre === 'Administrador General';
     }
 }
