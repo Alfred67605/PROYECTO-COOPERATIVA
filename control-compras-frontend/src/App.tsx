@@ -17,7 +17,7 @@ import { AlquilerGruasList } from './features/servicios/AlquilerGruasList';
 import { MainLayout } from './components/layout/MainLayout';
 import { Perfil } from './features/profile/Perfil';
 import { ToastProvider } from './components/ui/Toast';
-import { AnimatePresence, MotionConfig } from 'framer-motion';
+import { MotionConfig } from 'framer-motion';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,40 +45,37 @@ const RootRedirect = () => {
   return <Navigate to={getDefaultRedirect(user, canAccess)} replace />;
 };
 
-// Route wrapper for animations
+// Route wrapper
 const AnimatedRoutes = () => {
   const location = useLocation();
-  const rootPath = location.pathname.split('/')[1] || 'root';
   
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={rootPath}>
-        <Route path="/login" element={<Login />} />
-        
-        {/* Rutas Base */}
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/dashboard" element={<PrivateRoute module="dashboard"><Dashboard /></PrivateRoute>} />
-        <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
-        <Route path="/inventario" element={<PrivateRoute module="materiales"><InventarioList /></PrivateRoute>} />
-        
-        {/* Rutas Compras */}
-        <Route path="/compras" element={<PrivateRoute module="compras"><ComprasHistorial /></PrivateRoute>} />
-        <Route path="/compras/nueva" element={<PrivateRoute module="compras"><NuevaCompra /></PrivateRoute>} />
+    <Routes location={location}>
+      <Route path="/login" element={<Login />} />
+      
+      {/* Rutas Base */}
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="/dashboard" element={<PrivateRoute module="dashboard"><Dashboard /></PrivateRoute>} />
+      <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
+      <Route path="/inventario" element={<PrivateRoute module="materiales"><InventarioList /></PrivateRoute>} />
+      
+      {/* Rutas Compras */}
+      <Route path="/compras" element={<PrivateRoute module="compras"><ComprasHistorial /></PrivateRoute>} />
+      <Route path="/compras/nueva" element={<PrivateRoute module="compras"><NuevaCompra /></PrivateRoute>} />
 
-        {/* Rutas Admin */}
-        <Route path="/proveedores" element={<PrivateRoute module="proveedores"><ProveedoresList /></PrivateRoute>} />
-        <Route path="/usuarios" element={<PrivateRoute module="usuarios"><UsuariosList /></PrivateRoute>} />
-        <Route path="/bocaminas" element={<PrivateRoute module="bocaminas"><BocaminasList /></PrivateRoute>} />
-        <Route path="/historial" element={<PrivateRoute module="auditoria"><HistorialList /></PrivateRoute>} />
-        <Route path="/admin/respaldos" element={<PrivateRoute module="usuarios"><RespaldosView /></PrivateRoute>} />
-        
-        <Route path="/reportes" element={<PrivateRoute module="reportes"><ReportesView /></PrivateRoute>} />
-        <Route path="/servicios/*" element={<PrivateRoute module="servicios"><ServiciosDashboard /></PrivateRoute>} />
-        <Route path="/alquiler-gruas" element={<PrivateRoute module="servicios"><AlquilerGruasList /></PrivateRoute>} />
-        
-        <Route path="*" element={<RootRedirect />} />
-      </Routes>
-    </AnimatePresence>
+      {/* Rutas Admin */}
+      <Route path="/proveedores" element={<PrivateRoute module="proveedores"><ProveedoresList /></PrivateRoute>} />
+      <Route path="/usuarios" element={<PrivateRoute module="usuarios"><UsuariosList /></PrivateRoute>} />
+      <Route path="/bocaminas" element={<PrivateRoute module="bocaminas"><BocaminasList /></PrivateRoute>} />
+      <Route path="/historial" element={<PrivateRoute module="auditoria"><HistorialList /></PrivateRoute>} />
+      <Route path="/admin/respaldos" element={<PrivateRoute module="usuarios"><RespaldosView /></PrivateRoute>} />
+      
+      <Route path="/reportes" element={<PrivateRoute module="reportes"><ReportesView /></PrivateRoute>} />
+      <Route path="/servicios/*" element={<PrivateRoute module="servicios"><ServiciosDashboard /></PrivateRoute>} />
+      <Route path="/alquiler-gruas" element={<PrivateRoute module="servicios"><AlquilerGruasList /></PrivateRoute>} />
+      
+      <Route path="*" element={<RootRedirect />} />
+    </Routes>
   );
 };
 
