@@ -24,10 +24,8 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: 
 --
 
-COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
 
 
 SET default_tablespace = '';
@@ -2613,10 +2611,8 @@ CREATE INDEX historial_operaciones_tabla_registro_id_index ON public.historial_o
 
 
 --
--- Name: idx_users_nombre_trgm; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX idx_users_nombre_trgm ON public.users USING gin (nombre public.gin_trgm_ops);
 
 
 --

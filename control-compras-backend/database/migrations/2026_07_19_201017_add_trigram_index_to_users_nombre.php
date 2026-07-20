@@ -10,11 +10,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Enable pg_trgm extension in PostgreSQL for fast text search
-        DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
-        
-        // Create GIN index for case-insensitive LIKE/ILIKE searches on user name
-        DB::statement('CREATE INDEX IF NOT EXISTS idx_users_nombre_trgm ON users USING gin (nombre gin_trgm_ops)');
+        try {
+            // Enable pg_trgm extension in PostgreSQL for fast text search if available
+            DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+            DB::statement('CREATE INDEX IF NOT EXISTS idx_users_nombre_trgm ON users USING gin (nombre gin_trgm_ops)');
+        } catch (\Throwable $e) {
+            // Gracefully ignore if pg_trgm extension is not installed on hosting server
+        }
     }
 
     /**
@@ -22,6 +24,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('DROP INDEX IF EXISTS idx_users_nombre_trgm');
+        try {
+            DB::statement('DROP INDEX IF EXISTS idx_users_nombre_trgm');
+        } catch (\Throwable $e) {
+            // Gracefully ignore
+        }
     }
 };
