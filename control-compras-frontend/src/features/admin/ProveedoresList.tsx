@@ -80,12 +80,12 @@ export const ProveedoresList = () => {
     mutationFn: async (id: number) => await api.delete(`/proveedores/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proveedores'] });
-      toast.success('Proveedor inhabilitado', 'El proveedor fue marcado como inactivo.');
+      toast.success('Proveedor eliminado', 'El proveedor fue eliminado de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     },
     onError: (err: any) => {
-      toast.error('Error al inhabilitar', err.response?.data?.message || 'No se pudo inhabilitar el proveedor.');
+      toast.error('Error al eliminar', err.response?.data?.message || 'No se pudo eliminar el proveedor.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     }
@@ -223,9 +223,9 @@ export const ProveedoresList = () => {
       {createPortal(
         <ConfirmDialog
           isOpen={confirmOpen}
-          title="Inhabilitar Proveedor"
-          message={`¿Estás seguro de que deseas inhabilitar al proveedor "${deleteTarget?.nombre}"?`}
-          confirmLabel="Inhabilitar"
+          title="Eliminar Proveedor"
+          message={`¿Estás seguro de que deseas eliminar al proveedor "${deleteTarget?.nombre}" de manera definitiva? Esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
           cancelLabel="Cancelar"
           variant="danger"
           isLoading={deleteMutation.isPending}

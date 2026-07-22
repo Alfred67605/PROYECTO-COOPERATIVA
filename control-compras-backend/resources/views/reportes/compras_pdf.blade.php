@@ -152,8 +152,9 @@
                     <th>Proveedor</th>
                     <th>N&ordm; Factura</th>
                     <th>Bocamina</th>
-                    <th>Responsable</th>
-                    <th class="text-right">Total ($)</th>
+                    <th>Responsable (A Nombre De)</th>
+                    <th>Registrado Por</th>
+                    <th class="text-right">Total (Bs.)</th>
                 </tr>
             </thead>
             <tbody>
@@ -164,14 +165,15 @@
                     <td>{{ $c->proveedor->nombre ?? '-' }}</td>
                     <td>{{ $c->numero_factura ?: '-' }}</td>
                     <td>{{ $c->bocamina->nombre ?? 'Central' }}</td>
+                    <td>{{ $c->comprador_responsable ?: ($c->usuario->nombre ?? '-') }}</td>
                     <td>{{ $c->usuario->nombre ?? '-' }}</td>
-                    <td class="td-right">${{ number_format($c->total, 2) }}</td>
+                    <td class="td-right">Bs. {{ number_format($c->total, 2) }}</td>
                 </tr>
                 @endforeach
 
                 <tr class="total-row">
-                    <td colspan="6">TOTAL COMPRAS</td>
-                    <td class="td-right">${{ number_format($gastoTotal - $gastoTotalServicios, 2) }}</td>
+                    <td colspan="7">TOTAL COMPRAS</td>
+                    <td class="td-right">Bs. {{ number_format($gastoTotal - $gastoTotalServicios, 2) }}</td>
                 </tr>
             </tbody>
         </table>

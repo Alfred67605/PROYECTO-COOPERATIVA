@@ -34,11 +34,13 @@ class Material extends Model
                 }
 
                 // Fallback to checking if a file with slugified description exists
+                // Uses file_exists() instead of Storage facade to avoid finfo dependency
                 $slug = Str::slug($this->descripcion);
                 $extensions = ['jpg', 'jpeg', 'png', 'webp'];
+                $storagePath = storage_path('app/public');
                 foreach ($extensions as $ext) {
                     $filename = "materiales/{$slug}.{$ext}";
-                    if (Storage::disk('public')->exists($filename)) {
+                    if (file_exists($storagePath . '/' . $filename)) {
                         return asset('storage/' . $filename);
                     }
                 }
@@ -56,7 +58,10 @@ class Material extends Model
         static::deleting(function ($material) {
             $rawImagen = $material->getRawOriginal('imagen');
             if ($rawImagen) {
-                Storage::disk('public')->delete($rawImagen);
+                $path = storage_path('app/public/' . $rawImagen);
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
             }
         });
     }

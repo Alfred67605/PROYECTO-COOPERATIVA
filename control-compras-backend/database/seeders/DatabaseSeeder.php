@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             UsuarioSeeder::class,
             ProveedorSeeder::class,
             BocaminaSeeder::class,
-            MaterialSeeder::class,
+            MaterialesRealesSeeder::class,
             CompraSeeder::class,
             ServiciosSeeder::class,
             HistorialSeeder::class,

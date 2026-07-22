@@ -73,8 +73,14 @@ class MaquinariaController extends Controller
         if (!$request->user()->canWrite('servicios')) {
             throw new \Illuminate\Auth\Access\AuthorizationException();
         }
-        $maquinaria = \App\Models\Maquinaria::findOrFail($id);
-        $maquinaria->delete();
-        return response()->json(null, 204);
+        $maquinaria = \App\Models\Maquinaria::withTrashed()->findOrFail($id);
+        try {
+            $maquinaria->forceDelete();
+            return response()->json(['message' => 'Maquinaria eliminada de manera definitiva']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'No se puede eliminar la maquinaria porque tiene registros asociados.'
+            ], 422);
+        }
     }
 }

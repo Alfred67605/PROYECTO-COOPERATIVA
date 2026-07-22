@@ -2,8 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { TrendingUp, Building2, ShoppingCart } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area, Cell } from 'recharts';
+import { 
+  TrendingUp, Building2, ShoppingCart, Wrench, Package, 
+  PieChart as PieIcon, Calendar, ChevronRight 
+} from 'lucide-react';
+import { 
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area, Cell, Legend 
+} from 'recharts';
 import { AnimatedCounter } from '../../components/ui/AnimatedCounter';
 import { SkeletonKPI, SkeletonChart } from '../../components/ui/Skeleton';
 import { TiltCard } from '../../components/ui/TiltCard';
@@ -30,13 +35,34 @@ export const Dashboard = () => {
     ? (stats?.tendencia_mensual || [])
     : (stats?.tendencia_diaria || []);
 
+  const totalGasto = parseFloat(stats?.gasto_total || '0');
+  const gastoCompras = parseFloat(stats?.gasto_compras || '0');
+  const gastoServicios = parseFloat(stats?.gasto_servicios || '0');
+
+  const pctCompras = totalGasto > 0 ? Math.round((gastoCompras / totalGasto) * 100) : 0;
+  const pctServicios = totalGasto > 0 ? Math.round((gastoServicios / totalGasto) * 100) : 0;
+
   return (
     <div className="space-y-8">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Resumen Ejecutivo</h1>
-          <p className="text-mining-500 text-sm mt-1">Métricas y KPIs del año {selectedYear}</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Resumen Ejecutivo</h1>
+          <p className="text-mining-400 text-xs mt-1">
+            Consolidado de compras de inventario, mantenimiento técnico y servicios por bocamina — Año {selectedYear}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <select 
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="bg-obsidian-900 border border-white/15 text-white text-sm font-bold rounded-xl px-4 py-2 focus:outline-none focus:border-copper-500 shadow-md"
+          >
+            <option value={currentYear}>{currentYear}</option>
+            <option value={currentYear - 1}>{currentYear - 1}</option>
+            <option value={currentYear - 2}>{currentYear - 2}</option>
+          </select>
         </div>
       </div>
 
@@ -50,140 +76,160 @@ export const Dashboard = () => {
           variants={staggerContainer}
           initial="initial"
           animate="animate"
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-        <motion.div variants={staggerItem} className="col-span-1">
-          <TiltCard>
-            <div className="card h-full relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-copper-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700"></div>
-              <div className="flex justify-between items-start mb-4 relative z-10">
-                <div>
-                  <p className="text-sm font-medium text-mining-400 mb-1">Inversión Total</p>
-                  <h3 className="text-3xl font-display font-bold text-white tracking-tight">
-                    Bs. <AnimatedCounter value={parseFloat(stats?.gasto_total || '0')} />
-                  </h3>
+          {/* Card 1: Gasto Total Consolidado */}
+          <motion.div variants={staggerItem}>
+            <TiltCard>
+              <div className="card h-full relative overflow-hidden group p-5">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-copper-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700"></div>
+                <div className="flex justify-between items-start mb-3 relative z-10">
+                  <div>
+                    <p className="text-xs font-bold text-mining-400 uppercase tracking-wider mb-1">Inversión Consolidada</p>
+                    <h3 className="text-2xl font-black text-white tracking-tight">
+                      Bs. <AnimatedCounter value={totalGasto} />
+                    </h3>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-copper-500/10 border border-copper-500/30 flex items-center justify-center text-copper-400 shadow-glow-copper shrink-0">
+                    <TrendingUp size={22} />
+                  </div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-copper-500/10 border border-copper-500/20 flex items-center justify-center text-copper-400 shadow-glow-copper">
-                  <TrendingUp size={24} />
+                <div className="flex items-center gap-2 text-xs relative z-10 mt-4 pt-3 border-t border-white/5">
+                  <span className="text-copper-400 font-bold">Compras + Servicios</span>
+                  <span className="text-mining-500">Total Anual</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm relative z-10">
-                <span className="text-teal-400 bg-teal-400/10 px-2 py-0.5 rounded-md font-medium border border-teal-400/20">+12.5%</span>
-                <span className="text-mining-500">vs mes anterior</span>
-              </div>
-            </div>
-          </TiltCard>
-        </motion.div>
+            </TiltCard>
+          </motion.div>
 
-        <motion.div variants={staggerItem} className="col-span-1">
-          <TiltCard>
-            <div className="card h-full relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700"></div>
-              <div className="flex justify-between items-start mb-4 relative z-10">
-                <div>
-                  <p className="text-sm font-medium text-mining-400 mb-1">Operaciones</p>
-                  <h3 className="text-3xl font-display font-bold text-white tracking-tight">
-                    <AnimatedCounter value={stats?.total_compras || 0} />
-                  </h3>
+          {/* Card 2: Compras de Materiales */}
+          <motion.div variants={staggerItem}>
+            <TiltCard>
+              <div className="card h-full relative overflow-hidden group p-5">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700"></div>
+                <div className="flex justify-between items-start mb-3 relative z-10">
+                  <div>
+                    <p className="text-xs font-bold text-mining-400 uppercase tracking-wider mb-1">Compras Realizadas</p>
+                    <h3 className="text-2xl font-black text-white tracking-tight">
+                      Bs. <AnimatedCounter value={gastoCompras} />
+                    </h3>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 shadow-glow-teal shrink-0">
+                    <ShoppingCart size={22} />
+                  </div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 shadow-glow-teal">
-                  <ShoppingCart size={24} />
+                <div className="flex items-center justify-between text-xs relative z-10 mt-4 pt-3 border-t border-white/5">
+                  <span className="text-teal-400 font-bold">{stats?.total_compras || 0} compras</span>
+                  <span className="text-mining-400 font-semibold">{pctCompras}% del total</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm relative z-10">
-                <span className="text-teal-400 font-medium">Actividad normal</span>
-              </div>
-            </div>
-          </TiltCard>
-        </motion.div>
+            </TiltCard>
+          </motion.div>
 
-        <motion.div variants={staggerItem} className="col-span-1">
-          <TiltCard>
-            <div className="card h-full relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700"></div>
-              <div className="flex justify-between items-start mb-4 relative z-10">
-                <div>
-                  <p className="text-sm font-medium text-mining-400 mb-1">Proveedores Activos</p>
-                  <h3 className="text-3xl font-display font-bold text-white tracking-tight">
-                    <AnimatedCounter value={12} />
-                  </h3>
+          {/* Card 3: Servicios y Mantenimiento */}
+          <motion.div variants={staggerItem}>
+            <TiltCard>
+              <div className="card h-full relative overflow-hidden group p-5">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700"></div>
+                <div className="flex justify-between items-start mb-3 relative z-10">
+                  <div>
+                    <p className="text-xs font-bold text-mining-400 uppercase tracking-wider mb-1">Servicios & Mantenimiento</p>
+                    <h3 className="text-2xl font-black text-white tracking-tight">
+                      Bs. <AnimatedCounter value={gastoServicios} />
+                    </h3>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.2)] shrink-0">
+                    <Wrench size={22} />
+                  </div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.2)]">
-                  <Building2 size={24} />
+                <div className="flex items-center justify-between text-xs relative z-10 mt-4 pt-3 border-t border-white/5">
+                  <span className="text-blue-400 font-bold">{stats?.total_servicios || 0} servicios</span>
+                  <span className="text-mining-400 font-semibold">{pctServicios}% del total</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm relative z-10">
-                <span className="text-mining-400">En 3 regiones</span>
+            </TiltCard>
+          </motion.div>
+
+          {/* Card 4: Inventario & Operaciones */}
+          <motion.div variants={staggerItem}>
+            <TiltCard>
+              <div className="card h-full relative overflow-hidden group p-5">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700"></div>
+                <div className="flex justify-between items-start mb-3 relative z-10">
+                  <div>
+                    <p className="text-xs font-bold text-mining-400 uppercase tracking-wider mb-1">Infraestructura & Stock</p>
+                    <h3 className="text-2xl font-black text-white tracking-tight">
+                      <AnimatedCounter value={stats?.total_materiales || 0} /> <span className="text-sm font-semibold text-mining-400">Materiales</span>
+                    </h3>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.2)] shrink-0">
+                    <Package size={22} />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs relative z-10 mt-4 pt-3 border-t border-white/5">
+                  <span className="text-purple-400 font-bold">{stats?.total_bocaminas || 0} bocaminas</span>
+                  <span className="text-mining-400 font-semibold">{stats?.total_proveedores || 0} proveedores</span>
+                </div>
               </div>
-            </div>
-          </TiltCard>
-        </motion.div>
+            </TiltCard>
+          </motion.div>
         </motion.div>
       )}
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Trend Chart */}
+        {/* Trend Chart: Compras vs Servicios */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="xl:col-span-2 card"
+          className="xl:col-span-2 card p-6"
         >
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
-              <h3 className="text-lg font-bold text-white">Tendencia de Gastos</h3>
-              <p className="text-sm text-slate-400">
-                {viewMode === 'mensual' 
-                  ? `Histórico mensual del año ${selectedYear}` 
-                  : `Histórico diario del año ${selectedYear}`
-                }
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <TrendingUp size={20} className="text-copper-400" />
+                Evolución de Gastos (Compras vs Servicios)
+              </h3>
+              <p className="text-xs text-mining-400 mt-0.5">
+                Comparativa de inversiones de compras de materiales y servicios técnicos ({viewMode})
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              {/* Selector de Granularidad */}
-              <div className="flex rounded-lg p-0.5 bg-slate-900 border border-slate-700">
-                <button
-                  onClick={() => setViewMode('mensual')}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                    viewMode === 'mensual'
-                      ? 'bg-teal-500 text-white shadow'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Mensual
-                </button>
-                <button
-                  onClick={() => setViewMode('diario')}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                    viewMode === 'diario'
-                      ? 'bg-teal-500 text-white shadow'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Diario
-                </button>
-              </div>
 
-              {/* Selector de Año */}
-              <select 
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none"
+            <div className="flex rounded-lg p-0.5 bg-obsidian-900 border border-white/10">
+              <button
+                onClick={() => setViewMode('mensual')}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                  viewMode === 'mensual'
+                    ? 'bg-copper-500 text-white shadow-md'
+                    : 'text-mining-400 hover:text-white'
+                }`}
               >
-                <option value={currentYear}>{currentYear}</option>
-                <option value={currentYear - 1}>{currentYear - 1}</option>
-                <option value={currentYear - 2}>{currentYear - 2}</option>
-              </select>
+                Mensual
+              </button>
+              <button
+                onClick={() => setViewMode('diario')}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                  viewMode === 'diario'
+                    ? 'bg-copper-500 text-white shadow-md'
+                    : 'text-mining-400 hover:text-white'
+                }`}
+              >
+                Diario
+              </button>
             </div>
           </div>
           
           {isLoading ? <SkeletonChart /> : (
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.3}/>
+                    <linearGradient id="colorCompras" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.4}/>
                       <stop offset="95%" stopColor="#2DD4BF" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorServicios" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
@@ -191,28 +237,50 @@ export const Dashboard = () => {
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tick={{ fill: '#94a3b8', fontSize: 11 }}
                     dy={10}
                   />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tick={{ fill: '#94a3b8', fontSize: 11 }}
                     tickFormatter={(value) => value >= 1000 ? `Bs. ${value/1000}k` : `Bs. ${value}`}
                   />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', backgroundColor: 'rgba(15,23,42,0.9)', backdropFilter: 'blur(8px)' }}
+                    contentStyle={{ borderRadius: '14px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', backgroundColor: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(10px)' }}
                     itemStyle={{ color: '#f8fafc', fontWeight: 'bold' }}
-                    labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
+                    labelStyle={{ color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold' }}
+                    formatter={(value: any, name: any) => [
+                      `Bs. ${Number(value).toLocaleString()}`, 
+                      name === 'compras' ? 'Compras Materiales' : name === 'servicios' ? 'Servicios & Mantenimiento' : 'Total'
+                    ]}
+                  />
+                  <Legend 
+                    verticalAlign="top" 
+                    height={36}
+                    formatter={(value) => (
+                      <span className="text-xs font-bold text-white capitalize">
+                        {value === 'compras' ? 'Compras de Inventario' : value === 'servicios' ? 'Servicios & Mantenimiento' : 'Total'}
+                      </span>
+                    )}
                   />
                   <Area 
                     type="monotone" 
-                    dataKey="gastos" 
+                    dataKey="compras" 
+                    name="compras"
                     stroke="#2DD4BF" 
-                    strokeWidth={3}
+                    strokeWidth={2.5}
                     fillOpacity={1} 
-                    fill="url(#colorTrend)" 
-                    animationDuration={1500}
+                    fill="url(#colorCompras)" 
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="servicios" 
+                    name="servicios"
+                    stroke="#3B82F6" 
+                    strokeWidth={2.5}
+                    fillOpacity={1} 
+                    fill="url(#colorServicios)" 
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -220,69 +288,94 @@ export const Dashboard = () => {
           )}
         </motion.div>
 
-        {/* Recent Purchases */}
+        {/* Desglose Proporcional (Compras vs Servicios) */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="card"
+          className="card p-6 flex flex-col justify-between"
         >
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-white">Compras Recientes</h3>
-            <button onClick={() => navigate('/compras')} className="text-teal-400 text-sm font-semibold hover:text-teal-300">Ver todas</button>
+          <div>
+            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-1">
+              <PieIcon size={20} className="text-copper-400" />
+              Distribución de Inversión
+            </h3>
+            <p className="text-xs text-mining-400 mb-6">Proporción por tipo de gasto en el período</p>
+
+            <div className="space-y-6">
+              {/* Compras progress */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-bold">
+                  <span className="text-teal-400 flex items-center gap-1.5">
+                    <ShoppingCart size={14} /> Compras de Materiales
+                  </span>
+                  <span className="text-white">Bs. {gastoCompras.toLocaleString()} ({pctCompras}%)</span>
+                </div>
+                <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                  <div 
+                    className="h-full bg-gradient-to-r from-teal-500 to-emerald-400 rounded-full transition-all duration-1000"
+                    style={{ width: `${pctCompras}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Servicios progress */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-bold">
+                  <span className="text-blue-400 flex items-center gap-1.5">
+                    <Wrench size={14} /> Servicios & Mantenimiento
+                  </span>
+                  <span className="text-white">Bs. {gastoServicios.toLocaleString()} ({pctServicios}%)</span>
+                </div>
+                <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-400 rounded-full transition-all duration-1000"
+                    style={{ width: `${pctServicios}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <div className="space-y-4">
-            {isLoading ? (
-              Array.from({length: 4}).map((_,i) => <div key={i} className="h-16 bg-slate-800 rounded-xl animate-pulse"></div>)
-            ) : (
-              stats?.compras_recientes?.map((compra: any, idx: number) => {
-                return (
-                  <div key={idx} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-colors group cursor-pointer border border-transparent hover:border-slate-700">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-slate-800 text-slate-400">
-                      <ShoppingCart size={16} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-200 truncate group-hover:text-teal-400 transition-colors">
-                        {compra.proveedor?.nombre || 'Proveedor Desconocido'}
-                      </p>
-                      <p className="text-xs text-slate-500 truncate">{compra.bocamina?.nombre || 'Bodega Central'}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-white">Bs. {parseFloat(compra.total).toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-500">{new Date(compra.fecha).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+
+          <div className="mt-8 p-4 rounded-xl bg-copper-500/10 border border-copper-500/20 text-xs text-copper-300">
+            <strong className="text-white block font-bold mb-1">Métricas Clave:</strong>
+            El gasto total consolidado es de <span className="font-bold text-white">Bs. {totalGasto.toLocaleString()}</span> repartidos entre compras de stock y mantenimiento operativo de equipos.
           </div>
         </motion.div>
+      </div>
 
-        {/* Bar Chart - Gastos por Bocamina */}
+      {/* Lower Section: Bar Chart & Unified Activity Feed */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Gastos por Bocamina (Compras + Servicios) */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="xl:col-span-3 card"
+          className="xl:col-span-2 card p-6"
         >
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-white">Distribución de Gastos por Bocamina</h3>
-            <p className="text-sm text-slate-400">Acumulado del mes actual</p>
+          <div className="mb-6 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Building2 size={20} className="text-copper-400" />
+                Inversión Consolidada por Bocamina
+              </h3>
+              <p className="text-xs text-mining-400 mt-0.5">Suma total de compras y servicios asignados a cada centro minero</p>
+            </div>
           </div>
           
           {isLoading ? <SkeletonChart /> : (
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats?.gastos_por_bocamina || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e8ec" />
-                  <XAxis dataKey="nombre" axisLine={false} tickLine={false} tick={{ fill: '#798d9e', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#798d9e', fontSize: 12 }} tickFormatter={(val) => `Bs. ${val/1000}k`} dx={-10} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="nombre" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(val) => `Bs. ${val/1000}k`} dx={-5} />
                   <Tooltip 
                     cursor={{ fill: 'rgba(255,255,255,0.02)' }}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', backgroundColor: 'rgba(15,23,42,0.9)', backdropFilter: 'blur(8px)' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', backgroundColor: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(8px)' }}
                     itemStyle={{ color: '#f8fafc', fontWeight: 'bold' }}
+                    formatter={(val: any) => [`Bs. ${Number(val).toLocaleString()}`, 'Inversión Total']}
                   />
-                  <Bar dataKey="total_gastado" fill="#ea7740" radius={[6, 6, 0, 0]} barSize={40}>
+                  <Bar dataKey="total_gastado" radius={[8, 8, 0, 0]} barSize={38}>
                     {
                       (stats?.gastos_por_bocamina || []).map((_: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={index % 2 === 0 ? 'rgba(234,119,64,0.8)' : 'rgba(45,212,191,0.8)'} />
+                        <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#EA7740' : '#2DD4BF'} />
                       ))
                     }
                   </Bar>
@@ -292,6 +385,73 @@ export const Dashboard = () => {
           )}
         </motion.div>
 
+        {/* Unified Activity Feed (Compras + Servicios) */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+          className="card p-6 flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Calendar size={20} className="text-copper-400" />
+                Actividad Reciente
+              </h3>
+              <button 
+                onClick={() => navigate('/reportes')} 
+                className="text-copper-400 text-xs font-bold hover:text-copper-300 flex items-center gap-1"
+              >
+                Ver todo <ChevronRight size={14} />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {isLoading ? (
+                Array.from({length: 4}).map((_,i) => <div key={i} className="h-14 bg-white/5 rounded-xl animate-pulse"></div>)
+              ) : (
+                stats?.actividad_reciente?.map((item: any) => {
+                  const isCompra = item.tipo === 'compra';
+                  return (
+                    <div 
+                      key={item.id} 
+                      onClick={() => navigate(isCompra ? '/compras' : '/servicios')}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/5 border border-white/5 transition-all group cursor-pointer"
+                    >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold shrink-0 ${
+                        isCompra ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                      }`}>
+                        {isCompra ? <ShoppingCart size={16} /> : <Wrench size={16} />}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded uppercase ${
+                            isCompra ? 'bg-teal-500/10 text-teal-400' : 'bg-blue-500/10 text-blue-400'
+                          }`}>
+                            {isCompra ? 'Compra' : 'Servicio'}
+                          </span>
+                          <p className="font-bold text-white text-xs truncate group-hover:text-copper-400 transition-colors">
+                            {item.titulo}
+                          </p>
+                        </div>
+                        <p className="text-[11px] text-mining-400 truncate mt-0.5">{item.subtitulo} • {item.bocamina}</p>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <p className="font-bold text-xs text-white">Bs. {Number(item.monto).toLocaleString()}</p>
+                        <p className="text-[10px] text-mining-500">{new Date(item.fecha).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              {(!stats?.actividad_reciente || stats.actividad_reciente.length === 0) && (
+                <div className="py-8 text-center text-xs text-mining-500">
+                  Sin operaciones registradas recientemente.
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

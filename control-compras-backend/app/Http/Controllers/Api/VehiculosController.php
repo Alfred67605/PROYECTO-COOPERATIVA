@@ -69,8 +69,14 @@ class VehiculosController extends Controller
         if (!$request->user()->canWrite('servicios')) {
             throw new \Illuminate\Auth\Access\AuthorizationException();
         }
-        $vehiculo = \App\Models\Vehiculo::findOrFail($id);
-        $vehiculo->delete();
-        return response()->json(null, 204);
+        $vehiculo = \App\Models\Vehiculo::withTrashed()->findOrFail($id);
+        try {
+            $vehiculo->forceDelete();
+            return response()->json(['message' => 'Vehículo eliminado de manera definitiva']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'No se puede eliminar el vehículo porque tiene registros asociados.'
+            ], 422);
+        }
     }
 }

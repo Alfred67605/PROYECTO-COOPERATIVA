@@ -12,6 +12,7 @@ class Compra extends Model
     protected $fillable = [
         'proveedor_id',
         'usuario_id',
+        'comprador_responsable',
         'bocamina_id',
         'fecha',
         'numero_factura',

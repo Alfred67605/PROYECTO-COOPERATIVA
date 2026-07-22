@@ -132,9 +132,11 @@ class UsuarioControllerTest extends TestCase
             'estado' => false,
         ]);
 
-        // Delete user (logical deactivation, returns 200)
+        // Delete user (physical deletion, returns 200)
         $this->deleteJson("/api/usuarios/{$targetUser->id}")
              ->assertStatus(200)
-             ->assertJson(['message' => 'Usuario inhabilitado']);
+             ->assertJson(['message' => 'Usuario eliminado de manera definitiva']);
+
+        $this->assertDatabaseMissing('users', ['id' => $targetUser->id]);
     }
 }

@@ -48,7 +48,12 @@ export const Login = () => {
       setIsLoading(true);
       setError('');
       
-      await api.get(`${getBackendRootUrl()}/sanctum/csrf-cookie`, { baseURL: '' });
+      try {
+        await api.get(`${getBackendRootUrl()}/sanctum/csrf-cookie`, { baseURL: '' });
+      } catch (csrfErr) {
+        console.warn('CSRF cookie fetch warning:', csrfErr);
+      }
+
       const response = await api.post('/login', data);
       
       login(response.data.user);
@@ -65,7 +70,17 @@ export const Login = () => {
       }
     } catch (err: unknown) {
       const errorResponse = err as any;
-      setError(errorResponse.response?.data?.message || 'Credenciales incorrectas');
+      console.error('Login error detail:', errorResponse);
+      const serverMsg = errorResponse.response?.data?.message;
+      const status = errorResponse.response?.status;
+
+      if (serverMsg) {
+        setError(serverMsg);
+      } else if (status) {
+        setError(`Error en el servidor (${status}).`);
+      } else {
+        setError('Error de conexión con el servidor.');
+      }
     } finally {
       setIsLoading(false);
     }

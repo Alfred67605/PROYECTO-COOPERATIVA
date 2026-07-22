@@ -139,4 +139,87 @@ class RespaldoControllerTest extends TestCase
         $response->assertStatus(200);
         $this->assertDatabaseMissing('respaldos', ['id' => $respaldo->id]);
     }
+
+    /**
+     * Test restore backup with deduplication.
+     */
+    public function test_admin_can_restore_from_zip_file_with_deduplication()
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $tempDir = storage_path('app/temp_test_' . time());
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+        $jsonPath = $tempDir . '/database.json';
+        file_put_contents($jsonPath, json_encode([
+            'categorias' => [
+                ['id' => 9999, 'nombre' => 'Categoría Test Respaldo', 'created_at' => now()->toDateTimeString(), 'updated_at' => now()->toDateTimeString()]
+            ]
+        ]));
+
+        $zipFolder = storage_path('app/respaldos');
+        if (!file_exists($zipFolder)) {
+            mkdir($zipFolder, 0755, true);
+        }
+        $zipPath = $zipFolder . '/test_restore_zip.zip';
+        $zip = new \ZipArchive();
+        $zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $zip->addFile($jsonPath, 'database.json');
+        $zip->close();
+        unlink($jsonPath);
+        rmdir($tempDir);
+
+        $respaldo = Respaldo::create([
+            'nombre_archivo' => 'test_restore_zip.zip',
+            'tipo' => 'manual',
+            'tamano' => filesize($zipPath),
+            'estado' => 'completado',
+            'creado_por' => $this->adminUser->id,
+        ]);
+
+        $response = $this->postJson("/api/respaldos/{$respaldo->id}/restaurar");
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'message',
+            'detalles' => [
+                'tablas_restauradas',
+                'registros_procesados',
+                'duplicados_omitidos',
+                'archivos_restaurados'
+            ]
+        ]);
+
+        $this->assertDatabaseHas('categorias', ['nombre' => 'Categoría Test Respaldo']);
+
+        if (file_exists($zipPath)) {
+            unlink($zipPath);
+        }
+    }
+
+    /**
+     * Test update backup schedule configuration.
+     */
+    public function test_admin_can_update_backup_schedule_configuration()
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $response = $this->putJson('/api/respaldos/configuracion', [
+            'backup_frecuencia' => 'semanal',
+            'backup_dia_semana' => 'lunes',
+            'backup_dia_mes' => 15,
+            'backup_hora' => '04:30',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'configuracion' => [
+                'backup_frecuencia' => 'semanal',
+                'backup_dia_semana' => 'lunes',
+                'backup_dia_mes' => 15,
+                'backup_hora' => '04:30',
+            ]
+        ]);
+    }
 }

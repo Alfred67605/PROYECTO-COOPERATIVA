@@ -6,8 +6,9 @@ import { useToast } from '../../components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, Calendar, FileText, Search, Plus, Trash2, 
-  ArrowRight, ArrowLeft, CheckCircle2, PackageSearch, Save, Loader2
+  ArrowRight, ArrowLeft, CheckCircle2, PackageSearch, Save, Loader2, FolderPlus, UserCheck
 } from 'lucide-react';
+import { ModalCrearCategoria } from './ModalCrearCategoria';
 
 interface DetalleForm {
   material_id: number;
@@ -34,11 +35,13 @@ export const NuevaCompra = () => {
   const [proveedorId, setProveedorId] = useState('');
   const [bocaminaId, setBocaminaId] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
+  const [compradorResponsable, setCompradorResponsable] = useState('');
   const [numeroFactura, setNumeroFactura] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [detalles, setDetalles] = useState<DetalleForm[]>([]);
   const [searchMaterial, setSearchMaterial] = useState('');
   const [continueAdding, setContinueAdding] = useState(false);
+  const [showCategoriaModal, setShowCategoriaModal] = useState(false);
 
   const { data: proveedores } = useQuery({ queryKey: ['proveedores'], queryFn: async () => (await api.get('/proveedores')).data });
   const { data: bocaminas } = useQuery({ queryKey: ['bocaminas'], queryFn: async () => (await api.get('/bocaminas')).data });
@@ -54,6 +57,7 @@ export const NuevaCompra = () => {
         proveedor_id: proveedorId,
         bocamina_id: bocaminaId,
         fecha,
+        comprador_responsable: compradorResponsable,
         numero_factura: numeroFactura,
         observaciones,
         total: detalles.reduce((sum, item) => sum + item.subtotal, 0),
@@ -76,6 +80,7 @@ export const NuevaCompra = () => {
       } else {
         setProveedorId('');
         setBocaminaId('');
+        setCompradorResponsable('');
         setNumeroFactura('');
         setObservaciones('');
         setDetalles([]);
@@ -122,8 +127,8 @@ export const NuevaCompra = () => {
   const totalGeneral = detalles.reduce((sum, item) => sum + item.subtotal, 0);
 
   const nextStep = () => {
-    if (currentStep === 1 && (!proveedorId || !bocaminaId || !fecha)) {
-      toast.warning('Campos incompletos', 'Seleccione un proveedor, bocamina y fecha obligatoria.');
+    if (currentStep === 1 && (!proveedorId || !bocaminaId || !fecha || !numeroFactura.trim())) {
+      toast.warning('Campos incompletos', 'Seleccione un proveedor, bocamina, fecha y número de factura obligatorio.');
       return;
     }
     if (currentStep === 2 && detalles.length === 0) {
@@ -219,11 +224,20 @@ export const NuevaCompra = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Número de Factura</label>
+                  <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Número de Factura *</label>
                   <div className="relative">
                     <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
-                    <input type="text" className="input-field pl-10" placeholder="Ej. F001-00045" value={numeroFactura} onChange={e => setNumeroFactura(e.target.value)} />
+                    <input type="text" required className="input-field pl-10" placeholder="Ej. F001-00045" value={numeroFactura} onChange={e => setNumeroFactura(e.target.value)} />
                   </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Responsable / A Nombre De Quién Se Realiza la Compra</label>
+                  <div className="relative">
+                    <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
+                    <input type="text" className="input-field pl-10" placeholder="Ej. Juan Pérez (Solicitante / Encargado de Compra)" value={compradorResponsable} onChange={e => setCompradorResponsable(e.target.value)} />
+                  </div>
+                  <p className="text-[11px] text-mining-500 mt-1">Si dejas este campo vacío, la compra se atribuirá a tu usuario registrado.</p>
                 </div>
                 
                 <div className="md:col-span-2">
@@ -237,7 +251,17 @@ export const NuevaCompra = () => {
           {currentStep === 2 && (
             <motion.div key="step2" variants={variants} initial={isTest ? false : "initial"} animate="animate" exit="exit" className="space-y-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
-                <h3 className="text-lg font-bold text-white">Detalle de Materiales</h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-bold text-white">Detalle de Materiales</h3>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowCategoriaModal(true)} 
+                    className="btn-secondary py-1 px-3 text-xs flex items-center gap-1.5"
+                  >
+                    <FolderPlus size={14} className="text-copper-400" />
+                    <span>+ Categoría</span>
+                  </button>
+                </div>
                 <div className="relative w-full md:w-72 z-20">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
                   <input 
@@ -267,54 +291,66 @@ export const NuevaCompra = () => {
                 </div>
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-white/5">
+              <div className="bg-obsidian-900/50 rounded-2xl border border-white/5 overflow-hidden">
                 <table className="w-full text-left">
                   <thead className="bg-white/5 text-xs font-bold text-mining-400 uppercase">
                     <tr>
-                      <th className="p-4 w-32">Código</th>
-                      <th className="p-4">Descripción</th>
-                      <th className="p-4 w-32">Cantidad</th>
-                      <th className="p-4 w-40">Precio Unitario (Bs.)</th>
-                      <th className="p-4 w-40 text-right">Subtotal</th>
-                      <th className="p-4 w-16 text-center"></th>
+                      <th className="p-4">Material</th>
+                      <th className="p-4 text-center w-32">Cantidad</th>
+                      <th className="p-4 text-right w-40">P. Unitario (Bs.)</th>
+                      <th className="p-4 text-right w-40">Subtotal (Bs.)</th>
+                      <th className="p-4 w-16"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {detalles.map(d => (
                       <tr key={d.material_id} className="hover:bg-white/[0.02]">
-                        <td className="p-4 font-mono text-xs font-bold text-mining-300">
-                          {d.codigo}
-                        </td>
-                        <td className="p-4 text-white font-medium">
-                          {d.descripcion}
+                        <td className="p-4">
+                          <div className="font-bold text-white">{d.descripcion}</div>
+                          <div className="text-xs font-mono text-mining-500">{d.codigo}</div>
                         </td>
                         <td className="p-4">
-                          <input type="number" min="0.1" step="any" className="input-field py-1.5 px-3 text-center" value={d.cantidad} onChange={e => updateDetalle(d.material_id, 'cantidad', parseFloat(e.target.value) || 0)} />
+                          <input 
+                            type="number" 
+                            min="0.01" 
+                            step="any" 
+                            className="input-field text-center py-1.5" 
+                            value={d.cantidad} 
+                            onChange={e => updateDetalle(d.material_id, 'cantidad', parseFloat(e.target.value) || 0)} 
+                          />
                         </td>
                         <td className="p-4">
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400 font-medium">$</span>
-                            <input type="number" min="0" step="any" className="input-field py-1.5 pl-7 pr-3 text-right" value={d.precio_unitario} onChange={e => updateDetalle(d.material_id, 'precio_unitario', parseFloat(e.target.value) || 0)} />
-                          </div>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            step="any" 
+                            className="input-field text-right py-1.5" 
+                            value={d.precio_unitario} 
+                            onChange={e => updateDetalle(d.material_id, 'precio_unitario', parseFloat(e.target.value) || 0)} 
+                          />
                         </td>
-                        <td className="p-4 text-right font-bold text-white">
-                          ${d.subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        <td className="p-4 text-right font-bold text-copper-400">
+                          Bs. {d.subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </td>
-                        <td className="p-4 text-center">
-                          <button onClick={() => removeDetalle(d.material_id)} className="p-2 text-mining-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-                            <Trash2 size={18} />
+                        <td className="p-4 text-right">
+                          <button type="button" onClick={() => removeDetalle(d.material_id)} className="btn-icon text-red-400 hover:bg-red-500/10">
+                            <Trash2 size={16} />
                           </button>
                         </td>
                       </tr>
                     ))}
                     {detalles.length === 0 && (
-                      <tr><td colSpan={6} className="p-12 text-center text-mining-400">Busca y selecciona materiales para agregar a la compra.</td></tr>
+                      <tr>
+                        <td colSpan={5} className="p-12 text-center text-mining-500">
+                          Selecciona materiales en la barra superior para armar tu lista de compra.
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                   {detalles.length > 0 && (
-                    <tfoot className="bg-white/5 text-white">
+                    <tfoot className="bg-white/5 border-t border-white/10 font-bold">
                       <tr>
-                        <td colSpan={4} className="p-4 font-bold text-right uppercase tracking-wider text-sm">Total Compra</td>
+                        <td colSpan={3} className="p-4 text-right text-xs uppercase tracking-wider text-mining-400">Total General</td>
                         <td className="p-4 text-right font-black text-xl text-copper-400">Bs. {totalGeneral.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         <td></td>
                       </tr>
@@ -365,6 +401,10 @@ export const NuevaCompra = () => {
                       <div>
                         <p className="text-xs text-mining-400 mb-1">Bocamina Destino</p>
                         <p className="font-semibold text-white">{bocaminas?.find((b:any) => b.id === parseInt(bocaminaId))?.nombre || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-mining-400 mb-1">Responsable / Solicitante</p>
+                        <p className="font-semibold text-teal-400">{compradorResponsable || 'No especificado (Mismo usuario registrado)'}</p>
                       </div>
                       <div className="flex gap-4">
                         <div>
@@ -425,6 +465,11 @@ export const NuevaCompra = () => {
           </div>
         )}
       </div>
+
+      <ModalCrearCategoria
+        isOpen={showCategoriaModal}
+        onClose={() => setShowCategoriaModal(false)}
+      />
     </div>
   );
 };

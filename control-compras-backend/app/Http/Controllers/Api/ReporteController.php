@@ -21,65 +21,94 @@ class ReporteController extends Controller
     {
         $year = request('year', date('Y'));
 
+        // 1. Estadísticas de Compras
         $totalCompras = Compra::whereYear('fecha', $year)->count();
-        $gastoTotalCompras = Compra::whereYear('fecha', $year)->sum('total');
-        
-        $gastoTotalServicios = 0;
-        $serviciosAll = \App\Models\Servicio::with(['costos', 'repuestos', 'bocamina'])
-            ->whereYear('fecha', $year)
-            ->get();
+        $gastoTotalCompras = (float)Compra::whereYear('fecha', $year)->sum('total');
+
+        // 2. Estadísticas de Servicios y Mantenimientos
+        $serviciosQuery = \App\Models\Servicio::with(['costos', 'repuestos', 'bocamina'])
+            ->whereYear('fecha', $year);
+        $totalServicios = (float)$serviciosQuery->count();
+        $serviciosAll = $serviciosQuery->get();
+
+        $gastoTotalServicios = 0.0;
         foreach ($serviciosAll as $s) {
-            $gastoTotalServicios += $s->costos->sum('monto') + $s->repuestos->sum(function($r) { return $r->cantidad * $r->costo_unitario; });
+            $gastoTotalServicios += (float)($s->costos->sum('monto') + $s->repuestos->sum(function($r) {
+                return $r->cantidad * $r->costo_unitario;
+            }));
         }
+
         $gastoTotal = $gastoTotalCompras + $gastoTotalServicios;
-        
+
+        // 3. Métricas Globales
         $totalProveedores = \App\Models\Proveedor::count();
         $totalBocaminas = \App\Models\Bocamina::count();
-        
-        $gastosBocamina = Compra::select('bocaminas.nombre', DB::raw('SUM(compras.total) as total_gastado'))
+        $totalMateriales = \App\Models\Material::count();
+
+        // 4. Distribución por Bocamina (Compras + Servicios)
+        $gastosBocaminaMap = [];
+
+        $bocaminasBd = \App\Models\Bocamina::all();
+        foreach ($bocaminasBd as $b) {
+            $gastosBocaminaMap[$b->nombre] = [
+                'nombre' => $b->nombre,
+                'compras' => 0.0,
+                'servicios' => 0.0,
+                'total_gastado' => 0.0,
+            ];
+        }
+
+        $comprasBocamina = Compra::select('bocaminas.nombre', DB::raw('SUM(compras.total) as total_gastado'))
             ->join('bocaminas', 'compras.bocamina_id', '=', 'bocaminas.id')
             ->whereYear('compras.fecha', $year)
             ->groupBy('bocaminas.id', 'bocaminas.nombre')
-            ->get()
-            ->keyBy('nombre');
-            
-        foreach ($serviciosAll as $s) {
-            if ($s->boca_mina_id) {
-                $nombre = $s->bocamina->nombre ?? 'Central';
-                $costo = $s->costos->sum('monto') + $s->repuestos->sum(function($r) { return $r->cantidad * $r->costo_unitario; });
-                if ($costo > 0) {
-                    if (isset($gastosBocamina[$nombre])) {
-                        $gastosBocamina[$nombre]->total_gastado += $costo;
-                    } else {
-                        $gastosBocamina[$nombre] = (object)['nombre' => $nombre, 'total_gastado' => $costo];
-                    }
-                }
-            }
-        }
-        $gastosBocamina = $gastosBocamina->sortByDesc('total_gastado')->values();
-            
-        $comprasRecientes = Compra::with(['proveedor', 'bocamina'])
-            ->orderByDesc('id')
-            ->limit(5)
             ->get();
 
-        // Calcular Tendencia Mensual (12 meses)
+        foreach ($comprasBocamina as $cb) {
+            $nombre = $cb->nombre;
+            if (!isset($gastosBocaminaMap[$nombre])) {
+                $gastosBocaminaMap[$nombre] = ['nombre' => $nombre, 'compras' => 0.0, 'servicios' => 0.0, 'total_gastado' => 0.0];
+            }
+            $gastosBocaminaMap[$nombre]['compras'] += (float)$cb->total_gastado;
+            $gastosBocaminaMap[$nombre]['total_gastado'] += (float)$cb->total_gastado;
+        }
+
+        foreach ($serviciosAll as $s) {
+            $nombre = $s->bocamina->nombre ?? 'Bodega Central';
+            $costo = (float)($s->costos->sum('monto') + $s->repuestos->sum(fn($r) => $r->cantidad * $r->costo_unitario));
+            if ($costo > 0) {
+                if (!isset($gastosBocaminaMap[$nombre])) {
+                    $gastosBocaminaMap[$nombre] = ['nombre' => $nombre, 'compras' => 0.0, 'servicios' => 0.0, 'total_gastado' => 0.0];
+                }
+                $gastosBocaminaMap[$nombre]['servicios'] += $costo;
+                $gastosBocaminaMap[$nombre]['total_gastado'] += $costo;
+            }
+        }
+
+        $gastosBocamina = collect(array_values($gastosBocaminaMap))
+            ->filter(fn($item) => $item['total_gastado'] > 0)
+            ->sortByDesc('total_gastado')
+            ->values();
+
+        // 5. Tendencia Mensual (Compras vs Servicios)
         $mesesNombres = [
             1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr', 5 => 'May', 6 => 'Jun',
             7 => 'Jul', 8 => 'Ago', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic'
         ];
-        
+
         $tendenciaMensualMap = [];
         for ($m = 1; $m <= 12; $m++) {
             $tendenciaMensualMap[$m] = [
                 'name' => $mesesNombres[$m],
+                'compras' => 0.0,
+                'servicios' => 0.0,
                 'gastos' => 0.0,
             ];
         }
 
         $tendenciaDiariaMap = [];
 
-        // Sumar compras del año
+        // Sumar Compras
         $comprasYear = Compra::whereYear('fecha', $year)->get();
         foreach ($comprasYear as $compra) {
             $fecha = \Carbon\Carbon::parse($compra->fecha);
@@ -89,6 +118,7 @@ class ReporteController extends Controller
             $total = (float)$compra->total;
 
             if (isset($tendenciaMensualMap[$m])) {
+                $tendenciaMensualMap[$m]['compras'] += $total;
                 $tendenciaMensualMap[$m]['gastos'] += $total;
             }
 
@@ -96,23 +126,25 @@ class ReporteController extends Controller
                 $tendenciaDiariaMap[$d] = [
                     'name' => $dFormatted,
                     'date' => $d,
+                    'compras' => 0.0,
+                    'servicios' => 0.0,
                     'gastos' => 0.0,
                 ];
             }
+            $tendenciaDiariaMap[$d]['compras'] += $total;
             $tendenciaDiariaMap[$d]['gastos'] += $total;
         }
 
-        // Sumar servicios del año
+        // Sumar Servicios
         foreach ($serviciosAll as $servicio) {
             $fecha = \Carbon\Carbon::parse($servicio->fecha);
             $m = (int)$fecha->format('n');
             $d = $fecha->toDateString();
             $dFormatted = $fecha->format('d/m');
-            $total = (float)($servicio->costos->sum('monto') + $servicio->repuestos->sum(function($r) {
-                return $r->cantidad * $r->costo_unitario;
-            }));
+            $total = (float)($servicio->costos->sum('monto') + $servicio->repuestos->sum(fn($r) => $r->cantidad * $r->costo_unitario));
 
             if (isset($tendenciaMensualMap[$m])) {
+                $tendenciaMensualMap[$m]['servicios'] += $total;
                 $tendenciaMensualMap[$m]['gastos'] += $total;
             }
 
@@ -120,9 +152,12 @@ class ReporteController extends Controller
                 $tendenciaDiariaMap[$d] = [
                     'name' => $dFormatted,
                     'date' => $d,
+                    'compras' => 0.0,
+                    'servicios' => 0.0,
                     'gastos' => 0.0,
                 ];
             }
+            $tendenciaDiariaMap[$d]['servicios'] += $total;
             $tendenciaDiariaMap[$d]['gastos'] += $total;
         }
 
@@ -130,12 +165,59 @@ class ReporteController extends Controller
         $tendenciaDiaria = array_values($tendenciaDiariaMap);
         $tendenciaMensual = array_values($tendenciaMensualMap);
 
+        // 6. Actividad Reciente Consolidada (Compras + Servicios)
+        $comprasRecientes = Compra::with(['proveedor', 'bocamina'])
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get()
+            ->map(function($c) {
+                return [
+                    'id' => 'compra_' . $c->id,
+                    'tipo' => 'compra',
+                    'titulo' => 'Compra #' . ($c->numero_factura ?: $c->id),
+                    'subtitulo' => $c->proveedor->nombre ?? 'Proveedor Desconocido',
+                    'bocamina' => $c->bocamina->nombre ?? 'Bodega Central',
+                    'monto' => (float)$c->total,
+                    'fecha' => $c->fecha,
+                ];
+            });
+
+        $serviciosRecientes = \App\Models\Servicio::with(['bocamina', 'costos', 'repuestos', 'equipo'])
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get()
+            ->map(function($s) {
+                $costo = (float)($s->costos->sum('monto') + $s->repuestos->sum(fn($r) => $r->cantidad * $r->costo_unitario));
+                $equipoNombre = $s->equipo->nombre ?? ($s->descripcion ?: 'Servicio Técnico');
+                return [
+                    'id' => 'servicio_' . $s->id,
+                    'tipo' => 'servicio',
+                    'titulo' => ($s->codigo ? $s->codigo . ' - ' : '') . 'Mantenimiento',
+                    'subtitulo' => $equipoNombre,
+                    'bocamina' => $s->bocamina->nombre ?? 'Bodega Central',
+                    'monto' => $costo,
+                    'fecha' => $s->fecha,
+                ];
+            });
+
+        $actividadReciente = $comprasRecientes->concat($serviciosRecientes)
+            ->sortByDesc('fecha')
+            ->values()
+            ->take(6);
+
         return response()->json([
             'total_compras' => $totalCompras,
+            'total_servicios' => $totalServicios,
+            'gasto_compras' => $gastoTotalCompras,
+            'gasto_servicios' => $gastoTotalServicios,
             'gasto_total' => $gastoTotal,
+            'total_materiales' => $totalMateriales,
             'total_proveedores' => $totalProveedores,
             'total_bocaminas' => $totalBocaminas,
             'gastos_por_bocamina' => $gastosBocamina,
+            'actividad_reciente' => $actividadReciente,
             'compras_recientes' => $comprasRecientes,
             'tendencia_mensual' => $tendenciaMensual,
             'tendencia_diaria' => $tendenciaDiaria
@@ -500,13 +582,13 @@ class ReporteController extends Controller
             ]);
 
             // ── Encabezados ──
-            $headers = ['ID', 'Fecha', 'Proveedor', 'NIT Proveedor', 'N° Factura', 'Bocamina', 'Responsable', 'Observaciones', 'Total ($)', 'Estado'];
+            $headers = ['ID', 'Fecha', 'Proveedor', 'NIT Proveedor', 'N° Factura', 'Bocamina', 'Responsable / A Nombre De', 'Registrado Por', 'Observaciones', 'Total ($)', 'Estado'];
             $col = 'A';
             foreach ($headers as $header) {
                 $sheet->setCellValue($col . '3', $header);
                 $col++;
             }
-            $sheet->getStyle('A3:J3')->applyFromArray([
+            $sheet->getStyle('A3:K3')->applyFromArray([
                 'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
                 'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D96A43']],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
@@ -527,33 +609,34 @@ class ReporteController extends Controller
                 $sheet->setCellValue('D' . $row, $compra->proveedor->nit ?? '-');
                 $sheet->setCellValue('E' . $row, $compra->numero_factura ?: '-');
                 $sheet->setCellValue('F' . $row, $compra->bocamina->nombre ?? 'Bodega Central');
-                $sheet->setCellValue('G' . $row, $compra->usuario->nombre ?? '-');
-                $sheet->setCellValue('H' . $row, $compra->observaciones ?: '-');
-                $sheet->setCellValue('I' . $row, (float) $compra->total);
-                $sheet->setCellValue('J' . $row, $compra->estado ?? 'completada');
+                $sheet->setCellValue('G' . $row, $compra->comprador_responsable ?: ($compra->usuario->nombre ?? '-'));
+                $sheet->setCellValue('H' . $row, $compra->usuario->nombre ?? '-');
+                $sheet->setCellValue('I' . $row, $compra->observaciones ?: '-');
+                $sheet->setCellValue('J' . $row, (float) $compra->total);
+                $sheet->setCellValue('K' . $row, $compra->estado ?? 'completada');
 
-                $sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray([
+                $sheet->getStyle('A' . $row . ':K' . $row)->applyFromArray([
                     'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $fillColor]],
                     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'E2E8F0']]],
                 ]);
-                $sheet->getStyle('I' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                $sheet->getStyle('J' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
 
                 $total += $compra->total;
                 $row++;
             }
 
             // ── Fila TOTAL ──
-            $sheet->mergeCells('A' . $row . ':H' . $row);
+            $sheet->mergeCells('A' . $row . ':I' . $row);
             $sheet->setCellValue('A' . $row, 'TOTAL GENERAL COMPRAS');
-            $sheet->setCellValue('I' . $row, $total);
-            $sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray([
+            $sheet->setCellValue('J' . $row, $total);
+            $sheet->getStyle('A' . $row . ':K' . $row)->applyFromArray([
                 'font'    => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1A2332']],
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '334155']]],
             ]);
-            $sheet->getStyle('I' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('J' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
 
-            foreach (range('A', 'J') as $colChar) {
+            foreach (range('A', 'K') as $colChar) {
                 $sheet->getColumnDimension($colChar)->setAutoSize(true);
             }
         }

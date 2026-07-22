@@ -130,6 +130,6 @@ class CompraControllerTest extends TestCase
         ]);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['proveedor_id', 'bocamina_id', 'fecha', 'detalles']);
+                 ->assertJsonValidationErrors(['proveedor_id', 'bocamina_id', 'fecha', 'numero_factura', 'detalles']);
     }
 }

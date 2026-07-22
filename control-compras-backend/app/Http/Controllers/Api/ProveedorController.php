@@ -60,8 +60,15 @@ class ProveedorController extends Controller
     {
         $proveedor = Proveedor::findOrFail($id);
         $this->authorize('delete', $proveedor);
-        $proveedor->update(['estado' => false]);
-        return response()->json(['message' => 'Proveedor inhabilitado']);
+
+        try {
+            $proveedor->delete();
+            return response()->json(['message' => 'Proveedor eliminado de manera definitiva']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'No se puede eliminar el proveedor porque tiene compras asociadas.'
+            ], 422);
+        }
     }
 
     public function uploadLogo(Request $request, $id)

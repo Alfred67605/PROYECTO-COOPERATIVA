@@ -56,7 +56,14 @@ class BocaminaController extends Controller
     {
         $bocamina = Bocamina::findOrFail($id);
         $this->authorize('delete', $bocamina);
-        $bocamina->update(['estado' => false]);
-        return response()->json(['message' => 'Bocamina inhabilitada']);
+
+        try {
+            $bocamina->delete();
+            return response()->json(['message' => 'Bocamina eliminada de manera definitiva']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'No se puede eliminar la bocamina porque tiene compras o servicios asociados.'
+            ], 422);
+        }
     }
 }

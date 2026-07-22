@@ -113,9 +113,9 @@ describe('Materiales - Inventario y Catálogo', () => {
   context('Editar Material', () => {
     it('Debe abrir el modal de edición al hacer click en el botón editar', () => {
       cy.get('.animate-pulse', { timeout: 15000 }).should('not.exist');
-      // Click the first edit button on any card
-      cy.get('[class*="card"]').first().within(() => {
-        cy.get('button').filter(':has(svg)').first().click();
+      // Click the first edit button on first row
+      cy.get('tbody tr').first().within(() => {
+        cy.get('button').first().click();
       });
       cy.contains('Editar Material').should('be.visible');
     });
@@ -124,8 +124,9 @@ describe('Materiales - Inventario y Catálogo', () => {
   context('Eliminar Material', () => {
     it('Debe mostrar diálogo de confirmación al eliminar', () => {
       cy.get('.animate-pulse', { timeout: 15000 }).should('not.exist');
-      cy.get('[class*="card"]').first().within(() => {
-        cy.get('button').filter(':has(svg)').last().click();
+      // Click the delete button on first row
+      cy.get('tbody tr').first().within(() => {
+        cy.get('button').last().click();
       });
       cy.contains('Eliminar').should('be.visible');
     });
@@ -147,6 +148,22 @@ describe('Materiales - Inventario y Catálogo', () => {
       });
       cy.visit('/inventario');
       cy.get('.animate-pulse').should('exist');
+    });
+  });
+
+  context('Categorías de Materiales (Pestaña)', () => {
+    beforeEach(() => {
+      cy.contains('button', 'Categorías').click();
+    });
+
+    it('Debe cambiar de pestaña y mostrar el título "Categorías de Materiales"', () => {
+      cy.contains('h1', 'Categorías de Materiales').should('be.visible');
+    });
+
+    it('Debe abrir el modal de creación de categoría', () => {
+      cy.contains('button', 'Nueva Categoría').click();
+      cy.contains('.fixed.inset-0', 'Nueva Categoría').should('be.visible');
+      cy.get('input[placeholder*="Ej. Herramientas de Corte"]').should('be.visible');
     });
   });
 });

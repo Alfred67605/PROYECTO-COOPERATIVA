@@ -15,13 +15,15 @@ class UsuarioSeeder extends Seeder
         $comprasRol = Rol::where('nombre', 'Compras')->first();
 
         // Admin User
-        User::create([
-            'nombre' => 'Admin Cooperativa',
-            'email' => 'admin@cooperativa.com',
-            'password' => Hash::make('Admin2026!'),
-            'rol_id' => $adminRol->id,
-            'estado' => true,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@cooperativa.com'],
+            [
+                'nombre' => 'Admin Cooperativa',
+                'password' => Hash::make('Admin123$'),
+                'rol_id' => $adminRol->id,
+                'estado' => true,
+            ]
+        );
 
         // Compras Users requested by user
         $usuariosCompras = [
@@ -35,13 +37,15 @@ class UsuarioSeeder extends Seeder
         ];
 
         foreach ($usuariosCompras as $u) {
-            User::create([
-                'nombre' => $u['nombre'],
-                'email' => $u['email'],
-                'password' => Hash::make('Password123!'),
-                'rol_id' => $comprasRol->id,
-                'estado' => true,
-            ]);
+            User::firstOrCreate(
+                ['email' => $u['email']],
+                [
+                    'nombre' => $u['nombre'],
+                    'password' => Hash::make('Password123!'),
+                    'rol_id' => $comprasRol->id,
+                    'estado' => true,
+                ]
+            );
         }
     }
 }

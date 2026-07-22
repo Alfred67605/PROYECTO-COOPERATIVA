@@ -10,14 +10,9 @@ class InspeccionController extends Controller
     public function index()
     {
         $this->authorize('viewAny', \App\Models\Inspeccion::class);
-        $query = \App\Models\Inspeccion::with(['responsable', 'equipo']);
-        
-        $user = auth()->user();
-        if (!in_array($user->rol?->nombre, ['Administrador General', 'Mantenimiento', 'Gerencia'])) {
-            $query->where('firma_responsable_id', $user->id);
-        }
-        
-        $inspecciones = $query->orderBy('id', 'desc')->get();
+        $inspecciones = \App\Models\Inspeccion::with(['responsable', 'equipo'])
+            ->orderBy('id', 'desc')
+            ->get();
         return response()->json($inspecciones);
     }
 
@@ -72,9 +67,15 @@ class InspeccionController extends Controller
 
     public function destroy(string $id)
     {
-        $inspeccion = \App\Models\Inspeccion::findOrFail($id);
+        $inspeccion = \App\Models\Inspeccion::withTrashed()->findOrFail($id);
         $this->authorize('delete', $inspeccion);
-        $inspeccion->delete();
-        return response()->json(null, 204);
+        try {
+            $inspeccion->forceDelete();
+            return response()->json(['message' => 'Inspección eliminada de manera definitiva']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'No se puede eliminar la inspección porque tiene registros asociados.'
+            ], 422);
+        }
     }
 }

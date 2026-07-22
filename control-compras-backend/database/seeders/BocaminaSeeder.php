@@ -19,7 +19,7 @@ class BocaminaSeeder extends Seeder
         ];
 
         foreach ($bocaminas as $boca) {
-            Bocamina::create($boca);
+            Bocamina::firstOrCreate(['nombre' => $boca['nombre']], $boca);
         }
     }
 }

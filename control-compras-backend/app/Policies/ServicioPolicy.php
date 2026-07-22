@@ -9,7 +9,7 @@ class ServicioPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->canAccess('servicios');
     }
 
     public function view(User $user, Servicio $servicio): bool

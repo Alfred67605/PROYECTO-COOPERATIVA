@@ -1,19 +1,30 @@
 import { useState, useEffect } from 'react';
-import { Menu, ChevronRight, Sun, Moon } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { Menu, ChevronRight, Sun, Moon, ArrowLeft } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../features/auth/AuthContext';
+import { useAuth, getDefaultRedirect } from '../../features/auth/AuthContext';
 
 interface TopbarProps {
   onMenuClick: () => void;
-  isMobile: boolean;
+  isSidebarOpen: boolean;
 }
 
-export const Topbar = ({ onMenuClick, isMobile }: TopbarProps) => {
+export const Topbar = ({ onMenuClick, isSidebarOpen }: TopbarProps) => {
   const location = useLocation();
-  const { empresaSettings } = useAuth();
-  const pathName = location.pathname.split('/')[1] || 'Dashboard';
-  const title = pathName.charAt(0).toUpperCase() + pathName.slice(1);
+  const navigate = useNavigate();
+  const { user, canAccess } = useAuth();
+
+  const segments = location.pathname.split('/').filter(Boolean);
+  const breadcrumbItems = segments.length > 0
+    ? segments.map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    : ['Dashboard'];
+
+  const defaultRedirect = user ? getDefaultRedirect(user, canAccess) : '/dashboard';
+  const showBackButton = 
+    location.pathname !== '/login' && 
+    location.pathname !== '/' && 
+    location.pathname !== '/dashboard' && 
+    location.pathname !== defaultRedirect;
 
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -35,32 +46,38 @@ export const Topbar = ({ onMenuClick, isMobile }: TopbarProps) => {
 
   return (
     <header className="h-20 bg-obsidian-900/40 dark:bg-obsidian-900/40 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30 transition-all">
-      <div className="flex items-center gap-4">
-        {isMobile && (
-          <button 
-            onClick={onMenuClick}
-            className="p-2 -ml-2 rounded-xl text-mining-400 hover:bg-white/5 hover:text-white transition-colors"
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onMenuClick}
+          className="p-2 -ml-2 rounded-xl text-mining-400 hover:bg-white/5 hover:text-white transition-colors flex items-center justify-center"
+          title={isSidebarOpen ? "Colapsar menú" : "Expandir menú"}
+        >
+          <Menu size={24} />
+        </button>
+
+        {showBackButton && (
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-xl text-mining-400 hover:bg-white/5 hover:text-white transition-colors flex items-center justify-center gap-1 group/back animate-fade-in"
+            title="Atrás"
           >
-            <Menu size={24} />
+            <ArrowLeft size={20} className="group-hover/back:-translate-x-0.5 transition-transform" />
           </button>
         )}
         
-        <div className="flex items-center text-sm font-medium text-mining-500 hidden sm:flex">
-          <span>{empresaSettings?.nombre_empresa || 'Minera Cop'}</span>
-          <ChevronRight size={14} className="mx-2" />
-          <motion.span 
-            key={title}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-white font-bold tracking-wide"
-          >
-            {title}
-          </motion.span>
-        </div>
-        
-        {/* Mobile title */}
-        <div className="sm:hidden font-bold text-white text-lg tracking-wide">
-          {title}
+        <div className="flex items-center text-lg tracking-wide ml-1">
+          {breadcrumbItems.map((item, index) => (
+            <div key={index + item} className="flex items-center">
+              {index > 0 && <ChevronRight size={16} className="mx-1.5 text-mining-500" />}
+              <motion.span
+                initial={{ opacity: 0, y: 3 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={index === breadcrumbItems.length - 1 ? "text-white font-bold" : "text-mining-400 font-medium text-base"}
+              >
+                {item}
+              </motion.span>
+            </div>
+          ))}
         </div>
       </div>
       

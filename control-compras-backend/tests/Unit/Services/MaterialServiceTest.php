@@ -54,13 +54,11 @@ class MaterialServiceTest extends TestCase
         ]);
         $this->assertEquals('Brocas neumáticas de 12 pulgadas', $material->fresh()->descripcion);
 
-        // Logical delete (destroy updates state to inactivo)
-        $material->update([
-            'estado' => 'inactivo',
-            'imagen' => null,
-        ]);
+        // Physical delete
+        $materialId = $material->id;
+        $material->delete();
 
-        $this->assertEquals('inactivo', $material->fresh()->estado);
+        $this->assertDatabaseMissing('materiales', ['id' => $materialId]);
     }
 
     /**

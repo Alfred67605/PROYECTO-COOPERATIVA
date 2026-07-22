@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { Download, FileText, Loader2, Calendar, Filter, Pickaxe, Building2, Package, Activity, ShoppingCart, AlertCircle, RefreshCw, Wrench } from 'lucide-react';
+import { Download, FileText, Loader2, Filter, Pickaxe, Building2, Package, Activity, ShoppingCart, AlertCircle, RefreshCw, Wrench } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
@@ -139,59 +141,64 @@ export const ReportesView = () => {
       </div>
 
       {/* Controles de Filtros */}
-      <div className="card p-5 border-l-4 border-l-copper-500">
-        <div className="flex flex-col xl:flex-row gap-6 justify-between items-end">
-          <div className="space-y-2 w-full xl:w-auto">
-            <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider">Filtros Rápidos</label>
-            <div className="flex flex-wrap gap-2">
-              <button onClick={() => setRango('diario')} className="btn-secondary h-10 px-4">Diario</button>
-              <button onClick={() => setRango('semanal')} className="btn-secondary h-10 px-4">Semanal</button>
-              <button onClick={() => setRango('mensual')} className="btn-secondary h-10 px-4">Mensual</button>
+      <div className="card p-7 border-l-4 border-l-copper-500 space-y-6">
+        {/* Fila 1: Filtros Rápidos + Tipo de Gasto */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-b border-white/10 pb-5">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="text-sm font-extrabold text-mining-200 uppercase tracking-wider">Filtros Rápidos:</span>
+            <div className="flex flex-wrap gap-2.5">
+              <button onClick={() => setRango('diario')} className="btn-secondary text-sm font-semibold h-11 px-5">Diario</button>
+              <button onClick={() => setRango('semanal')} className="btn-secondary text-sm font-semibold h-11 px-5">Semanal</button>
+              <button onClick={() => setRango('mensual')} className="btn-secondary text-sm font-semibold h-11 px-5">Mensual</button>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end flex-1 w-full">
-            <div className="w-full">
-              <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Fecha Inicio</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
-                <input type="date" className="input-field pl-10" value={dateRange.inicio} onChange={e => setDateRange({...dateRange, inicio: e.target.value})} />
-              </div>
-            </div>
-            <div className="w-full">
-              <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Fecha Fin</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
-                <input type="date" className="input-field pl-10" value={dateRange.fin} onChange={e => setDateRange({...dateRange, fin: e.target.value})} />
-              </div>
-            </div>
-            <div className="w-full">
-              <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Bocamina (Opcional)</label>
-              <div className="relative">
-                <Pickaxe className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
-                <select className="input-field pl-10" value={dateRange.bocamina_id} onChange={e => setDateRange({...dateRange, bocamina_id: e.target.value})}>
-                  <option value="">Todas las bocaminas</option>
-                  {bocaminas?.map((b: any) => (
-                    <option key={b.id} value={b.id}>{b.nombre}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="w-full">
-              <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Tipo de Gasto</label>
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-mining-400" size={18} />
-                <select className="input-field pl-10" value={dateRange.tipo} onChange={e => setDateRange({...dateRange, tipo: e.target.value})}>
-                  <option value="todos">Todos</option>
-                  <option value="compras">Solo Compras</option>
-                  <option value="servicios">Solo Servicios</option>
-                </select>
-              </div>
-            </div>
-            <button onClick={() => refetch()} className="btn-primary whitespace-nowrap h-10 px-6 w-full justify-center">
-              <Filter size={18} /> Aplicar
-            </button>
+
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-extrabold text-mining-200 uppercase tracking-wider">Tipo de Gasto:</span>
+            <CustomSelect
+              options={[
+                { value: 'todos', label: 'Todos los gastos' },
+                { value: 'compras', label: 'Solo Compras' },
+                { value: 'servicios', label: 'Solo Servicios' }
+              ]}
+              value={dateRange.tipo}
+              onChange={val => setDateRange({...dateRange, tipo: val})}
+              icon={<Filter size={18} />}
+              className="w-60"
+            />
           </div>
+        </div>
+
+        {/* Fila 2: Fechas + Bocamina + Botón Aplicar */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
+          <CustomDatePicker
+            label="Fecha Inicio"
+            value={dateRange.inicio}
+            onChange={val => setDateRange({...dateRange, inicio: val})}
+            className="w-full"
+          />
+          <CustomDatePicker
+            label="Fecha Fin"
+            value={dateRange.fin}
+            onChange={val => setDateRange({...dateRange, fin: val})}
+            className="w-full"
+          />
+          <div className="space-y-2 w-full">
+            <label className="block text-xs font-extrabold text-mining-300 uppercase tracking-wider">Bocamina (Opcional)</label>
+            <CustomSelect
+              options={[
+                { value: '', label: 'Todas las bocaminas' },
+                ...(bocaminas || []).map((b: any) => ({ value: String(b.id), label: b.nombre }))
+              ]}
+              value={dateRange.bocamina_id}
+              onChange={val => setDateRange({...dateRange, bocamina_id: val})}
+              icon={<Pickaxe size={18} />}
+              className="w-full"
+            />
+          </div>
+          <button onClick={() => refetch()} className="btn-primary h-12 px-7 w-full justify-center text-sm font-bold tracking-wide shadow-glow-copper">
+            <Filter size={20} /> Aplicar Filtros
+          </button>
         </div>
       </div>
 
@@ -326,6 +333,7 @@ export const ReportesView = () => {
                       <th className="p-4">Proveedor</th>
                       <th className="p-4">N° Factura</th>
                       <th className="p-4">Bocamina</th>
+                      <th className="p-4">Responsable / Solicitante</th>
                       <th className="p-4 text-right">Monto (Bs.)</th>
                     </tr>
                   </thead>
@@ -337,11 +345,12 @@ export const ReportesView = () => {
                         <td className="p-4 text-mining-300">{c.proveedor?.nombre || '-'}</td>
                         <td className="p-4 text-mining-300">{c.numero_factura || '-'}</td>
                         <td className="p-4 text-mining-300">{c.bocamina?.nombre || 'Central'}</td>
+                        <td className="p-4 text-teal-400 font-medium">{c.comprador_responsable || c.usuario?.nombre || '-'}</td>
                         <td className="p-4 text-right font-bold text-copper-400">Bs. {parseFloat(c.total).toLocaleString()}</td>
                       </tr>
                     ))}
                     {(!reporte?.compras || reporte.compras.length === 0) && (
-                      <tr><td colSpan={6} className="p-8 text-center text-mining-400">No se encontraron compras en este periodo.</td></tr>
+                      <tr><td colSpan={7} className="p-8 text-center text-mining-400">No se encontraron compras en este periodo.</td></tr>
                     )}
                   </tbody>
                 </table>

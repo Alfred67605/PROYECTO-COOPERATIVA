@@ -37,12 +37,8 @@ class CompraPolicy
         return $user->canWrite('compras');
     }
 
-    /**
-     * Determine whether the user can delete compras.
-     * Only Administrador General can delete.
-     */
     public function delete(User $user, Compra $compra): bool
     {
-        return $user->rol?->nombre === 'Administrador General';
+        return $user->canWrite('compras');
     }
 }

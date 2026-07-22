@@ -1,9 +1,23 @@
 import axios from 'axios';
 
 const getBaseUrl = (): string => {
-  const raw = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-  const clean = raw.replace(/\/+$/, '');
-  return clean.endsWith('/api') ? clean : `${clean}/api`;
+  const raw = import.meta.env.VITE_API_URL;
+  if (raw && !raw.includes('localhost') && !raw.includes('127.0.0.1')) {
+    const clean = raw.replace(/\/+$/, '');
+    return clean.endsWith('/api') ? clean : `${clean}/api`;
+  }
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === '127.0.0.1') {
+      return 'http://127.0.0.1:8000/api';
+    }
+    if (host !== 'localhost') {
+      return `${window.location.origin}/api`;
+    }
+  }
+
+  return 'http://localhost:8000/api';
 };
 
 const api = axios.create({

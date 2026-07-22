@@ -133,7 +133,11 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
               {hasSubItems ? (
                 <button
                   onClick={() => {
-                    if (isMobile) setIsOpen(true);
+                    if (isMobile) {
+                      setIsOpen(true);
+                    } else if (!isOpen) {
+                      setIsOpen(true);
+                    }
                     toggleMenu(item.name);
                   }}
                   className={`relative flex w-full items-center px-3 py-2.5 rounded-xl transition-all duration-300 group ${

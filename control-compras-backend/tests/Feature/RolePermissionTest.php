@@ -143,4 +143,18 @@ class RolePermissionTest extends TestCase
         $response = $this->getJson('/api/reportes/dashboard');
         $response->assertStatus(200);
     }
+
+    public function test_user_with_extra_permission_can_manage_bocaminas(): void
+    {
+        // User with Compras role + extra 'bocaminas' permission
+        $user = $this->createUser('Compras', ['bocaminas']);
+        Sanctum::actingAs($user);
+
+        // Can create bocamina
+        $response = $this->postJson('/api/bocaminas', [
+            'nombre' => 'Bocamina Extra Permiso Test',
+            'ubicacion' => 'Ubicacion Test',
+        ]);
+        $response->assertStatus(201);
+    }
 }

@@ -111,10 +111,10 @@ class CompraServiceTest extends TestCase
         $compra = new Compra();
         $this->assertTrue($policy->view($this->user, $compra));
 
-        // User with "Compras" role has access to create/update, but NOT delete (Admin only)
+        // User with "Compras" role (write access) can create, update, and delete
         $this->assertTrue($policy->create($this->user));
         $this->assertTrue($policy->update($this->user, $compra));
-        $this->assertFalse($policy->delete($this->user, $compra));
+        $this->assertTrue($policy->delete($this->user, $compra));
 
         // Admin General can delete
         $adminRole = Rol::firstOrCreate(['nombre' => 'Administrador General']);

@@ -82,6 +82,37 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
-        $schedule->command('backup:run')->dailyAt('02:00');
+        try {
+            $setting = \App\Models\EmpresaSetting::first();
+            $frecuencia = $setting->backup_frecuencia ?? 'semanal';
+            $hora = $setting->backup_hora ?? '02:00';
+            $diaSemana = strtolower($setting->backup_dia_semana ?? 'domingo');
+            $diaMes = (int)($setting->backup_dia_mes ?? 1);
+
+            if ($frecuencia === 'desactivado') {
+                return;
+            }
+
+            $diasMap = [
+                'domingo' => 0,
+                'lunes' => 1,
+                'martes' => 2,
+                'miercoles' => 3,
+                'jueves' => 4,
+                'viernes' => 5,
+                'sabado' => 6,
+            ];
+            $diaNum = $diasMap[$diaSemana] ?? 0;
+
+            if ($frecuencia === 'diario') {
+                $schedule->command('backup:run')->dailyAt($hora);
+            } elseif ($frecuencia === 'semanal') {
+                $schedule->command('backup:run')->weeklyOn($diaNum, $hora);
+            } elseif ($frecuencia === 'mensual') {
+                $schedule->command('backup:run')->monthlyOn($diaMes, $hora);
+            }
+        } catch (\Throwable $t) {
+            $schedule->command('backup:run')->weeklyOn(0, '02:00');
+        }
     })
     ->create();

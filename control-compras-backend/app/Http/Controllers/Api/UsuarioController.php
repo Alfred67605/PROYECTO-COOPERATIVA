@@ -135,14 +135,21 @@ class UsuarioController extends Controller
         if (!$request->user()->canWrite('usuarios')) {
             throw new \Illuminate\Auth\Access\AuthorizationException();
         }
-        // Prevent admin from deactivating themselves
+        // Prevent admin from deleting themselves
         if ((int) $id === $request->user()->id) {
             return response()->json([
-                'message' => 'No puede desactivar su propia cuenta.'
+                'message' => 'No puede eliminar su propia cuenta.'
             ], 422);
         }
 
-        User::findOrFail($id)->update(['estado' => false]);
-        return response()->json(['message' => 'Usuario inhabilitado']);
+        $user = User::findOrFail($id);
+        try {
+            $user->delete();
+            return response()->json(['message' => 'Usuario eliminado de manera definitiva']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'No se puede eliminar el usuario porque tiene transacciones registradas.'
+            ], 422);
+        }
     }
 }

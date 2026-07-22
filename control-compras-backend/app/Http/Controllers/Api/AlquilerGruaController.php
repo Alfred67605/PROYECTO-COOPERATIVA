@@ -73,8 +73,13 @@ class AlquilerGruaController extends Controller
             throw new \Illuminate\Auth\Access\AuthorizationException();
         }
         $alquiler = AlquilerGrua::findOrFail($id);
-        $alquiler->delete();
-        
-        return response()->json(['message' => 'Alquiler de grúa eliminado correctamente']);
+        try {
+            $alquiler->delete();
+            return response()->json(['message' => 'Alquiler de grúa eliminado de manera definitiva']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'No se puede eliminar el alquiler de grúa porque tiene registros asociados.'
+            ], 422);
+        }
     }
 }

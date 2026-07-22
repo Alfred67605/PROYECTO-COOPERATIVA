@@ -1,0 +1,2 @@
+<?php
+// Cleanup temporary script

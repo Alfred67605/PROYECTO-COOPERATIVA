@@ -98,12 +98,12 @@ export const UsuariosList = () => {
     mutationFn: async (id: number) => await api.delete(`/usuarios/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
-      toast.success('Usuario inhabilitado', 'El usuario fue marcado como inactivo.');
+      toast.success('Usuario eliminado', 'El usuario fue eliminado de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     },
     onError: (err: any) => {
-      toast.error('Error al inhabilitar', err.response?.data?.message || 'No se pudo inhabilitar el usuario.');
+      toast.error('Error al eliminar', err.response?.data?.message || 'No se pudo eliminar el usuario.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     }
@@ -250,9 +250,9 @@ export const UsuariosList = () => {
       {createPortal(
         <ConfirmDialog
           isOpen={confirmOpen}
-          title="Inhabilitar Usuario"
-          message={`¿Estás seguro de que deseas inhabilitar al usuario "${deleteTarget?.nombre}"? El usuario perderá acceso al sistema.`}
-          confirmLabel="Inhabilitar"
+          title="Eliminar Usuario"
+          message={`¿Estás seguro de que deseas eliminar al usuario "${deleteTarget?.nombre}" de manera definitiva? Esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
           cancelLabel="Cancelar"
           variant="danger"
           isLoading={deleteMutation.isPending}

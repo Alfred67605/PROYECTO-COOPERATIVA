@@ -16,7 +16,7 @@ class ProveedorSeeder extends Seeder
         ];
 
         foreach ($proveedores as $prov) {
-            Proveedor::create($prov);
+            Proveedor::firstOrCreate(['nombre' => $prov['nombre']], $prov);
         }
     }
 }

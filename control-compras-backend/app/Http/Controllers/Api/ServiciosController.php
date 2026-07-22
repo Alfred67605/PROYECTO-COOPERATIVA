@@ -12,17 +12,9 @@ class ServiciosController extends Controller
     public function index()
     {
         $this->authorize('viewAny', \App\Models\Servicio::class);
-        $query = \App\Models\Servicio::with(['usuarioRegistro', 'responsable', 'equipo', 'repuestos.material', 'costos']);
-        
-        $user = auth()->user();
-        if (!in_array($user->rol?->nombre, ['Administrador General', 'Mantenimiento', 'Gerencia'])) {
-            $query->where(function($q) use ($user) {
-                $q->where('usuario_registro_id', $user->id)
-                  ->orWhere('responsable_id', $user->id);
-            });
-        }
-        
-        $servicios = $query->orderBy('id', 'desc')->get();
+        $servicios = \App\Models\Servicio::with(['usuarioRegistro', 'responsable', 'equipo', 'repuestos.material', 'costos'])
+            ->orderBy('id', 'desc')
+            ->get();
         return response()->json($servicios);
     }
 
@@ -159,9 +151,15 @@ class ServiciosController extends Controller
 
     public function destroy(string $id)
     {
-        $servicio = \App\Models\Servicio::findOrFail($id);
+        $servicio = \App\Models\Servicio::withTrashed()->findOrFail($id);
         $this->authorize('delete', $servicio);
-        $servicio->delete();
-        return response()->json(null, 204);
+        try {
+            $servicio->forceDelete();
+            return response()->json(['message' => 'Servicio eliminado de manera definitiva']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'No se puede eliminar el servicio porque tiene registros asociados.'
+            ], 422);
+        }
     }
 }

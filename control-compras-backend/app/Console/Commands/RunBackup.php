@@ -73,47 +73,43 @@ class RunBackup extends Command
         $zipPath = $respaldoFolder . DIRECTORY_SEPARATOR . $zipFileName;
 
         try {
-            // 2. Ejecutar pg_dump
-            $this->info("Volcando base de datos...");
-            
-            $pgDumpBinary = $this->getPgDumpBinary();
-            $cmd = [
-                $pgDumpBinary,
-                '-h', $host,
-                '-p', $port,
-                '-U', $username,
-                '-F', 'p',
-                '-f', $sqlPath,
-                $database
-            ];
+            // 2. Intentar pg_dump si está disponible
+            try {
+                $pgDumpBinary = $this->getPgDumpBinary();
+                $cmd = [
+                    $pgDumpBinary,
+                    '-h', $host,
+                    '-p', $port,
+                    '-U', $username,
+                    '-F', 'p',
+                    '-f', $sqlPath,
+                    $database
+                ];
 
-            $env = array_merge(getenv() ?: [], [
-                'PGPASSWORD' => $password
-            ]);
+                $env = array_merge(getenv() ?: [], [
+                    'PGPASSWORD' => $password
+                ]);
 
-            $process = proc_open($cmd, [
-                0 => ["pipe", "r"],
-                1 => ["pipe", "w"],
-                2 => ["pipe", "w"]
-            ], $pipes, null, $env);
+                $process = proc_open($cmd, [
+                    0 => ["pipe", "r"],
+                    1 => ["pipe", "w"],
+                    2 => ["pipe", "w"]
+                ], $pipes, null, $env);
 
-            if (is_resource($process)) {
-                $stdout = stream_get_contents($pipes[1]);
-                fclose($pipes[1]);
-                $stderr = stream_get_contents($pipes[2]);
-                fclose($pipes[2]);
-                $returnValue = proc_close($process);
-                
-                if ($returnValue !== 0) {
-                    throw new \Exception("Error en pg_dump: " . $stderr);
+                if (is_resource($process)) {
+                    stream_get_contents($pipes[1]);
+                    fclose($pipes[1]);
+                    stream_get_contents($pipes[2]);
+                    fclose($pipes[2]);
+                    proc_close($process);
                 }
-            } else {
-                throw new \Exception("No se pudo ejecutar el binario pg_dump.");
+            } catch (\Throwable $t) {
+                Log::warning("pg_dump no ejecutado: " . $t->getMessage());
             }
 
-            if (!file_exists($sqlPath) || filesize($sqlPath) === 0) {
-                throw new \Exception("El volcado de base de datos generado está vacío o no existe.");
-            }
+            // 2b. Exportar JSON de la base de datos para restauración cruzada con deduplicación
+            $jsonPath = $tempFolder . DIRECTORY_SEPARATOR . 'database.json';
+            $this->exportDatabaseJson($jsonPath);
 
             // 3. Crear archivo Zip
             $this->info("Comprimiendo respaldo...");
@@ -122,8 +118,13 @@ class RunBackup extends Command
                 throw new \Exception("No se pudo crear el archivo ZIP en: " . $zipPath);
             }
 
-            // Agregar dump de base de datos
-            $zip->addFile($sqlPath, 'database.sql');
+            // Agregar dump de base de datos SQL y JSON
+            if (file_exists($sqlPath) && filesize($sqlPath) > 0) {
+                $zip->addFile($sqlPath, 'database.sql');
+            }
+            if (file_exists($jsonPath) && filesize($jsonPath) > 0) {
+                $zip->addFile($jsonPath, 'database.json');
+            }
 
             // Agregar uploads de storage (public y private)
             $this->addFolderToZip(storage_path('app/public'), $zip, 'storage/public');
@@ -133,7 +134,10 @@ class RunBackup extends Command
 
             // 4. Limpiar temporales
             if (file_exists($sqlPath)) {
-                unlink($sqlPath);
+                @unlink($sqlPath);
+            }
+            if (file_exists($jsonPath)) {
+                @unlink($jsonPath);
             }
             if (file_exists($tempFolder) && is_dir($tempFolder)) {
                 @rmdir($tempFolder);
@@ -318,5 +322,28 @@ class RunBackup extends Command
         }
 
         return 'pg_dump';
+    }
+
+    /**
+     * Exporta todos los registros de la base de datos a un archivo JSON estructurado.
+     */
+    private function exportDatabaseJson($jsonPath)
+    {
+        $tables = [
+            'roles', 'permisos', 'permiso_user', 'users',
+            'categorias', 'materiales', 'bocaminas', 'proveedores',
+            'compras', 'detalle_compras', 'servicios', 'repuesto_servicios',
+            'costo_servicios', 'inspecciones', 'alquiler_gruas',
+            'historial_operaciones', 'empresa_settings'
+        ];
+
+        $data = [];
+        foreach ($tables as $table) {
+            if (\Illuminate\Support\Facades\Schema::hasTable($table)) {
+                $data[$table] = \DB::table($table)->get()->toArray();
+            }
+        }
+
+        file_put_contents($jsonPath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     }
 }

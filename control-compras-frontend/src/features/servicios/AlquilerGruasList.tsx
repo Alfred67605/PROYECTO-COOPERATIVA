@@ -69,12 +69,12 @@ export const AlquilerGruasList = () => {
     mutationFn: async (id: number) => await api.delete(`/alquiler-gruas/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alquiler-gruas'] });
-      toast.success('Registro eliminado', 'El alquiler fue eliminado.');
+      toast.success('Alquiler eliminado', 'El alquiler de grúa fue eliminado de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     },
     onError: (err: any) => {
-      toast.error('Error', err.response?.data?.message || 'No se pudo eliminar.');
+      toast.error('Error al eliminar', err.response?.data?.message || 'No se pudo eliminar el registro.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     }
@@ -191,8 +191,8 @@ export const AlquilerGruasList = () => {
       {createPortal(
         <ConfirmDialog
           isOpen={confirmOpen}
-          title="Eliminar Registro"
-          message={`¿Estás seguro de que deseas eliminar el alquiler de la grúa "${deleteTarget?.placa}"?`}
+          title="Eliminar Alquiler de Grúa"
+          message={`¿Estás seguro de que deseas eliminar el alquiler de la grúa "${deleteTarget?.placa}" de manera definitiva? Esta acción no se puede deshacer.`}
           confirmLabel="Eliminar"
           cancelLabel="Cancelar"
           variant="danger"

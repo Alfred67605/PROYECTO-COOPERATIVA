@@ -13,6 +13,10 @@ class EmpresaSetting extends Model
         'nombre_empresa',
         'subtitulo',
         'logo',
+        'backup_frecuencia',
+        'backup_dia_semana',
+        'backup_dia_mes',
+        'backup_hora',
     ];
 
     protected $appends = ['logo_url'];

@@ -16,12 +16,13 @@ class CompraController extends Controller
     {
         $this->authorize('viewAny', Compra::class);
         
-        $query = Compra::with(['proveedor', 'usuario', 'bocamina']);
+        $query = Compra::with(['proveedor', 'usuario', 'bocamina'])->orderBy('id', 'desc');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('numero_factura', 'ilike', "%{$search}%")
+                  ->orWhere('comprador_responsable', 'ilike', "%{$search}%")
                   ->orWhereHas('proveedor', function ($pq) use ($search) {
                       $pq->where('nombre', 'ilike', "%{$search}%");
                   });
@@ -36,11 +37,16 @@ class CompraController extends Controller
     {
         $this->authorize('create', Compra::class);
 
+        if ($request->has('bocamina_id') && ($request->input('bocamina_id') === '' || $request->input('bocamina_id') === null)) {
+            $request->merge(['bocamina_id' => null]);
+        }
+
         $validated = $request->validate([
             'proveedor_id' => 'required|exists:proveedores,id',
             'bocamina_id' => 'nullable|exists:bocaminas,id',
             'fecha' => 'required|date',
-            'numero_factura' => 'nullable|string|max:100',
+            'comprador_responsable' => 'nullable|string|max:255',
+            'numero_factura' => 'required|string|max:100',
             'observaciones' => 'nullable|string|max:1000',
             'detalles' => 'required|array|min:1',
             'detalles.*.material_id' => 'required|exists:materiales,id',
@@ -55,6 +61,7 @@ class CompraController extends Controller
             $compra = Compra::create([
                 'proveedor_id' => $validated['proveedor_id'],
                 'usuario_id' => $request->user()->id,
+                'comprador_responsable' => $validated['comprador_responsable'] ?? null,
                 'bocamina_id' => $validated['bocamina_id'] ?? null,
                 'fecha' => $validated['fecha'],
                 'numero_factura' => $validated['numero_factura'] ?? null,
@@ -73,8 +80,6 @@ class CompraController extends Controller
                     'precio' => $detalle['precio'],
                     'subtotal' => $subtotal,
                 ]);
-
-                // Ya no actualizamos inventario en la tabla materiales porque ahora es solo un catálogo maestro.
             }
 
             $compra->update(['total' => $total]);
@@ -84,13 +89,12 @@ class CompraController extends Controller
             return response()->json($compra->load('detalles'), 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            // Log the actual error for debugging, never expose to the client (CWE-209)
             Log::error('Error al registrar compra', [
                 'user_id' => $request->user()->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return response()->json(['message' => 'Error al registrar la compra'], 500);
+            return response()->json(['message' => 'Error al registrar la compra: ' . $e->getMessage()], 500);
         }
     }
 
@@ -100,6 +104,29 @@ class CompraController extends Controller
         $this->authorize('view', $compra);
         return response()->json($compra);
     }
-    
-    // Updates and deletes are generally disabled or restricted for accounting records
+
+    public function destroy($id)
+    {
+        $compra = Compra::findOrFail($id);
+        $this->authorize('delete', $compra);
+
+        try {
+            DB::beginTransaction();
+            $compra->detalles()->delete();
+            $compra->delete();
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Compra eliminada exitosamente.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al eliminar compra', [
+                'compra_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Error al eliminar la compra: ' . $e->getMessage()], 500);
+        }
+    }
 }

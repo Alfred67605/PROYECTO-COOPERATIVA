@@ -57,12 +57,12 @@ export const BocaminasList = () => {
     mutationFn: async (id: number) => await api.delete(`/bocaminas/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bocaminas'] });
-      toast.success('Bocamina inhabilitada', 'El registro fue marcado como inactivo.');
+      toast.success('Bocamina eliminada', 'La bocamina fue eliminada de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     },
     onError: (err: any) => {
-      toast.error('Error al inhabilitar', err.response?.data?.message || 'No se pudo inhabilitar la bocamina.');
+      toast.error('Error al eliminar', err.response?.data?.message || 'No se pudo eliminar la bocamina.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     }
@@ -171,9 +171,9 @@ export const BocaminasList = () => {
       {createPortal(
         <ConfirmDialog
           isOpen={confirmOpen}
-          title="Inhabilitar Bocamina"
-          message={`¿Estás seguro de que deseas inhabilitar la bocamina "${deleteTarget?.nombre}"?`}
-          confirmLabel="Inhabilitar"
+          title="Eliminar Bocamina"
+          message={`¿Estás seguro de que deseas eliminar la bocamina "${deleteTarget?.nombre}" de manera definitiva? Esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
           cancelLabel="Cancelar"
           variant="danger"
           isLoading={deleteMutation.isPending}

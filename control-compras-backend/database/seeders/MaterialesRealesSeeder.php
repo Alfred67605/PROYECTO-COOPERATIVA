@@ -249,6 +249,34 @@ G-10/0007	ESCALERA DE MADERA "4 MTRS"	G-10	MADERAS Y TABLONES	METROS	0	0	0
 G-10/0008	TABLON DE MADERA "1.5 X 3 X 2.50 MTRS"	G-10	MADERAS Y TABLONES	METROS	0	0	0
 EOT;
 
+        $groupMapping = [
+            'G-1'  => 'Material Explosivo',
+            'G-2'  => 'Accesorios e Instalaciones',
+            'G-3'  => 'Herramientas',
+            'G-4'  => 'Lubricantes y Aceites',
+            'G-5'  => 'Filtros y Correas',
+            'G-6'  => 'Equipos de Protección Personal',
+            'G-7'  => 'Herramientas de Mecánica',
+            'G-8'  => 'Pinturas y Anticongelantes',
+            'G-9'  => 'Material Eléctrico',
+            'G-10' => 'Maderas y Tablones',
+            'G-11' => 'Otros',
+        ];
+
+        // Seed Categorías if empty
+        foreach ($groupMapping as $code => $name) {
+            DB::table('categorias')->updateOrInsert(
+                ['nombre' => $name],
+                [
+                    'codigo' => $code,
+                    'descripcion' => "Categoría de {$name}",
+                    'estado' => 'activo',
+                    'updated_at' => Carbon::now(),
+                    'created_at' => Carbon::now(),
+                ]
+            );
+        }
+
         $lines = explode("\n", trim($tsvData));
         $materialesToInsert = [];
 
@@ -258,10 +286,13 @@ EOT;
 
             $codigo = trim($cols[0]);
             $descripcion = trim($cols[1]);
-            $grupo = trim($cols[2]);
-            $categoria = trim($cols[3]);
+            $grupoCode = trim($cols[2]);
+            $categoriaStr = trim($cols[3]);
             $unidad = trim($cols[4]);
             
+            // Remap group code (e.g., G-1 -> Material Explosivo)
+            $grupoNombre = $groupMapping[$grupoCode] ?? (mb_convert_case(mb_strtolower($categoriaStr), MB_CASE_TITLE, 'UTF-8')) ?: $grupoCode;
+
             // Reemplazar coma por punto para castear a float
             $rawCantidad = isset($cols[5]) ? str_replace(['.', ','], ['', '.'], trim($cols[5])) : 0;
             $rawPrecio = isset($cols[6]) ? str_replace(['.', ','], ['', '.'], trim($cols[6])) : 0;
@@ -274,13 +305,8 @@ EOT;
             $materialesToInsert[] = [
                 'codigo' => $codigo,
                 'descripcion' => $descripcion,
-                'grupo' => $grupo,
-                'categoria' => $categoria,
-                'unidad' => $unidad,
-                'cantidad' => $cantidad,
-                'precio_unitario' => $precio,
-                'valor_total' => $total,
-                'estado' => $cantidad > 0 ? 1 : 0,
+                'grupo' => $grupoNombre,
+                'estado' => 'disponible',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ];

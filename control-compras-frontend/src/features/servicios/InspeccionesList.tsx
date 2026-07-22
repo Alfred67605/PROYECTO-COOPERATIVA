@@ -66,12 +66,12 @@ export const InspeccionesList = () => {
     mutationFn: async (id: number) => await api.delete(`/inspecciones/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspecciones'] });
-      toast.success('Inspección eliminada', 'El registro fue eliminado.');
+      toast.success('Inspección eliminada', 'La inspección fue eliminada de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     },
     onError: (err: any) => {
-      toast.error('Error', err.response?.data?.message || 'No se pudo eliminar.');
+      toast.error('Error al eliminar', err.response?.data?.message || 'No se pudo eliminar la inspección.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     }
@@ -193,7 +193,7 @@ export const InspeccionesList = () => {
         <ConfirmDialog
           isOpen={confirmOpen}
           title="Eliminar Inspección"
-          message={`¿Estás seguro de que deseas eliminar la ${deleteTarget?.nombre}?`}
+          message={`¿Estás seguro de que deseas eliminar la ${deleteTarget?.nombre} de manera definitiva? Esta acción no se puede deshacer.`}
           confirmLabel="Eliminar"
           cancelLabel="Cancelar"
           variant="danger"

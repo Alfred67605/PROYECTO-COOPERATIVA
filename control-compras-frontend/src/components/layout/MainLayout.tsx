@@ -49,7 +49,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
       >
         <Topbar 
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          isMobile={isMobile}
+          isSidebarOpen={isSidebarOpen}
         />
 
         {isReadOnly && (
