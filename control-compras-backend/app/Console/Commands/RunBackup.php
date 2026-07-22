@@ -330,10 +330,11 @@ class RunBackup extends Command
     private function exportDatabaseJson($jsonPath)
     {
         $tables = [
-            'roles', 'permisos', 'permiso_user', 'users',
+            'roles', 'permisos', 'users', 'permiso_user', 'permiso_rol',
             'categorias', 'materiales', 'bocaminas', 'proveedores',
+            'maquinarias', 'vehiculos', 'tipo_mantenimientos',
             'compras', 'detalle_compras', 'servicios', 'repuesto_servicios',
-            'costo_servicios', 'inspecciones', 'alquiler_gruas',
+            'costo_servicios', 'inspeccions', 'inspecciones', 'alquiler_gruas',
             'historial_operaciones', 'empresa_settings'
         ];
 

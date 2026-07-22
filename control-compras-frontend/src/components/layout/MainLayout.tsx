@@ -16,7 +16,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
   const { user } = useAuth();
 
-  const isReadOnly = user?.permisos?.some((p: any) => p.nombre === 'solo_lectura');
+  const isReadOnly = user?.rol?.nombre !== 'Administrador General' && user?.permisos?.some((p: any) => p.nombre === 'solo_lectura');
 
   useEffect(() => {
     const handleResize = () => {

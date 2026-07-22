@@ -137,9 +137,7 @@ export const RespaldosView = () => {
       if (res?.data?.detalles) {
         setRestoreSummary(res.data.detalles);
       }
-      queryClient.invalidateQueries({ queryKey: ['respaldos'] });
-      queryClient.invalidateQueries({ queryKey: ['materiales'] });
-      queryClient.invalidateQueries({ queryKey: ['compras'] });
+      queryClient.invalidateQueries();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Error durante la restauración del sistema.';
       toast.error('Error al restaurar', msg);

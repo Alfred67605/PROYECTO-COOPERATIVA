@@ -19,6 +19,7 @@ class RespaldoController extends Controller
     public function index(Request $request)
     {
         $this->verificarYEjecutarRespaldoProgramado();
+        $this->sincronizarArchivosDeRespaldo();
 
         $respaldos = Respaldo::with('usuario')
             ->orderBy('created_at', 'desc')
@@ -219,92 +220,186 @@ class RespaldoController extends Controller
                 $archivosRestaurados += $this->copyDirectory($privateFolder, storage_path('app/private'));
             }
 
-            // 2. Restaurar Base de Datos desde database.json con Deduplicación Inteligente
-            $jsonFile = $extractPath . DIRECTORY_SEPARATOR . 'database.json';
-            if (file_exists($jsonFile)) {
-                $jsonContent = file_get_contents($jsonFile);
-                $dbData = json_decode($jsonContent, true);
-
-                if (is_array($dbData)) {
-                    $tablesOrder = [
-                        'roles', 'permisos', 'permiso_user', 'users', 
-                        'categorias', 'materiales', 'bocaminas', 'proveedores', 
-                        'compras', 'detalle_compras', 'servicios', 'repuesto_servicios', 
-                        'costo_servicios', 'inspecciones', 'alquiler_gruas', 
-                        'historial_operaciones', 'empresa_settings'
-                    ];
-
-                    DB::beginTransaction();
-
-                    foreach ($tablesOrder as $table) {
-                        if (!isset($dbData[$table]) || !is_array($dbData[$table])) {
-                            continue;
-                        }
-
-                        $rows = $dbData[$table];
-                        if (empty($rows)) {
-                            continue;
-                        }
-
-                        $tablasRestauradas++;
-
-                        foreach ($rows as $row) {
-                            $registrosProcesados++;
-                            $matchKeys = [];
-
-                            switch ($table) {
-                                case 'roles':
-                                case 'permisos':
-                                case 'categorias':
-                                case 'bocaminas':
-                                case 'proveedores':
-                                    $matchKeys = ['nombre' => $row['nombre'] ?? null];
-                                    break;
-                                case 'users':
-                                    $matchKeys = ['email' => $row['email'] ?? null];
-                                    break;
-                                case 'materiales':
-                                case 'servicios':
-                                    $matchKeys = ['codigo' => $row['codigo'] ?? null];
-                                    break;
-                                case 'compras':
-                                    $matchKeys = ['numero_factura' => $row['numero_factura'] ?? null];
-                                    break;
-                                case 'empresa_settings':
-                                    $matchKeys = ['key' => $row['key'] ?? ($row['id'] ?? null)];
-                                    break;
-                                default:
-                                    $matchKeys = ['id' => $row['id'] ?? null];
-                                    break;
-                            }
-
-                            // Quitar keys nulas de matchKeys
-                            $matchKeys = array_filter($matchKeys, fn($v) => !is_null($v));
-                            if (empty($matchKeys) && isset($row['id'])) {
-                                $matchKeys = ['id' => $row['id']];
-                            }
-
-                            $existing = DB::table($table)->where($matchKeys)->first();
-                            if ($existing) {
-                                // Omitir duplicados idénticos / actualizar
-                                $duplicadosOmitidos++;
-                                DB::table($table)->where($matchKeys)->update($row);
-                            } else {
-                                DB::table($table)->insert($row);
-                            }
-                        }
+            // 2. Restaurar Base de Datos desde database.sql y/o database.json con Deduplicación Inteligente
+                $sqlFile = null;
+                foreach (['database.sql', 'db_dump.sql', 'backup.sql'] as $sf) {
+                    $p = $extractPath . DIRECTORY_SEPARATOR . $sf;
+                    if (file_exists($p) && filesize($p) > 0) {
+                        $sqlFile = $p;
+                        break;
                     }
-
-                    DB::commit();
                 }
-            }
+
+                if ($sqlFile) {
+                    try {
+                        $sqlContent = file_get_contents($sqlFile);
+                        if (!empty($sqlContent)) {
+                            if (DB::connection()->getDriverName() === 'pgsql') {
+                                try { DB::statement('SET CONSTRAINTS ALL DEFERRED;'); } catch (\Throwable $t) {}
+                            }
+                            DB::unprepared($sqlContent);
+                            $tablasRestauradas++;
+                        }
+                    } catch (\Throwable $sqlErr) {
+                        Log::warning("Aviso al ejecutar SQL dump: " . $sqlErr->getMessage());
+                    }
+                }
+
+                $jsonFile = $extractPath . DIRECTORY_SEPARATOR . 'database.json';
+                if (file_exists($jsonFile)) {
+                    $jsonContent = file_get_contents($jsonFile);
+                    $dbData = json_decode($jsonContent, true);
+
+                    if (is_array($dbData)) {
+                        $tablesOrder = [
+                            'roles', 'permisos', 'users', 'permiso_user', 'permiso_rol',
+                            'categorias', 'materiales', 'bocaminas', 'proveedores', 
+                            'maquinarias', 'vehiculos', 'tipo_mantenimientos',
+                            'compras', 'detalle_compras', 'servicios', 'repuesto_servicios', 
+                            'costo_servicios', 'inspeccions', 'inspecciones', 'alquiler_gruas', 
+                            'historial_operaciones', 'empresa_settings'
+                        ];
+
+                        $isPgsql = DB::connection()->getDriverName() === 'pgsql';
+
+                        DB::beginTransaction();
+
+                        foreach ($tablesOrder as $table) {
+                            if (!isset($dbData[$table]) || !is_array($dbData[$table])) {
+                                continue;
+                            }
+
+                            $rows = $dbData[$table];
+                            if (empty($rows)) {
+                                continue;
+                            }
+
+                            $targetTable = $table;
+                            if (!\Illuminate\Support\Facades\Schema::hasTable($targetTable)) {
+                                if ($targetTable === 'inspecciones' && \Illuminate\Support\Facades\Schema::hasTable('inspeccions')) {
+                                    $targetTable = 'inspeccions';
+                                } else {
+                                    continue;
+                                }
+                            }
+
+                            $tablasRestauradas++;
+
+                            foreach ($rows as $row) {
+                                $registrosProcesados++;
+                                $matchKeys = [];
+
+                                switch ($table) {
+                                    case 'roles':
+                                    case 'permisos':
+                                    case 'categorias':
+                                    case 'bocaminas':
+                                    case 'proveedores':
+                                    case 'tipo_mantenimientos':
+                                        $matchKeys = ['nombre' => $row['nombre'] ?? null];
+                                        break;
+                                    case 'users':
+                                        $matchKeys = ['email' => $row['email'] ?? null];
+                                        break;
+                                    case 'materiales':
+                                    case 'servicios':
+                                        $matchKeys = ['codigo' => $row['codigo'] ?? null];
+                                        break;
+                                    case 'maquinarias':
+                                        $matchKeys = ['nombre_codigo' => $row['nombre_codigo'] ?? null];
+                                        break;
+                                    case 'vehiculos':
+                                        $matchKeys = ['placa' => $row['placa'] ?? null];
+                                        break;
+                                    case 'compras':
+                                        $matchKeys = ['numero_factura' => $row['numero_factura'] ?? null];
+                                        break;
+                                    case 'permiso_user':
+                                        $matchKeys = [
+                                            'permiso_id' => $row['permiso_id'] ?? null,
+                                            'user_id' => $row['user_id'] ?? null,
+                                        ];
+                                        break;
+                                    case 'permiso_rol':
+                                        $matchKeys = [
+                                            'permiso_id' => $row['permiso_id'] ?? null,
+                                            'rol_id' => $row['rol_id'] ?? null,
+                                        ];
+                                        break;
+                                    case 'empresa_settings':
+                                        $matchKeys = ['key' => $row['key'] ?? ($row['id'] ?? null)];
+                                        break;
+                                    default:
+                                        $matchKeys = ['id' => $row['id'] ?? null];
+                                        break;
+                                }
+
+                                // Quitar keys nulas de matchKeys
+                                $matchKeys = array_filter($matchKeys, fn($v) => !is_null($v));
+                                if (empty($matchKeys) && isset($row['id'])) {
+                                    $matchKeys = ['id' => $row['id']];
+                                }
+
+                                if ($isPgsql) {
+                                    try {
+                                        DB::statement("SAVEPOINT restore_row_sp");
+                                    } catch (\Throwable $t) {}
+                                }
+
+                                try {
+                                    if (!empty($matchKeys)) {
+                                        $existing = DB::table($targetTable)->where($matchKeys)->first();
+                                        if ($existing) {
+                                            // Omitir duplicados idénticos / actualizar
+                                            $duplicadosOmitidos++;
+                                            DB::table($targetTable)->where($matchKeys)->update((array)$row);
+                                        } else {
+                                            DB::table($targetTable)->insert((array)$row);
+                                        }
+                                    } else {
+                                        DB::table($targetTable)->insert((array)$row);
+                                    }
+
+                                    if ($isPgsql) {
+                                        try {
+                                            DB::statement("RELEASE SAVEPOINT restore_row_sp");
+                                        } catch (\Throwable $t) {}
+                                    }
+                                } catch (\Throwable $rowErr) {
+                                    if ($isPgsql) {
+                                        try {
+                                            DB::statement("ROLLBACK TO SAVEPOINT restore_row_sp");
+                                        } catch (\Throwable $t) {}
+                                    }
+                                    $duplicadosOmitidos++;
+                                    Log::warning("Omisión/Colisión en tabla {$table}: " . $rowErr->getMessage());
+                                }
+                            }
+                        }
+
+                        // Resincronización explícita de secuencias de autoincremento en PostgreSQL
+                        if (DB::connection()->getDriverName() === 'pgsql') {
+                            foreach ($tablesOrder as $t) {
+                                if (\Illuminate\Support\Facades\Schema::hasTable($t) && \Illuminate\Support\Facades\Schema::hasColumn($t, 'id')) {
+                                    try {
+                                        DB::statement("SELECT setval(pg_get_serial_sequence('\"{$t}\"', 'id'), coalesce(max(id), 1)) FROM \"{$t}\";");
+                                    } catch (\Throwable $seqErr) {
+                                        Log::warning("No se pudo resincronizar la secuencia para {$t}: " . $seqErr->getMessage());
+                                    }
+                                }
+                            }
+                        }
+
+                        DB::commit();
+                    }
+                }
 
             // 3. Limpiar carpeta temporal
             $this->deleteDirectory($extractPath);
 
             // Auditoría
             HistorialOperacion::create([
-                'usuario_id' => $user->id,
+                'usuario_id' => $user->id ?? 1,
                 'accion' => 'actualizar',
                 'tabla' => 'respaldos',
                 'registro_id' => null,
@@ -330,7 +425,9 @@ class RespaldoController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             $this->deleteDirectory($extractPath);
             Log::error("Error en restauración de respaldo: " . $e->getMessage());
 
@@ -491,6 +588,46 @@ class RespaldoController extends Controller
             }
         } catch (\Throwable $t) {
             Log::warning("Error al verificar respaldo programado: " . $t->getMessage());
+        }
+    }
+
+    /**
+     * Escanea el directorio storage/app/respaldos e indexa automáticamente los archivos .zip
+     * que no estén registrados en la base de datos.
+     */
+    private function sincronizarArchivosDeRespaldo()
+    {
+        try {
+            $backupDir = storage_path('app/respaldos');
+            if (!file_exists($backupDir)) {
+                return;
+            }
+
+            $files = scandir($backupDir);
+            foreach ($files as $file) {
+                if ($file === '.' || $file === '..' || !str_ends_with(strtolower($file), '.zip')) {
+                    continue;
+                }
+
+                $filePath = $backupDir . DIRECTORY_SEPARATOR . $file;
+                if (is_file($filePath)) {
+                    $exists = Respaldo::where('nombre_archivo', $file)->exists();
+                    if (!$exists) {
+                        $mtime = filemtime($filePath);
+                        Respaldo::create([
+                            'nombre_archivo' => $file,
+                            'tipo' => str_contains($file, 'manual') ? 'manual' : 'automatico',
+                            'tamano' => filesize($filePath),
+                            'estado' => 'completado',
+                            'creado_por' => null,
+                            'created_at' => date('Y-m-d H:i:s', $mtime),
+                            'updated_at' => date('Y-m-d H:i:s', $mtime),
+                        ]);
+                    }
+                }
+            }
+        } catch (\Throwable $t) {
+            Log::warning("Error al sincronizar archivos de respaldo en disco: " . $t->getMessage());
         }
     }
 }
