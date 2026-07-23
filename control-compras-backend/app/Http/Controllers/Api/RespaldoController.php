@@ -544,19 +544,17 @@ class RespaldoController extends Controller
             $diaMes = (int)($setting->backup_dia_mes ?? 1);
 
             $ahora = now();
-            $horaActual = $ahora->format('H:i');
+            $scheduledTime = \Carbon\Carbon::parse($ahora->format('Y-m-d') . ' ' . $hora);
 
-            // Verificar si ya pasó la hora programada hoy
-            if ($horaActual < $hora) {
+            // Verificar si la hora actual ya alcanzó o superó la hora programada
+            if ($ahora->lt($scheduledTime)) {
                 return;
             }
 
             $esDebido = false;
-            $startOfPeriod = null;
 
             if ($frecuencia === 'diario') {
                 $esDebido = true;
-                $startOfPeriod = $ahora->copy()->startOfDay();
             } elseif ($frecuencia === 'semanal') {
                 $diasMap = [
                     'domingo' => 0, 'lunes' => 1, 'martes' => 2,
@@ -565,18 +563,17 @@ class RespaldoController extends Controller
                 $diaNum = $diasMap[$diaSemana] ?? 0;
                 if ($ahora->dayOfWeek === $diaNum) {
                     $esDebido = true;
-                    $startOfPeriod = $ahora->copy()->startOfDay();
                 }
             } elseif ($frecuencia === 'mensual') {
                 if ($ahora->day === $diaMes) {
                     $esDebido = true;
-                    $startOfPeriod = $ahora->copy()->startOfDay();
                 }
             }
 
-            if ($esDebido && $startOfPeriod) {
+            if ($esDebido) {
+                // Verificar si ya existe un respaldo automático creado A PARTIR de la hora programada de hoy
                 $yaExiste = Respaldo::where('tipo', 'automatico')
-                    ->where('created_at', '>=', $startOfPeriod)
+                    ->where('created_at', '>=', $scheduledTime)
                     ->where('estado', 'completado')
                     ->exists();
 

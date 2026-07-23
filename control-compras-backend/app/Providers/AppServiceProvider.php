@@ -47,8 +47,8 @@ class AppServiceProvider extends ServiceProvider
         // Configure Rate Limiters
         $this->configureRateLimiting();
 
-        // Verificar respaldos programados en solicitudes HTTP de forma ligera
-        if (!app()->runningInConsole() && rand(1, 5) === 1) {
+        // Verificar respaldos programados en solicitudes HTTP
+        if (!app()->runningInConsole()) {
             try {
                 app(\App\Http\Controllers\Api\RespaldoController::class)->verificarYEjecutarRespaldoProgramado();
             } catch (\Throwable $t) {}
