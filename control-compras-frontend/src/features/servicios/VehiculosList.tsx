@@ -41,6 +41,7 @@ export const VehiculosList = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehiculos'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success(
         editingId ? 'Vehículo actualizado' : 'Vehículo registrado',
         editingId ? 'Los datos se guardaron correctamente.' : 'El vehículo fue añadido al sistema.'
@@ -58,6 +59,7 @@ export const VehiculosList = () => {
     mutationFn: async (id: number) => await api.delete(`/vehiculos/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehiculos'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Vehículo eliminado', 'El vehículo fue eliminado de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);

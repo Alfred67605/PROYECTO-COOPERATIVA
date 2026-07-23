@@ -63,6 +63,7 @@ export const ProveedoresList = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proveedores'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success(
         editingId ? 'Proveedor actualizado' : 'Proveedor creado',
         editingId ? 'Los datos se guardaron correctamente.' : 'El proveedor fue registrado exitosamente.'
@@ -80,6 +81,7 @@ export const ProveedoresList = () => {
     mutationFn: async (id: number) => await api.delete(`/proveedores/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proveedores'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Proveedor eliminado', 'El proveedor fue eliminado de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);
@@ -268,7 +270,14 @@ export const ProveedoresList = () => {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Teléfono</label>
-                        <input className="input-field" value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} />
+                        <input 
+                          type="text" 
+                          inputMode="numeric"
+                          placeholder="Ej: 71234567" 
+                          className="input-field" 
+                          value={form.telefono} 
+                          onChange={e => setForm({...form, telefono: e.target.value.replace(/[^0-9\+\-\s]/g, '')})} 
+                        />
                       </div>
                     </div>
 

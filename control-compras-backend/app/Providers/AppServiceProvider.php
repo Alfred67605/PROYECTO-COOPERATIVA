@@ -36,8 +36,23 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        // Register morph map for equipo polymorphic relationships
+        \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
+            'maquinaria' => \App\Models\Maquinaria::class,
+            'vehiculo' => \App\Models\Vehiculo::class,
+            'App\Models\Maquinaria' => \App\Models\Maquinaria::class,
+            'App\Models\Vehiculo' => \App\Models\Vehiculo::class,
+        ]);
+
         // Configure Rate Limiters
         $this->configureRateLimiting();
+
+        // Verificar respaldos programados en solicitudes HTTP de forma ligera
+        if (!app()->runningInConsole() && rand(1, 5) === 1) {
+            try {
+                app(\App\Http\Controllers\Api\RespaldoController::class)->verificarYEjecutarRespaldoProgramado();
+            } catch (\Throwable $t) {}
+        }
     }
 
     /**

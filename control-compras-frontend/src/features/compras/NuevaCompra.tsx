@@ -25,6 +25,14 @@ const steps = [
   { id: 3, title: 'Confirmación', icon: <CheckCircle2 size={20} /> }
 ];
 
+const getTodayLocalDate = (): string => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const NuevaCompra = () => {
   const navigate = useNavigate();
   const toast = useToast();
@@ -34,7 +42,7 @@ export const NuevaCompra = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [proveedorId, setProveedorId] = useState('');
   const [bocaminaId, setBocaminaId] = useState('');
-  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
+  const [fecha, setFecha] = useState(getTodayLocalDate());
   const [compradorResponsable, setCompradorResponsable] = useState('');
   const [numeroFactura, setNumeroFactura] = useState('');
   const [observaciones, setObservaciones] = useState('');

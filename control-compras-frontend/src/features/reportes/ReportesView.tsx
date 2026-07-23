@@ -58,18 +58,26 @@ export const ReportesView = () => {
     retry: 1,
   });
 
-  const setRango = (tipoRango: 'diario' | 'semanal' | 'mensual') => {
-    const hoy = new Date();
-    const daysAgo = (n: number) => { const d = new Date(hoy); d.setDate(hoy.getDate() - n); return d; };
+  const todayLocalDateStr = formatLocalDate(new Date());
+  const daysAgoStr = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return formatLocalDate(d);
+  };
+  const firstOfMonthStr = formatLocalDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const lastOfMonthStr  = formatLocalDate(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0));
 
+  const isDiarioActive  = dateRange.inicio === todayLocalDateStr && dateRange.fin === todayLocalDateStr;
+  const isSemanalActive = dateRange.inicio === daysAgoStr(6) && dateRange.fin === todayLocalDateStr;
+  const isMensualActive = dateRange.inicio === firstOfMonthStr && dateRange.fin === lastOfMonthStr;
+
+  const setRango = (tipoRango: 'diario' | 'semanal' | 'mensual') => {
     if (tipoRango === 'diario') {
-      setDateRange({ ...dateRange, inicio: formatLocalDate(hoy), fin: formatLocalDate(hoy) });
+      setDateRange(prev => ({ ...prev, inicio: todayLocalDateStr, fin: todayLocalDateStr }));
     } else if (tipoRango === 'semanal') {
-      setDateRange({ ...dateRange, inicio: formatLocalDate(daysAgo(6)), fin: formatLocalDate(hoy) });
+      setDateRange(prev => ({ ...prev, inicio: daysAgoStr(6), fin: todayLocalDateStr }));
     } else if (tipoRango === 'mensual') {
-      const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-      const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-      setDateRange({ ...dateRange, inicio: formatLocalDate(primerDia), fin: formatLocalDate(ultimoDia) });
+      setDateRange(prev => ({ ...prev, inicio: firstOfMonthStr, fin: lastOfMonthStr }));
     }
   };
 
@@ -147,9 +155,30 @@ export const ReportesView = () => {
           <div className="flex flex-wrap items-center gap-4">
             <span className="text-sm font-extrabold text-mining-200 uppercase tracking-wider">Filtros Rápidos:</span>
             <div className="flex flex-wrap gap-2.5">
-              <button onClick={() => setRango('diario')} className="btn-secondary text-sm font-semibold h-11 px-5">Diario</button>
-              <button onClick={() => setRango('semanal')} className="btn-secondary text-sm font-semibold h-11 px-5">Semanal</button>
-              <button onClick={() => setRango('mensual')} className="btn-secondary text-sm font-semibold h-11 px-5">Mensual</button>
+              <button 
+                onClick={() => setRango('diario')} 
+                className={`text-sm font-semibold h-11 px-5 rounded-xl transition-all ${
+                  isDiarioActive ? 'bg-copper-500 text-white font-extrabold shadow-glow-copper' : 'btn-secondary'
+                }`}
+              >
+                Diario (Hoy)
+              </button>
+              <button 
+                onClick={() => setRango('semanal')} 
+                className={`text-sm font-semibold h-11 px-5 rounded-xl transition-all ${
+                  isSemanalActive ? 'bg-copper-500 text-white font-extrabold shadow-glow-copper' : 'btn-secondary'
+                }`}
+              >
+                Semanal (7 días)
+              </button>
+              <button 
+                onClick={() => setRango('mensual')} 
+                className={`text-sm font-semibold h-11 px-5 rounded-xl transition-all ${
+                  isMensualActive ? 'bg-copper-500 text-white font-extrabold shadow-glow-copper' : 'btn-secondary'
+                }`}
+              >
+                Mensual (Mes Actual)
+              </button>
             </div>
           </div>
 
@@ -330,6 +359,7 @@ export const ReportesView = () => {
                     <tr>
                       <th className="p-4">ID</th>
                       <th className="p-4">Fecha</th>
+                      <th className="p-4">Materiales / Productos</th>
                       <th className="p-4">Proveedor</th>
                       <th className="p-4">N° Factura</th>
                       <th className="p-4">Bocamina</th>
@@ -342,6 +372,19 @@ export const ReportesView = () => {
                       <tr key={c.id} className="hover:bg-white/[0.02]">
                         <td className="p-4 font-mono text-xs text-mining-400">#{c.id}</td>
                         <td className="p-4 font-medium text-white">{new Date(c.fecha).toLocaleDateString()}</td>
+                        <td className="p-4 text-xs text-mining-200">
+                          {c.detalles && c.detalles.length > 0 ? (
+                            <ul className="list-disc list-inside space-y-0.5">
+                              {c.detalles.map((d: any, i: number) => (
+                                <li key={i}>
+                                  <span className="font-semibold text-white">{d.material?.descripcion || d.material?.nombre || 'Material'}</span> ({d.cantidad} u.)
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <span className="text-mining-500">-</span>
+                          )}
+                        </td>
                         <td className="p-4 text-mining-300">{c.proveedor?.nombre || '-'}</td>
                         <td className="p-4 text-mining-300">{c.numero_factura || '-'}</td>
                         <td className="p-4 text-mining-300">{c.bocamina?.nombre || 'Central'}</td>
@@ -350,7 +393,7 @@ export const ReportesView = () => {
                       </tr>
                     ))}
                     {(!reporte?.compras || reporte.compras.length === 0) && (
-                      <tr><td colSpan={7} className="p-8 text-center text-mining-400">No se encontraron compras en este periodo.</td></tr>
+                      <tr><td colSpan={8} className="p-8 text-center text-mining-400">No se encontraron compras en este periodo.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -372,6 +415,7 @@ export const ReportesView = () => {
                       <th className="p-4">Código</th>
                       <th className="p-4">Fecha</th>
                       <th className="p-4">Equipo</th>
+                      <th className="p-4">Materiales / Repuestos Usados</th>
                       <th className="p-4">Bocamina</th>
                       <th className="p-4">Responsable</th>
                       <th className="p-4">Estado</th>
@@ -387,6 +431,19 @@ export const ReportesView = () => {
                           <td className="p-4 font-mono text-xs text-mining-400">{s.codigo}</td>
                           <td className="p-4 font-medium text-white">{new Date(s.fecha).toLocaleDateString()}</td>
                           <td className="p-4 text-mining-300">{formatEquipoTipo(s.equipo_tipo)} ({s.equipo?.placa || s.equipo?.nombre_codigo || s.equipo?.codigo || '-'})</td>
+                          <td className="p-4 text-xs text-mining-200">
+                            {s.repuestos && s.repuestos.length > 0 ? (
+                              <ul className="list-disc list-inside space-y-0.5">
+                                {s.repuestos.map((r: any, i: number) => (
+                                  <li key={i}>
+                                    <span className="font-semibold text-teal-300">{r.material?.descripcion || r.material?.nombre || 'Repuesto'}</span> ({r.cantidad} u.)
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <span className="text-mining-400 italic">{s.descripcion || '-'}</span>
+                            )}
+                          </td>
                           <td className="p-4 text-mining-300">{s.bocamina?.nombre || 'Central'}</td>
                           <td className="p-4 text-mining-300">{s.responsable?.nombre || '-'}</td>
                           <td className="p-4">
@@ -399,7 +456,7 @@ export const ReportesView = () => {
                       );
                     })}
                     {(!reporte?.servicios || reporte.servicios.length === 0) && (
-                      <tr><td colSpan={7} className="p-8 text-center text-mining-400">No se encontraron servicios en este periodo.</td></tr>
+                      <tr><td colSpan={8} className="p-8 text-center text-mining-400">No se encontraron servicios en este periodo.</td></tr>
                     )}
                   </tbody>
                 </table>

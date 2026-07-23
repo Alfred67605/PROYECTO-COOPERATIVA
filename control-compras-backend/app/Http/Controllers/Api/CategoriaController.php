@@ -47,6 +47,10 @@ class CategoriaController extends Controller
             $validated['estado'] = 'activo';
         }
 
+        if (empty($validated['codigo']) || trim($validated['codigo']) === '') {
+            $validated['codigo'] = $this->generarCodigoAutomatico($validated['nombre']);
+        }
+
         $categoria = Categoria::create($validated);
 
         return response()->json([
@@ -75,12 +79,54 @@ class CategoriaController extends Controller
             'estado' => 'nullable|string|max:20',
         ]);
 
+        if (empty($validated['codigo']) || trim($validated['codigo']) === '') {
+            $validated['codigo'] = $this->generarCodigoAutomatico($validated['nombre'], $id);
+        }
+
         $categoria->update($validated);
 
         return response()->json([
             'message' => 'Categoría actualizada exitosamente',
             'data' => $categoria
         ]);
+    }
+
+    /**
+     * Genera automáticamente un código/prefijo único basado en el nombre de la categoría.
+     */
+    private function generarCodigoAutomatico(string $nombre, $exceptId = null): string
+    {
+        $str = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $nombre);
+        $clean = strtoupper(preg_replace('/[^A-Za-z0-9\s]/', '', $str ?: $nombre));
+
+        $stopWords = ['DE', 'DEL', 'LA', 'LAS', 'LOS', 'EL', 'Y', 'EN', 'PARA', 'POR', 'UN', 'UNA', 'CON'];
+        $words = array_values(array_filter(explode(' ', $clean), function ($w) use ($stopWords) {
+            return !empty($w) && !in_array($w, $stopWords);
+        }));
+
+        if (empty($words)) {
+            $baseCode = 'CAT';
+        } elseif (count($words) === 1) {
+            $baseCode = substr($words[0], 0, 5);
+        } elseif (count($words) === 2) {
+            $baseCode = substr($words[0], 0, 4) . '-' . substr($words[1], 0, 1);
+        } else {
+            $initials = implode('', array_map(fn($w) => substr($w, 0, 1), array_slice($words, 0, 4)));
+            $baseCode = strlen($initials) >= 3 ? $initials : substr($words[0], 0, 4) . '-' . substr($words[1], 0, 1);
+        }
+
+        $baseCode = strtoupper($baseCode);
+        $codigo = $baseCode;
+        $counter = 1;
+
+        while (Categoria::where('codigo', $codigo)
+            ->when($exceptId, fn($q) => $q->where('id', '!=', $exceptId))
+            ->exists()) {
+            $codigo = "{$baseCode}-{$counter}";
+            $counter++;
+        }
+
+        return $codigo;
     }
 
     public function destroy($id)

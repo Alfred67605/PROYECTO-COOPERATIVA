@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/axios';
 import { 
   TrendingUp, Building2, ShoppingCart, Wrench, Package, 
-  PieChart as PieIcon, Calendar, ChevronRight 
+  PieChart as PieIcon, Calendar, ChevronRight, RotateCw 
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area, Cell, Legend 
@@ -21,7 +21,7 @@ export const Dashboard = () => {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [viewMode, setViewMode] = useState<'mensual' | 'diario'>('mensual');
 
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['dashboard-stats', selectedYear],
     queryFn: async () => {
       const { data } = await api.get(`/reportes/dashboard?year=${selectedYear}`);
@@ -29,6 +29,7 @@ export const Dashboard = () => {
     },
     staleTime: 0,
     refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   const trendData = viewMode === 'mensual'
@@ -54,6 +55,15 @@ export const Dashboard = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            title="Actualizar datos"
+            className="p-2 bg-obsidian-900 border border-white/15 text-mining-300 hover:text-white hover:border-copper-500 rounded-xl transition-colors shadow-md disabled:opacity-50 flex items-center gap-2 text-xs font-bold"
+          >
+            <RotateCw size={16} className={isFetching ? 'animate-spin text-copper-400' : ''} />
+            <span className="hidden sm:inline">Actualizar</span>
+          </button>
           <select 
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}

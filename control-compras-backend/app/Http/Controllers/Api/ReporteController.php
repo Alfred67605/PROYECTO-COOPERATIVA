@@ -28,14 +28,25 @@ class ReporteController extends Controller
         // 2. Estadísticas de Servicios y Mantenimientos
         $serviciosQuery = \App\Models\Servicio::with(['costos', 'repuestos', 'bocamina'])
             ->whereYear('fecha', $year);
-        $totalServicios = (float)$serviciosQuery->count();
+        $totalServiciosCount = (float)$serviciosQuery->count();
         $serviciosAll = $serviciosQuery->get();
+
+        $alquilerGruasQuery = \App\Models\AlquilerGrua::with('bocamina')
+            ->whereYear('created_at', $year);
+        $totalAlquilerGruas = (float)$alquilerGruasQuery->count();
+        $alquilerGruasAll = $alquilerGruasQuery->get();
+
+        $totalServicios = $totalServiciosCount + $totalAlquilerGruas;
 
         $gastoTotalServicios = 0.0;
         foreach ($serviciosAll as $s) {
             $gastoTotalServicios += (float)($s->costos->sum('monto') + $s->repuestos->sum(function($r) {
                 return $r->cantidad * $r->costo_unitario;
             }));
+        }
+
+        foreach ($alquilerGruasAll as $g) {
+            $gastoTotalServicios += (float)($g->costo ?? 0);
         }
 
         $gastoTotal = $gastoTotalCompras + $gastoTotalServicios;
@@ -76,7 +87,19 @@ class ReporteController extends Controller
         foreach ($serviciosAll as $s) {
             $nombre = $s->bocamina->nombre ?? 'Bodega Central';
             $costo = (float)($s->costos->sum('monto') + $s->repuestos->sum(fn($r) => $r->cantidad * $r->costo_unitario));
-            if ($costo > 0) {
+            if ($costo > 0 || $s->bocamina) {
+                if (!isset($gastosBocaminaMap[$nombre])) {
+                    $gastosBocaminaMap[$nombre] = ['nombre' => $nombre, 'compras' => 0.0, 'servicios' => 0.0, 'total_gastado' => 0.0];
+                }
+                $gastosBocaminaMap[$nombre]['servicios'] += $costo;
+                $gastosBocaminaMap[$nombre]['total_gastado'] += $costo;
+            }
+        }
+
+        foreach ($alquilerGruasAll as $g) {
+            $nombre = $g->bocamina->nombre ?? 'Bodega Central';
+            $costo = (float)($g->costo ?? 0);
+            if ($costo > 0 || $g->bocamina) {
                 if (!isset($gastosBocaminaMap[$nombre])) {
                     $gastosBocaminaMap[$nombre] = ['nombre' => $nombre, 'compras' => 0.0, 'servicios' => 0.0, 'total_gastado' => 0.0];
                 }
@@ -161,11 +184,37 @@ class ReporteController extends Controller
             $tendenciaDiariaMap[$d]['gastos'] += $total;
         }
 
+        // Sumar Alquiler de Grúas
+        foreach ($alquilerGruasAll as $grua) {
+            $fecha = \Carbon\Carbon::parse($grua->created_at);
+            $m = (int)$fecha->format('n');
+            $d = $fecha->toDateString();
+            $dFormatted = $fecha->format('d/m');
+            $total = (float)($grua->costo ?? 0);
+
+            if (isset($tendenciaMensualMap[$m])) {
+                $tendenciaMensualMap[$m]['servicios'] += $total;
+                $tendenciaMensualMap[$m]['gastos'] += $total;
+            }
+
+            if (!isset($tendenciaDiariaMap[$d])) {
+                $tendenciaDiariaMap[$d] = [
+                    'name' => $dFormatted,
+                    'date' => $d,
+                    'compras' => 0.0,
+                    'servicios' => 0.0,
+                    'gastos' => 0.0,
+                ];
+            }
+            $tendenciaDiariaMap[$d]['servicios'] += $total;
+            $tendenciaDiariaMap[$d]['gastos'] += $total;
+        }
+
         ksort($tendenciaDiariaMap);
         $tendenciaDiaria = array_values($tendenciaDiariaMap);
         $tendenciaMensual = array_values($tendenciaMensualMap);
 
-        // 6. Actividad Reciente Consolidada (Compras + Servicios)
+        // 6. Actividad Reciente Consolidada (Compras + Servicios + Grúas)
         $comprasRecientes = Compra::with(['proveedor', 'bocamina'])
             ->orderByDesc('fecha')
             ->orderByDesc('id')
@@ -190,7 +239,7 @@ class ReporteController extends Controller
             ->get()
             ->map(function($s) {
                 $costo = (float)($s->costos->sum('monto') + $s->repuestos->sum(fn($r) => $r->cantidad * $r->costo_unitario));
-                $equipoNombre = $s->equipo->nombre ?? ($s->descripcion ?: 'Servicio Técnico');
+                $equipoNombre = $s->equipo->nombre ?? $s->equipo->nombre_codigo ?? $s->equipo->placa ?? ($s->descripcion ?: 'Servicio Técnico');
                 return [
                     'id' => 'servicio_' . $s->id,
                     'tipo' => 'servicio',
@@ -202,7 +251,24 @@ class ReporteController extends Controller
                 ];
             });
 
-        $actividadReciente = $comprasRecientes->concat($serviciosRecientes)
+        $alquileresRecientes = \App\Models\AlquilerGrua::with('bocamina')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get()
+            ->map(function($g) {
+                return [
+                    'id' => 'grua_' . $g->id,
+                    'tipo' => 'servicio',
+                    'titulo' => 'Alquiler Grúa - ' . $g->placa_grua,
+                    'subtitulo' => $g->nombre_chofer ?: 'Grúa',
+                    'bocamina' => $g->bocamina->nombre ?? 'Bodega Central',
+                    'monto' => (float)($g->costo ?? 0),
+                    'fecha' => $g->created_at ? $g->created_at->toDateString() : date('Y-m-d'),
+                ];
+            });
+
+        $actividadReciente = $comprasRecientes->concat($serviciosRecientes)->concat($alquileresRecientes)
             ->sortByDesc('fecha')
             ->values()
             ->take(6);
@@ -239,13 +305,12 @@ class ReporteController extends Controller
             'bocamina_id' => 'nullable|integer|exists:bocaminas,id',
         ]);
 
-        // La columna `fecha` es de tipo DATE en la BD — usamos solo fecha sin hora
-        $inicio = $request->query('inicio', now()->startOfMonth()->toDateString());
-        $fin    = $request->query('fin',    now()->endOfMonth()->toDateString());
+        // La columna `fecha` es de tipo DATE en la BD — usamos formato YYYY-MM-DD
+        $inicioRaw = $request->query('inicio', now()->startOfMonth()->toDateString());
+        $finRaw    = $request->query('fin',    now()->endOfMonth()->toDateString());
 
-        // Convertimos a Carbon para normalizar; comparamos solo la parte DATE
-        $inicioCar = \Carbon\Carbon::parse($inicio)->startOfDay();
-        $finCar    = \Carbon\Carbon::parse($fin)->endOfDay();
+        $inicioStr = \Carbon\Carbon::parse($inicioRaw)->toDateString();
+        $finStr    = \Carbon\Carbon::parse($finRaw)->toDateString();
 
         $comprasLista = collect();
         $gastoTotalCompras = 0;
@@ -257,21 +322,21 @@ class ReporteController extends Controller
 
         // ── Compras ──
         if ($tipo === 'compras' || $tipo === 'todos') {
-            $comprasQuery = Compra::whereDate('fecha', '>=', $inicioCar->toDateString())
-                                  ->whereDate('fecha', '<=', $finCar->toDateString());
+            $comprasQuery = Compra::whereDate('fecha', '>=', $inicioStr)
+                                  ->whereDate('fecha', '<=', $finStr);
             if ($bocaminaId) {
                 $comprasQuery->where('bocamina_id', $bocaminaId);
             }
-            $comprasLista = $comprasQuery->with(['proveedor', 'bocamina', 'usuario'])->orderByDesc('fecha')->get();
+            $comprasLista = $comprasQuery->with(['proveedor', 'bocamina', 'usuario', 'detalles.material'])->orderByDesc('fecha')->get();
             $gastoTotalCompras = (float)$comprasLista->sum('total');
             $totalOperacionesCompras = $comprasLista->count();
         }
 
         // ── Servicios ──
         if ($tipo === 'servicios' || $tipo === 'todos') {
-            $serviciosQuery = \App\Models\Servicio::with(['costos', 'repuestos', 'bocamina', 'responsable', 'equipo'])
-                ->whereDate('fecha', '>=', $inicioCar->toDateString())
-                ->whereDate('fecha', '<=', $finCar->toDateString());
+            $serviciosQuery = \App\Models\Servicio::with(['costos', 'repuestos.material', 'bocamina', 'responsable', 'equipo'])
+                ->whereDate('fecha', '>=', $inicioStr)
+                ->whereDate('fecha', '<=', $finStr);
             if ($bocaminaId) {
                 $serviciosQuery->where('boca_mina_id', $bocaminaId);
             }
@@ -289,8 +354,8 @@ class ReporteController extends Controller
         // ── Gastos por Bocamina ──
         $gastosBocamina = collect();
         if ($tipo === 'compras' || $tipo === 'todos') {
-            $gastosBocaminaQuery = Compra::whereDate('compras.fecha', '>=', $inicioCar->toDateString())
-                                         ->whereDate('compras.fecha', '<=', $finCar->toDateString());
+            $gastosBocaminaQuery = Compra::whereDate('compras.fecha', '>=', $inicioStr)
+                                         ->whereDate('compras.fecha', '<=', $finStr);
             if ($bocaminaId) {
                 $gastosBocaminaQuery->where('compras.bocamina_id', $bocaminaId);
             }
@@ -323,8 +388,8 @@ class ReporteController extends Controller
         // ── Gastos por Proveedor ──
         $gastosProveedor = collect();
         if ($tipo === 'compras' || $tipo === 'todos') {
-            $gastosProveedorQuery = Compra::whereDate('compras.fecha', '>=', $inicioCar->toDateString())
-                                          ->whereDate('compras.fecha', '<=', $finCar->toDateString());
+            $gastosProveedorQuery = Compra::whereDate('compras.fecha', '>=', $inicioStr)
+                                          ->whereDate('compras.fecha', '<=', $finStr);
             if ($bocaminaId) {
                 $gastosProveedorQuery->where('compras.bocamina_id', $bocaminaId);
             }
@@ -342,8 +407,8 @@ class ReporteController extends Controller
             $topMaterialesQuery = DB::table('detalle_compras')
                 ->join('compras',    'detalle_compras.compra_id',   '=', 'compras.id')
                 ->join('materiales', 'detalle_compras.material_id', '=', 'materiales.id')
-                ->whereDate('compras.fecha', '>=', $inicioCar->toDateString())
-                ->whereDate('compras.fecha', '<=', $finCar->toDateString());
+                ->whereDate('compras.fecha', '>=', $inicioStr)
+                ->whereDate('compras.fecha', '<=', $finStr);
             if ($bocaminaId) {
                 $topMaterialesQuery->where('compras.bocamina_id', $bocaminaId);
             }
@@ -385,10 +450,10 @@ class ReporteController extends Controller
         $fin = $request->query('fin', now()->endOfDay()->toDateString());
         $bocaminaId = $request->query('bocamina_id');
 
-        $inicio = \Carbon\Carbon::parse($inicio)->startOfDay();
-        $fin = \Carbon\Carbon::parse($fin)->endOfDay();
+        $inicioStr = \Carbon\Carbon::parse($inicio)->toDateString();
+        $finStr = \Carbon\Carbon::parse($fin)->toDateString();
 
-        $comprasQuery = Compra::whereBetween('compras.fecha', [$inicio, $fin]);
+        $comprasQuery = Compra::whereDate('compras.fecha', '>=', $inicioStr)->whereDate('compras.fecha', '<=', $finStr);
         if ($bocaminaId) {
             $comprasQuery->where('compras.bocamina_id', $bocaminaId);
         }
@@ -400,7 +465,7 @@ class ReporteController extends Controller
             ->keyBy('nombre');
 
         $serviciosQuery = \App\Models\Servicio::with(['costos', 'repuestos', 'bocamina'])
-            ->whereBetween('fecha', [$inicio, $fin]);
+            ->whereDate('fecha', '>=', $inicioStr)->whereDate('fecha', '<=', $finStr);
             
         if ($bocaminaId) {
             $serviciosQuery->where('boca_mina_id', $bocaminaId);
@@ -453,8 +518,10 @@ class ReporteController extends Controller
 
     public function exportarPdf(Request $request)
     {
-        $inicio = $request->query('inicio') ? \Carbon\Carbon::parse($request->query('inicio'))->startOfDay() : null;
-        $fin = $request->query('fin') ? \Carbon\Carbon::parse($request->query('fin'))->endOfDay() : null;
+        $inicioRaw = $request->query('inicio');
+        $finRaw = $request->query('fin');
+        $inicioStr = $inicioRaw ? \Carbon\Carbon::parse($inicioRaw)->toDateString() : null;
+        $finStr    = $finRaw ? \Carbon\Carbon::parse($finRaw)->toDateString() : null;
         $bocaminaId = $request->query('bocamina_id');
         if ($bocaminaId === '' || $bocaminaId === 'null') {
             $bocaminaId = null;
@@ -466,8 +533,8 @@ class ReporteController extends Controller
         $servicios = collect();
         $gastoTotalServicios = 0;
 
-        $periodoTexto = ($inicio && $fin) 
-            ? 'Periodo: ' . $inicio->format('d/m/Y') . ' - ' . $fin->format('d/m/Y')
+        $periodoTexto = ($inicioStr && $finStr) 
+            ? 'Periodo: ' . \Carbon\Carbon::parse($inicioStr)->format('d/m/Y') . ' - ' . \Carbon\Carbon::parse($finStr)->format('d/m/Y')
             : 'Histórico Completo';
 
         if ($bocaminaId) {
@@ -478,8 +545,8 @@ class ReporteController extends Controller
 
         if ($tipo === 'compras' || $tipo === 'todos') {
             $query = Compra::with(['proveedor', 'bocamina', 'usuario', 'detalles.material'])->orderByDesc('fecha');
-            if ($inicio && $fin) {
-                $query->whereBetween('fecha', [$inicio, $fin]);
+            if ($inicioStr && $finStr) {
+                $query->whereDate('fecha', '>=', $inicioStr)->whereDate('fecha', '<=', $finStr);
             }
             if ($bocaminaId) {
                 $query->where('bocamina_id', $bocaminaId);
@@ -489,9 +556,9 @@ class ReporteController extends Controller
         }
 
         if ($tipo === 'servicios' || $tipo === 'todos') {
-            $queryServicios = \App\Models\Servicio::with(['costos', 'repuestos', 'bocamina', 'responsable', 'equipo']);
-            if ($inicio && $fin) {
-                $queryServicios->whereBetween('fecha', [$inicio, $fin]);
+            $queryServicios = \App\Models\Servicio::with(['costos', 'repuestos.material', 'bocamina', 'responsable', 'equipo']);
+            if ($inicioStr && $finStr) {
+                $queryServicios->whereDate('fecha', '>=', $inicioStr)->whereDate('fecha', '<=', $finStr);
             }
             if ($bocaminaId) {
                 $queryServicios->where('boca_mina_id', $bocaminaId);
@@ -521,8 +588,10 @@ class ReporteController extends Controller
 
     public function exportarExcel(Request $request)
     {
-        $inicio = $request->query('inicio') ? \Carbon\Carbon::parse($request->query('inicio'))->startOfDay() : null;
-        $fin    = $request->query('fin')    ? \Carbon\Carbon::parse($request->query('fin'))->endOfDay()   : null;
+        $inicioRaw = $request->query('inicio');
+        $finRaw    = $request->query('fin');
+        $inicioStr = $inicioRaw ? \Carbon\Carbon::parse($inicioRaw)->toDateString() : null;
+        $finStr    = $finRaw    ? \Carbon\Carbon::parse($finRaw)->toDateString()   : null;
         $bocaminaId = $request->query('bocamina_id');
         if ($bocaminaId === '' || $bocaminaId === 'null') {
             $bocaminaId = null;
@@ -546,9 +615,9 @@ class ReporteController extends Controller
             $sheet->setTitle('Compras');
             $activeSheetIndex++;
 
-            $query = Compra::with(['proveedor', 'bocamina', 'usuario'])->orderByDesc('fecha');
-            if ($inicio && $fin) {
-                $query->whereBetween('fecha', [$inicio, $fin]);
+            $query = Compra::with(['proveedor', 'bocamina', 'usuario', 'detalles.material'])->orderByDesc('fecha');
+            if ($inicioStr && $finStr) {
+                $query->whereDate('fecha', '>=', $inicioStr)->whereDate('fecha', '<=', $finStr);
             }
             if ($bocaminaId) {
                 $query->where('bocamina_id', $bocaminaId);
@@ -556,7 +625,7 @@ class ReporteController extends Controller
             $compras = $query->get();
 
             // ── Título ──
-            $sheet->mergeCells('A1:J1');
+            $sheet->mergeCells('A1:L1');
             $sheet->setCellValue('A1', 'REPORTE DE COMPRAS — ' . $empresaNombre);
             $sheet->getStyle('A1')->applyFromArray([
                 'font'      => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
@@ -566,15 +635,15 @@ class ReporteController extends Controller
             $sheet->getRowDimension(1)->setRowHeight(28);
 
             // ── Sub-título periodo ──
-            $periodoTexto = ($inicio && $fin)
-                ? $inicio->format('d/m/Y') . ' — ' . $fin->format('d/m/Y')
+            $periodoTexto = ($inicioStr && $finStr)
+                ? \Carbon\Carbon::parse($inicioStr)->format('d/m/Y') . ' — ' . \Carbon\Carbon::parse($finStr)->format('d/m/Y')
                 : 'Histórico Completo';
             if ($bocaminaId) {
                 $bocamina = \App\Models\Bocamina::find($bocaminaId);
                 $periodoTexto .= '  |  Bocamina: ' . ($bocamina ? $bocamina->nombre : 'Desconocida');
             }
 
-            $sheet->mergeCells('A2:J2');
+            $sheet->mergeCells('A2:L2');
             $sheet->setCellValue('A2', 'Periodo: ' . $periodoTexto . '   |   Generado el: ' . $generadoEl);
             $sheet->getStyle('A2')->applyFromArray([
                 'font'      => ['italic' => true, 'color' => ['rgb' => '64748B']],
@@ -582,13 +651,13 @@ class ReporteController extends Controller
             ]);
 
             // ── Encabezados ──
-            $headers = ['ID', 'Fecha', 'Proveedor', 'NIT Proveedor', 'N° Factura', 'Bocamina', 'Responsable / A Nombre De', 'Registrado Por', 'Observaciones', 'Total ($)', 'Estado'];
+            $headers = ['ID', 'Fecha', 'Materiales / Productos', 'Proveedor', 'NIT Proveedor', 'N° Factura', 'Bocamina', 'Responsable / A Nombre De', 'Registrado Por', 'Observaciones', 'Total (Bs.)', 'Estado'];
             $col = 'A';
             foreach ($headers as $header) {
                 $sheet->setCellValue($col . '3', $header);
                 $col++;
             }
-            $sheet->getStyle('A3:K3')->applyFromArray([
+            $sheet->getStyle('A3:L3')->applyFromArray([
                 'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
                 'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D96A43']],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
@@ -603,40 +672,45 @@ class ReporteController extends Controller
                 $isEven = ($row % 2 === 0);
                 $fillColor = $isEven ? 'F8FAFC' : 'FFFFFF';
 
+                $materialesTexto = isset($compra->detalles) && $compra->detalles->count() > 0
+                    ? $compra->detalles->map(fn($d) => ($d->material->descripcion ?? $d->material->nombre ?? 'Material') . ' (' . (float)$d->cantidad . ' u.)')->join('; ')
+                    : '-';
+
                 $sheet->setCellValue('A' . $row, $compra->id);
                 $sheet->setCellValue('B' . $row, $compra->fecha->format('d/m/Y'));
-                $sheet->setCellValue('C' . $row, $compra->proveedor->nombre ?? '-');
-                $sheet->setCellValue('D' . $row, $compra->proveedor->nit ?? '-');
-                $sheet->setCellValue('E' . $row, $compra->numero_factura ?: '-');
-                $sheet->setCellValue('F' . $row, $compra->bocamina->nombre ?? 'Bodega Central');
-                $sheet->setCellValue('G' . $row, $compra->comprador_responsable ?: ($compra->usuario->nombre ?? '-'));
-                $sheet->setCellValue('H' . $row, $compra->usuario->nombre ?? '-');
-                $sheet->setCellValue('I' . $row, $compra->observaciones ?: '-');
-                $sheet->setCellValue('J' . $row, (float) $compra->total);
-                $sheet->setCellValue('K' . $row, $compra->estado ?? 'completada');
+                $sheet->setCellValue('C' . $row, $materialesTexto);
+                $sheet->setCellValue('D' . $row, $compra->proveedor->nombre ?? '-');
+                $sheet->setCellValue('E' . $row, $compra->proveedor->nit ?? '-');
+                $sheet->setCellValue('F' . $row, $compra->numero_factura ?: '-');
+                $sheet->setCellValue('G' . $row, $compra->bocamina->nombre ?? 'Bodega Central');
+                $sheet->setCellValue('H' . $row, $compra->comprador_responsable ?: ($compra->usuario->nombre ?? '-'));
+                $sheet->setCellValue('I' . $row, $compra->usuario->nombre ?? '-');
+                $sheet->setCellValue('J' . $row, $compra->observaciones ?: '-');
+                $sheet->setCellValue('K' . $row, (float) $compra->total);
+                $sheet->setCellValue('L' . $row, $compra->estado ?? 'completada');
 
-                $sheet->getStyle('A' . $row . ':K' . $row)->applyFromArray([
+                $sheet->getStyle('A' . $row . ':L' . $row)->applyFromArray([
                     'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $fillColor]],
                     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'E2E8F0']]],
                 ]);
-                $sheet->getStyle('J' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                $sheet->getStyle('K' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
 
                 $total += $compra->total;
                 $row++;
             }
 
             // ── Fila TOTAL ──
-            $sheet->mergeCells('A' . $row . ':I' . $row);
+            $sheet->mergeCells('A' . $row . ':J' . $row);
             $sheet->setCellValue('A' . $row, 'TOTAL GENERAL COMPRAS');
-            $sheet->setCellValue('J' . $row, $total);
-            $sheet->getStyle('A' . $row . ':K' . $row)->applyFromArray([
+            $sheet->setCellValue('K' . $row, $total);
+            $sheet->getStyle('A' . $row . ':L' . $row)->applyFromArray([
                 'font'    => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1A2332']],
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '334155']]],
             ]);
-            $sheet->getStyle('J' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('K' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
 
-            foreach (range('A', 'K') as $colChar) {
+            foreach (range('A', 'L') as $colChar) {
                 $sheet->getColumnDimension($colChar)->setAutoSize(true);
             }
         }
@@ -646,9 +720,9 @@ class ReporteController extends Controller
             $sheet->setTitle('Servicios');
             $activeSheetIndex++;
 
-            $queryServicios = \App\Models\Servicio::with(['costos', 'repuestos', 'bocamina', 'responsable', 'equipo'])->orderByDesc('fecha');
-            if ($inicio && $fin) {
-                $queryServicios->whereBetween('fecha', [$inicio, $fin]);
+            $queryServicios = \App\Models\Servicio::with(['costos', 'repuestos.material', 'bocamina', 'responsable', 'equipo'])->orderByDesc('fecha');
+            if ($inicioStr && $finStr) {
+                $queryServicios->whereDate('fecha', '>=', $inicioStr)->whereDate('fecha', '<=', $finStr);
             }
             if ($bocaminaId) {
                 $queryServicios->where('boca_mina_id', $bocaminaId);
@@ -656,7 +730,7 @@ class ReporteController extends Controller
             $servicios = $queryServicios->get();
 
             // ── Título ──
-            $sheet->mergeCells('A1:H1');
+            $sheet->mergeCells('A1:I1');
             $sheet->setCellValue('A1', 'REPORTE DE SERVICIOS Y MANTENIMIENTO — ' . $empresaNombre);
             $sheet->getStyle('A1')->applyFromArray([
                 'font'      => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
@@ -666,15 +740,15 @@ class ReporteController extends Controller
             $sheet->getRowDimension(1)->setRowHeight(28);
 
             // ── Sub-título periodo ──
-            $periodoTexto = ($inicio && $fin)
-                ? $inicio->format('d/m/Y') . ' — ' . $fin->format('d/m/Y')
+            $periodoTexto = ($inicioStr && $finStr)
+                ? \Carbon\Carbon::parse($inicioStr)->format('d/m/Y') . ' — ' . \Carbon\Carbon::parse($finStr)->format('d/m/Y')
                 : 'Histórico Completo';
             if ($bocaminaId) {
                 $bocamina = \App\Models\Bocamina::find($bocaminaId);
                 $periodoTexto .= '  |  Bocamina: ' . ($bocamina ? $bocamina->nombre : 'Desconocida');
             }
 
-            $sheet->mergeCells('A2:H2');
+            $sheet->mergeCells('A2:I2');
             $sheet->setCellValue('A2', 'Periodo: ' . $periodoTexto . '   |   Generado el: ' . $generadoEl);
             $sheet->getStyle('A2')->applyFromArray([
                 'font'      => ['italic' => true, 'color' => ['rgb' => '64748B']],
@@ -682,13 +756,13 @@ class ReporteController extends Controller
             ]);
 
             // ── Encabezados ──
-            $headers = ['Código', 'Fecha', 'Equipo', 'Bocamina', 'Responsable', 'Estado', 'Descripción', 'Costo Total ($)'];
+            $headers = ['Código', 'Fecha', 'Equipo', 'Materiales / Repuestos Usados', 'Bocamina', 'Responsable', 'Estado', 'Descripción', 'Costo Total (Bs.)'];
             $col = 'A';
             foreach ($headers as $header) {
                 $sheet->setCellValue($col . '3', $header);
                 $col++;
             }
-            $sheet->getStyle('A3:H3')->applyFromArray([
+            $sheet->getStyle('A3:I3')->applyFromArray([
                 'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
                 'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2DD4BF']],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
@@ -710,37 +784,42 @@ class ReporteController extends Controller
                     $tipoLimpio = 'Vehículo';
                 }
 
+                $repuestosTexto = isset($s->repuestos) && $s->repuestos->count() > 0
+                    ? $s->repuestos->map(fn($r) => ($r->material->descripcion ?? $r->material->nombre ?? 'Repuesto') . ' (' . (float)$r->cantidad . ' u.)')->join('; ')
+                    : ($s->descripcion ?: '-');
+
                 $sheet->setCellValue('A' . $row, $s->codigo);
                 $sheet->setCellValue('B' . $row, \Carbon\Carbon::parse($s->fecha)->format('d/m/Y'));
                 $sheet->setCellValue('C' . $row, $tipoLimpio . ' (' . ($s->equipo->placa ?? $s->equipo->nombre_codigo ?? $s->equipo->codigo ?? '-') . ')');
-                $sheet->setCellValue('D' . $row, $s->bocamina->nombre ?? 'Bodega Central');
-                $sheet->setCellValue('E' . $row, $s->responsable->nombre ?? '-');
-                $sheet->setCellValue('F' . $row, $s->estado);
-                $sheet->setCellValue('G' . $row, $s->descripcion ?: '-');
-                $sheet->setCellValue('H' . $row, (float) $costoTotal);
+                $sheet->setCellValue('D' . $row, $repuestosTexto);
+                $sheet->setCellValue('E' . $row, $s->bocamina->nombre ?? 'Bodega Central');
+                $sheet->setCellValue('F' . $row, $s->responsable->nombre ?? '-');
+                $sheet->setCellValue('G' . $row, $s->estado);
+                $sheet->setCellValue('H' . $row, $s->descripcion ?: '-');
+                $sheet->setCellValue('I' . $row, (float) $costoTotal);
 
-                $sheet->getStyle('A' . $row . ':H' . $row)->applyFromArray([
+                $sheet->getStyle('A' . $row . ':I' . $row)->applyFromArray([
                     'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $fillColor]],
                     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'E2E8F0']]],
                 ]);
-                $sheet->getStyle('H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                $sheet->getStyle('I' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
 
                 $totalServicios += $costoTotal;
                 $row++;
             }
 
             // ── Fila TOTAL ──
-            $sheet->mergeCells('A' . $row . ':G' . $row);
+            $sheet->mergeCells('A' . $row . ':H' . $row);
             $sheet->setCellValue('A' . $row, 'TOTAL GENERAL SERVICIOS');
-            $sheet->setCellValue('H' . $row, $totalServicios);
-            $sheet->getStyle('A' . $row . ':H' . $row)->applyFromArray([
+            $sheet->setCellValue('I' . $row, $totalServicios);
+            $sheet->getStyle('A' . $row . ':I' . $row)->applyFromArray([
                 'font'    => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1A2332']],
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '334155']]],
             ]);
-            $sheet->getStyle('H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('I' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
 
-            foreach (range('A', 'H') as $colChar) {
+            foreach (range('A', 'I') as $colChar) {
                 $sheet->getColumnDimension($colChar)->setAutoSize(true);
             }
         }

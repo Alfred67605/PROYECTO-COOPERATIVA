@@ -136,6 +136,7 @@ export const InventarioList = () => {
       queryClient.invalidateQueries({ queryKey: ['categorias'] });
       queryClient.invalidateQueries({ queryKey: ['materiales-grupos'] });
       queryClient.invalidateQueries({ queryKey: ['materiales'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Categoría eliminada', 'La categoría fue eliminada de manera definitiva.');
       setConfirmCatOpen(false);
       setDeleteCatTarget(null);
@@ -220,6 +221,7 @@ export const InventarioList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materiales'] });
       queryClient.invalidateQueries({ queryKey: ['all-materiales'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success(
         editingId ? 'Material actualizado' : 'Material registrado',
         editingId ? 'Los datos se guardaron correctamente.' : 'El material fue añadido al catálogo.'
@@ -238,6 +240,7 @@ export const InventarioList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materiales'] });
       queryClient.invalidateQueries({ queryKey: ['all-materiales'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Material eliminado', 'El material fue eliminado de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);

@@ -530,7 +530,7 @@ class RespaldoController extends Controller
     /**
      * Verifica si existe un respaldo automático pendiente según la programación configurada.
      */
-    private function verificarYEjecutarRespaldoProgramado()
+    public function verificarYEjecutarRespaldoProgramado()
     {
         try {
             $setting = \App\Models\EmpresaSetting::first();
@@ -577,6 +577,7 @@ class RespaldoController extends Controller
             if ($esDebido && $startOfPeriod) {
                 $yaExiste = Respaldo::where('tipo', 'automatico')
                     ->where('created_at', '>=', $startOfPeriod)
+                    ->where('estado', 'completado')
                     ->exists();
 
                 if (!$yaExiste) {

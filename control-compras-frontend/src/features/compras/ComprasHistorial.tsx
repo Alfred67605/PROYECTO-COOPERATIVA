@@ -30,6 +30,7 @@ export const ComprasHistorial = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['compras'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Compra eliminada', 'El registro de compra fue eliminado permanentemente.');
       setConfirmOpen(false);
       setDeleteTargetId(null);

@@ -15,6 +15,25 @@ interface ModalCrearCategoriaProps {
   editingCategoria?: any;
 }
 
+const generateAutoCode = (catName: string): string => {
+  if (!catName.trim()) return '';
+  const clean = catName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, '');
+
+  const stopWords = ['DE', 'DEL', 'LA', 'LAS', 'LOS', 'EL', 'Y', 'EN', 'PARA', 'POR', 'UN', 'UNA', 'CON'];
+  const words = clean.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w));
+
+  if (words.length === 0) return 'CAT';
+  if (words.length === 1) return words[0].slice(0, 5);
+  if (words.length === 2) return `${words[0].slice(0, 4)}-${words[1].slice(0, 1)}`;
+  
+  const initials = words.slice(0, 4).map(w => w[0]).join('');
+  return initials.length >= 3 ? initials : `${words[0].slice(0, 4)}-${words[1].slice(0, 1)}`;
+};
+
 export const ModalCrearCategoria = ({ isOpen, onClose, onSuccess, editingCategoria }: ModalCrearCategoriaProps) => {
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -22,32 +41,27 @@ export const ModalCrearCategoria = ({ isOpen, onClose, onSuccess, editingCategor
   const [nombre, setNombre] = useState('');
   const [codigo, setCodigo] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [isAutoCode, setIsAutoCode] = useState(true);
   const [error, setError] = useState('');
 
-  // Sync state when editingCategoria changes or modal opens
-  useState(() => {
-    if (editingCategoria) {
-      setNombre(editingCategoria.nombre || '');
-      setCodigo(editingCategoria.codigo || '');
-      setDescripcion(editingCategoria.descripcion || '');
+  const handleNombreChange = (val: string) => {
+    setNombre(val);
+    if (isAutoCode && !editingCategoria) {
+      setCodigo(generateAutoCode(val));
     }
-  });
+  };
 
-  // Also sync on open/change via useEffect
-  useState(() => {
-    if (isOpen) {
-      setNombre(editingCategoria?.nombre || '');
-      setCodigo(editingCategoria?.codigo || '');
-      setDescripcion(editingCategoria?.descripcion || '');
-      setError('');
-    }
-  });
+  const handleCodigoChange = (val: string) => {
+    setCodigo(val);
+    setIsAutoCode(false);
+  };
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      const finalCode = codigo.trim() || generateAutoCode(nombre);
       const payload = {
         nombre: nombre.trim(),
-        codigo: codigo.trim() || null,
+        codigo: finalCode || null,
         descripcion: descripcion.trim() || null,
         estado: editingCategoria?.estado || 'activo'
       };
@@ -66,6 +80,7 @@ export const ModalCrearCategoria = ({ isOpen, onClose, onSuccess, editingCategor
       queryClient.invalidateQueries({ queryKey: ['categorias'] });
       queryClient.invalidateQueries({ queryKey: ['materiales-grupos'] });
       queryClient.invalidateQueries({ queryKey: ['materiales'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       
       if (onSuccess) {
         onSuccess(data?.data || data);
@@ -83,6 +98,7 @@ export const ModalCrearCategoria = ({ isOpen, onClose, onSuccess, editingCategor
     setNombre('');
     setCodigo('');
     setDescripcion('');
+    setIsAutoCode(true);
     setError('');
     onClose();
   };
@@ -158,7 +174,7 @@ export const ModalCrearCategoria = ({ isOpen, onClose, onSuccess, editingCategor
                     required
                     placeholder="Ej. Herramientas de Corte, Mangueras y Conexiones"
                     value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
+                    onChange={(e) => handleNombreChange(e.target.value)}
                     className="input-field pl-11 py-2.5 w-full"
                     autoFocus
                   />
@@ -166,20 +182,31 @@ export const ModalCrearCategoria = ({ isOpen, onClose, onSuccess, editingCategor
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-mining-400 uppercase tracking-wider mb-2">
-                  Código / Prefijo (Opcional)
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-mining-400 uppercase tracking-wider">
+                    Código / Prefijo (Opcional)
+                  </label>
+                  {isAutoCode && nombre.trim() && !editingCategoria && (
+                    <span className="text-[10px] font-extrabold text-copper-400 bg-copper-500/10 px-2 py-0.5 rounded-full border border-copper-500/20">
+                      Auto-generado
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 text-mining-500" size={18} />
                   <input
                     type="text"
                     placeholder="Ej. G-12, HERR-C, MANG"
                     value={codigo}
-                    onChange={(e) => setCodigo(e.target.value)}
+                    onChange={(e) => handleCodigoChange(e.target.value)}
                     className="input-field pl-11 py-2.5 w-full font-mono uppercase"
                   />
                 </div>
-                <p className="text-[11px] text-mining-500 mt-1">Identificador de grupo usado en correlativos de códigos de material.</p>
+                <p className="text-[11px] text-mining-500 mt-1">
+                  {isAutoCode && nombre.trim() && !editingCategoria
+                    ? 'Código generado automáticamente a partir del nombre (puedes personalizarlo).'
+                    : 'Identificador de grupo usado en correlativos de códigos de material.'}
+                </p>
               </div>
 
               <div>

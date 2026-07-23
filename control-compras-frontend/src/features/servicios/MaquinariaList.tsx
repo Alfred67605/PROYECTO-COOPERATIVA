@@ -44,6 +44,7 @@ export const MaquinariaList = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maquinaria'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success(
         editingId ? 'Maquinaria actualizada' : 'Maquinaria registrada',
         editingId ? 'Los datos se guardaron correctamente.' : 'El equipo fue añadido al sistema.'
@@ -61,6 +62,7 @@ export const MaquinariaList = () => {
     mutationFn: async (id: number) => await api.delete(`/maquinaria/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maquinaria'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Maquinaria eliminada', 'El equipo fue eliminado de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);

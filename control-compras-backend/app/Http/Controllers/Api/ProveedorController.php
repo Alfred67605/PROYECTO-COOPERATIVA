@@ -21,7 +21,7 @@ class ProveedorController extends Controller
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
-            'telefono' => 'nullable|string|max:50',
+            'telefono' => ['nullable', 'string', 'max:50', 'regex:/^[0-9\+\-\s]*$/'],
             'direccion' => 'nullable|string|max:500',
             'email' => 'nullable|email:rfc|max:255',
             'nit' => 'nullable|string|max:100',
@@ -45,7 +45,7 @@ class ProveedorController extends Controller
         
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
-            'telefono' => 'nullable|string|max:50',
+            'telefono' => ['nullable', 'string', 'max:50', 'regex:/^[0-9\+\-\s]*$/'],
             'direccion' => 'nullable|string|max:500',
             'email' => 'nullable|email:rfc|max:255',
             'nit' => 'nullable|string|max:100',

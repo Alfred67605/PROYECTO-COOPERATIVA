@@ -49,6 +49,7 @@ export const InspeccionesList = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspecciones'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success(
         editingId ? 'Inspección actualizada' : 'Inspección registrada',
         editingId ? 'Los datos se guardaron correctamente.' : 'La inspección fue añadida al sistema.'
@@ -66,6 +67,7 @@ export const InspeccionesList = () => {
     mutationFn: async (id: number) => await api.delete(`/inspecciones/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspecciones'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Inspección eliminada', 'La inspección fue eliminada de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);

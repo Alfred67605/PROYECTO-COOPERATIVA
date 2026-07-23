@@ -52,6 +52,7 @@ export const AlquilerGruasList = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alquiler-gruas'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success(
         editingId ? 'Alquiler actualizado' : 'Alquiler registrado',
         editingId ? 'Los datos de la grúa se actualizaron correctamente.' : 'Se registró el alquiler de la grúa exitosamente.'
@@ -69,6 +70,7 @@ export const AlquilerGruasList = () => {
     mutationFn: async (id: number) => await api.delete(`/alquiler-gruas/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alquiler-gruas'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Alquiler eliminado', 'El alquiler de grúa fue eliminado de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);

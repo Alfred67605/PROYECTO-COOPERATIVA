@@ -149,6 +149,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Fecha</th>
+                    <th>Materiales / Productos</th>
                     <th>Proveedor</th>
                     <th>N&ordm; Factura</th>
                     <th>Bocamina</th>
@@ -159,9 +160,15 @@
             </thead>
             <tbody>
                 @foreach($compras as $c)
+                @php
+                    $materialesItems = isset($c->detalles) && $c->detalles->count() > 0
+                        ? $c->detalles->map(fn($d) => ($d->material->descripcion ?? $d->material->nombre ?? 'Material') . ' (x' . (float)$d->cantidad . ')')->join(', ')
+                        : '-';
+                @endphp
                 <tr>
                     <td class="td-mono">#{{ $c->id }}</td>
                     <td>{{ $c->fecha->format('d/m/Y') }}</td>
+                    <td style="font-weight: 600; color: #1e293b;">{{ $materialesItems }}</td>
                     <td>{{ $c->proveedor->nombre ?? '-' }}</td>
                     <td>{{ $c->numero_factura ?: '-' }}</td>
                     <td>{{ $c->bocamina->nombre ?? 'Central' }}</td>
@@ -172,8 +179,8 @@
                 @endforeach
 
                 <tr class="total-row">
-                    <td colspan="7">TOTAL COMPRAS</td>
-                    <td class="td-right">Bs. {{ number_format($gastoTotal - $gastoTotalServicios, 2) }}</td>
+                    <td colspan="8">TOTAL COMPRAS</td>
+                    <td class="td-right">Bs. {{ number_format($gastoTotalCompras, 2) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -189,10 +196,11 @@
                     <th>Código</th>
                     <th>Fecha</th>
                     <th>Equipo</th>
+                    <th>Materiales / Repuestos Usados</th>
                     <th>Bocamina</th>
                     <th>Responsable</th>
                     <th>Estado</th>
-                    <th class="text-right">Total ($)</th>
+                    <th class="text-right">Total (Bs.)</th>
                 </tr>
             </thead>
             <tbody>
@@ -203,21 +211,25 @@
                     if ($tipoLimpio === 'Vehiculo') {
                         $tipoLimpio = 'Vehículo';
                     }
+                    $repuestosItems = isset($s->repuestos) && $s->repuestos->count() > 0
+                        ? $s->repuestos->map(fn($r) => ($r->material->descripcion ?? $r->material->nombre ?? 'Repuesto') . ' (x' . (float)$r->cantidad . ')')->join(', ')
+                        : ($s->descripcion ?: '-');
                 @endphp
                 <tr>
                     <td class="td-mono">{{ $s->codigo }}</td>
                     <td>{{ \Carbon\Carbon::parse($s->fecha)->format('d/m/Y') }}</td>
                     <td>{{ $tipoLimpio }} ({{ $s->equipo->placa ?? $s->equipo->nombre_codigo ?? $s->equipo->codigo ?? '-' }})</td>
+                    <td style="font-weight: 600; color: #1e293b;">{{ $repuestosItems }}</td>
                     <td>{{ $s->bocamina->nombre ?? 'Central' }}</td>
                     <td>{{ $s->responsable->nombre ?? '-' }}</td>
                     <td>{{ $s->estado }}</td>
-                    <td class="td-right">${{ number_format($costoTotal, 2) }}</td>
+                    <td class="td-right">Bs. {{ number_format($costoTotal, 2) }}</td>
                 </tr>
                 @endforeach
 
                 <tr class="total-row">
-                    <td colspan="6">TOTAL SERVICIOS</td>
-                    <td class="td-right">${{ number_format($gastoTotalServicios, 2) }}</td>
+                    <td colspan="7">TOTAL SERVICIOS</td>
+                    <td class="td-right">Bs. {{ number_format($gastoTotalServicios, 2) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -229,8 +241,8 @@
         <table>
             <tbody>
                 <tr class="total-row">
-                    <td colspan="6">TOTAL GENERAL (COMPRAS + SERVICIOS)</td>
-                    <td class="td-right">${{ number_format($gastoTotal, 2) }}</td>
+                    <td colspan="7">TOTAL GENERAL (COMPRAS + SERVICIOS)</td>
+                    <td class="td-right">Bs. {{ number_format($gastoTotal, 2) }}</td>
                 </tr>
             </tbody>
         </table>

@@ -36,25 +36,7 @@ class RunBackup extends Command
 
         // 1. Obtener credenciales de la BD
         $connection = config('database.default');
-        if ($connection !== 'pgsql') {
-            $errorMsg = "Solo se soporta respaldo para bases de datos PostgreSQL.";
-            $this->error($errorMsg);
-            Respaldo::create([
-                'nombre_archivo' => 'error_bd_not_supported.zip',
-                'tipo' => $tipo,
-                'tamano' => 0,
-                'estado' => 'fallido',
-                'creado_por' => $usuarioId,
-            ]);
-            return 1;
-        }
-
-        $dbConfig = config("database.connections.pgsql");
-        $host = $dbConfig['host'] ?? '127.0.0.1';
-        $port = $dbConfig['port'] ?? '5432';
-        $database = $dbConfig['database'] ?? 'control_compras_db';
-        $username = $dbConfig['username'] ?? 'postgres';
-        $password = $dbConfig['password'] ?? 'admin';
+        $dbConfig = config("database.connections.{$connection}", []);
 
         $timestamp = now()->format('Y-m-d_H-i-s');
         $sqlFileName = "db_dump_{$timestamp}.sql";
@@ -73,38 +55,55 @@ class RunBackup extends Command
         $zipPath = $respaldoFolder . DIRECTORY_SEPARATOR . $zipFileName;
 
         try {
-            // 2. Intentar pg_dump si está disponible
-            try {
-                $pgDumpBinary = $this->getPgDumpBinary();
-                $cmd = [
-                    $pgDumpBinary,
-                    '-h', $host,
-                    '-p', $port,
-                    '-U', $username,
-                    '-F', 'p',
-                    '-f', $sqlPath,
-                    $database
-                ];
+            // 2. Intentar dumper binario según el tipo de BD
+            if ($connection === 'pgsql') {
+                try {
+                    $pgDumpBinary = $this->getPgDumpBinary();
+                    $host = $dbConfig['host'] ?? '127.0.0.1';
+                    $port = $dbConfig['port'] ?? '5432';
+                    $database = $dbConfig['database'] ?? 'control_compras_db';
+                    $username = $dbConfig['username'] ?? 'postgres';
+                    $password = $dbConfig['password'] ?? 'admin';
 
-                $env = array_merge(getenv() ?: [], [
-                    'PGPASSWORD' => $password
-                ]);
+                    $cmd = [
+                        $pgDumpBinary,
+                        '-h', $host,
+                        '-p', $port,
+                        '-U', $username,
+                        '-F', 'p',
+                        '-f', $sqlPath,
+                        $database
+                    ];
 
-                $process = proc_open($cmd, [
-                    0 => ["pipe", "r"],
-                    1 => ["pipe", "w"],
-                    2 => ["pipe", "w"]
-                ], $pipes, null, $env);
+                    $env = array_merge(getenv() ?: [], [
+                        'PGPASSWORD' => $password
+                    ]);
 
-                if (is_resource($process)) {
-                    stream_get_contents($pipes[1]);
-                    fclose($pipes[1]);
-                    stream_get_contents($pipes[2]);
-                    fclose($pipes[2]);
-                    proc_close($process);
+                    $process = proc_open($cmd, [
+                        0 => ["pipe", "r"],
+                        1 => ["pipe", "w"],
+                        2 => ["pipe", "w"]
+                    ], $pipes, null, $env);
+
+                    if (is_resource($process)) {
+                        stream_get_contents($pipes[1]);
+                        fclose($pipes[1]);
+                        stream_get_contents($pipes[2]);
+                        fclose($pipes[2]);
+                        proc_close($process);
+                    }
+                } catch (\Throwable $t) {
+                    Log::warning("pg_dump no ejecutado: " . $t->getMessage());
                 }
-            } catch (\Throwable $t) {
-                Log::warning("pg_dump no ejecutado: " . $t->getMessage());
+            } elseif ($connection === 'sqlite') {
+                try {
+                    $sqlitePath = $dbConfig['database'] ?? database_path('database.sqlite');
+                    if (file_exists($sqlitePath)) {
+                        copy($sqlitePath, $tempFolder . DIRECTORY_SEPARATOR . 'database.sqlite');
+                    }
+                } catch (\Throwable $t) {
+                    Log::warning("Copia SQLite no ejecutada: " . $t->getMessage());
+                }
             }
 
             // 2b. Exportar JSON de la base de datos para restauración cruzada con deduplicación

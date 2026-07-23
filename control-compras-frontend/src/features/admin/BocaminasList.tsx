@@ -40,6 +40,7 @@ export const BocaminasList = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bocaminas'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success(
         editingId ? 'Bocamina actualizada' : 'Bocamina registrada',
         editingId ? 'Los datos se guardaron correctamente.' : 'La bocamina fue añadida al sistema.'
@@ -57,6 +58,7 @@ export const BocaminasList = () => {
     mutationFn: async (id: number) => await api.delete(`/bocaminas/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bocaminas'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Bocamina eliminada', 'La bocamina fue eliminada de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);

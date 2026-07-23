@@ -19,6 +19,14 @@ interface RepuestoItem {
 
 const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
 
+const getTodayLocalDate = (): string => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const ServiciosList = () => {
   const { user, canWrite } = useAuth();
   const canEdit = canWrite('servicios');
@@ -30,11 +38,13 @@ export const ServiciosList = () => {
   
   const [form, setForm] = useState({
     codigo: '',
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: getTodayLocalDate(),
     hora: new Date().toTimeString().substring(0,5),
     estado: 'Pendiente',
     equipo_tipo: 'App\\Models\\Maquinaria',
     equipo_id: '',
+    boca_mina_id: '',
+    costo_mano_obra: '',
     descripcion: '',
     observaciones: '',
     repuestos: [] as RepuestoItem[]
@@ -47,6 +57,7 @@ export const ServiciosList = () => {
   const { data: maquinaria } = useQuery({ queryKey: ['maquinaria'], queryFn: async () => (await api.get('/maquinaria')).data });
   const { data: vehiculos } = useQuery({ queryKey: ['vehiculos'], queryFn: async () => (await api.get('/vehiculos')).data });
   const { data: materiales } = useQuery({ queryKey: ['materiales'], queryFn: async () => (await api.get('/materiales')).data });
+  const { data: bocaminas } = useQuery({ queryKey: ['bocaminas'], queryFn: async () => (await api.get('/bocaminas')).data });
 
   const { data, isLoading } = useQuery({
     queryKey: ['servicios'],
@@ -55,9 +66,15 @@ export const ServiciosList = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const costosPayload = form.costo_mano_obra && parseFloat(form.costo_mano_obra) > 0
+        ? [{ tipo_costo: 'Mano de Obra / Servicio', monto: parseFloat(form.costo_mano_obra), descripcion: 'Costo del servicio' }]
+        : [];
+
       const payload = {
         ...form,
         equipo_id: Number(form.equipo_id),
+        boca_mina_id: form.boca_mina_id ? Number(form.boca_mina_id) : null,
+        costos: costosPayload,
         usuario_registro_id: user?.id,
       };
       if (editingId) return await api.put(`/servicios/${editingId}`, payload);
@@ -65,6 +82,7 @@ export const ServiciosList = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['servicios'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success(
         editingId ? 'Servicio actualizado' : 'Servicio registrado',
         editingId ? 'Los datos se guardaron correctamente.' : 'El servicio fue añadido al sistema.'
@@ -82,6 +100,7 @@ export const ServiciosList = () => {
     mutationFn: async (id: number) => await api.delete(`/servicios/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['servicios'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast.success('Servicio eliminado', 'El mantenimiento fue eliminado de manera definitiva.');
       setConfirmOpen(false);
       setDeleteTarget(null);
@@ -96,11 +115,13 @@ export const ServiciosList = () => {
   const openCreate = () => { 
     setForm({ 
       codigo: `SRV-${new Date().getTime().toString().slice(-4)}`, 
-      fecha: new Date().toISOString().split('T')[0],
+      fecha: getTodayLocalDate(),
       hora: new Date().toTimeString().substring(0,5),
       estado: 'Pendiente',
       equipo_tipo: 'App\\Models\\Maquinaria',
       equipo_id: '',
+      boca_mina_id: '',
+      costo_mano_obra: '',
       descripcion: '',
       observaciones: '',
       repuestos: []
@@ -109,10 +130,19 @@ export const ServiciosList = () => {
   };
   
   const openEdit = (s: any) => {
+    const manoObra = s.costos?.find((c: any) => c.tipo_costo === 'Mano de Obra / Servicio')?.monto || s.costos?.[0]?.monto || '';
     setForm({ 
-      codigo: s.codigo, fecha: s.fecha, hora: s.hora, estado: s.estado,
-      equipo_tipo: s.equipo_tipo, equipo_id: s.equipo_id, descripcion: s.descripcion || '', observaciones: s.observaciones || '',
-      repuestos: s.repuestos || []
+      codigo: s.codigo, fecha: s.fecha, hora: s.hora?.substring(0,5) || '08:00', estado: s.estado,
+      equipo_tipo: s.equipo_tipo, equipo_id: String(s.equipo_id),
+      boca_mina_id: s.boca_mina_id ? String(s.boca_mina_id) : '',
+      costo_mano_obra: manoObra ? String(manoObra) : '',
+      descripcion: s.descripcion || '', observaciones: s.observaciones || '',
+      repuestos: s.repuestos?.map((r: any) => ({
+        material_id: r.material_id,
+        material_nombre: r.material?.nombre || r.material?.descripcion || '',
+        cantidad: r.cantidad,
+        costo_unitario: r.costo_unitario
+      })) || []
     });
     setEditingId(s.id); setError(''); setShowModal(true);
   };
@@ -288,6 +318,22 @@ export const ServiciosList = () => {
                             <option key={eq.id} value={eq.id}>{getEquipoLabel(form.equipo_tipo, eq)}</option>
                           ))}
                         </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-mining-500 uppercase mb-2">Bocamina / Ubicación</label>
+                        <select className="input-field" value={form.boca_mina_id} onChange={e => setForm({...form, boca_mina_id: e.target.value})}>
+                          <option value="">Bodega Central / Ninguna</option>
+                          {Array.isArray(bocaminas) && bocaminas.map((b: any) => (
+                            <option key={b.id} value={b.id}>{b.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-mining-500 uppercase mb-2">Costo Servicio / Mano Obra (Bs.)</label>
+                        <input type="number" step="0.01" min="0" placeholder="Ej: 500.00" className="input-field" value={form.costo_mano_obra} onChange={e => setForm({...form, costo_mano_obra: e.target.value})} />
                       </div>
                     </div>
 

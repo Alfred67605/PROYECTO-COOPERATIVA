@@ -95,6 +95,9 @@ class User extends Authenticatable
         if (!$this->estado) {
             return false;
         }
+        if ($this->rol?->nombre === 'Administrador General') {
+            return true;
+        }
         if ($this->rol?->nombre === 'Consulta') {
             return false;
         }
