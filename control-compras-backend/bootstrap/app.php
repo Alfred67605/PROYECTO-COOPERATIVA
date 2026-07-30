@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ], append: [
             \App\Http\Middleware\SanitizeInput::class,
+            \App\Http\Middleware\EnforceSingleSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
