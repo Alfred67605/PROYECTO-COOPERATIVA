@@ -101,23 +101,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const roleName = user.rol?.nombre || '';
     if (roleName === 'Administrador General') return true;
 
-    // Default access per role (without extra permissions)
-    const roleDefaults: Record<string, string[]> = {
-      'Gerencia':            ['materiales', 'compras', 'servicios', 'reportes', 'auditoria'],
-      'Compras':             ['proveedores', 'materiales', 'compras'],
-      'Contabilidad':        ['materiales', 'compras', 'reportes'],
-      'Supervisor Bocamina': ['bocaminas', 'materiales', 'servicios'],
-      'Consulta':            ['reportes', 'auditoria'],
-    };
-
     // Admin-only modules (cannot be granted via permissions unless explicitly defined)
-    if (['usuarios', 'dashboard'].includes(module)) {
+    if (module === 'usuarios') {
       return hasPermission(module);
     }
 
-    // Check role default access OR extra permission
+    // If explicit permissions exist on the user object, use them
+    if (user.permisos && user.permisos.length > 0) {
+      return user.permisos.some((p: any) => p.nombre === module);
+    }
+
+    // Default access per role (fallback if no custom permissions saved)
+    const roleDefaults: Record<string, string[]> = {
+      'Gerencia':            ['dashboard', 'materiales', 'compras', 'servicios', 'reportes', 'auditoria'],
+      'Compras':             ['dashboard', 'proveedores', 'materiales', 'compras'],
+      'Contabilidad':        ['dashboard', 'materiales', 'compras', 'reportes'],
+      'Supervisor Bocamina': ['dashboard', 'bocaminas', 'materiales', 'servicios'],
+      'Consulta':            ['dashboard', 'reportes', 'auditoria'],
+    };
+
     const defaults = roleDefaults[roleName] || [];
-    return defaults.includes(module) || hasPermission(module);
+    return defaults.includes(module);
   };
 
   const canWrite = (module: string): boolean => {

@@ -43,10 +43,7 @@ export const UsuariosList = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null);
 
-  const [showWarningModal, setShowWarningModal] = useState(false);
-  const [warningMessage, setWarningMessage] = useState('');
-
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error: queryError, refetch } = useQuery({
     queryKey: ['usuarios'],
     queryFn: async () => (await api.get('/usuarios')).data
   });
@@ -62,15 +59,19 @@ export const UsuariosList = () => {
   });
 
 
+  const userList = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+  const rolesList = Array.isArray(roles) ? roles : (Array.isArray(roles?.data) ? roles.data : []);
+  const permisosList = Array.isArray(permisos) ? permisos : (Array.isArray(permisos?.data) ? permisos.data : []);
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload: any = { ...form, rol_id: parseInt(form.rol_id) };
       if (editingId && !payload.password) delete payload.password;
 
       // Auto-assign solo_lectura for Consulta role
-      const selectedRole = roles?.find((r: any) => String(r.id) === String(form.rol_id));
+      const selectedRole = rolesList.find((r: any) => String(r.id) === String(form.rol_id));
       if (selectedRole?.nombre === 'Consulta') {
-        const soloLecturaPerm = permisos?.find((p: any) => p.nombre === 'solo_lectura');
+        const soloLecturaPerm = permisosList.find((p: any) => p.nombre === 'solo_lectura');
         if (soloLecturaPerm && !payload.permisos.includes(soloLecturaPerm.id)) {
           payload.permisos = [...payload.permisos, soloLecturaPerm.id];
         }
@@ -109,45 +110,33 @@ export const UsuariosList = () => {
     }
   });
 
+  const getDefaultPermIdsForRole = (roleIdStr: string) => {
+    const selectedRole = rolesList.find((r: any) => String(r.id) === String(roleIdStr));
+    if (!selectedRole) return [];
+    const defaultModuleNames = ROLE_DEFAULT_MODULES[selectedRole.nombre] || [];
+    return permisosList
+      .filter((p: any) => defaultModuleNames.includes(p.nombre))
+      .map((p: any) => p.id);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const selectedRole = roles?.find((r: any) => String(r.id) === String(form.rol_id));
-
-    if (selectedRole && selectedRole.nombre !== 'Administrador General') {
-      const roleDefaults = ROLE_DEFAULT_MODULES[selectedRole.nombre] || [];
-      const extraPermNames: string[] = [];
-
-      form.permisos.forEach(id => {
-        const perm = permisos?.find((p: any) => p.id === id);
-        if (perm && !roleDefaults.includes(perm.nombre) && perm.nombre !== 'solo_lectura') {
-          const labels: Record<string, string> = {
-            bocaminas: 'Bocaminas', proveedores: 'Proveedores', materiales: 'Materiales',
-            compras: 'Compras', servicios: 'Servicios', reportes: 'Reportes', auditoria: 'Auditoría',
-          };
-          extraPermNames.push(labels[perm.nombre] || perm.nombre);
-        }
-      });
-
-      if (extraPermNames.length > 0) {
-        setWarningMessage(`¿Estás seguro de darle acceso adicional a ${extraPermNames.join(', ')} al usuario "${form.nombre || 'Nuevo Usuario'}" con rol ${selectedRole.nombre}?`);
-        setShowWarningModal(true);
-        return;
-      }
-    }
-
     saveMutation.mutate();
   };
 
   const openCreate = () => { setForm(emptyForm); setEditingId(null); setError(''); setShowModal(true); };
   const openEdit = (u: any) => {
+    let userPermIds = u.permisos?.map((p: any) => p.id) || [];
+    if (userPermIds.length === 0 && u.rol_id) {
+      userPermIds = getDefaultPermIdsForRole(String(u.rol_id));
+    }
     setForm({ 
       nombre: u.nombre, 
       email: u.email, 
       password: '', 
       rol_id: String(u.rol_id), 
       estado: u.estado,
-      permisos: u.permisos?.map((p: any) => p.id) || []
+      permisos: userPermIds
     });
     setEditingId(u.id); setError(''); setShowModal(true);
   };
@@ -167,7 +156,7 @@ export const UsuariosList = () => {
           <span className="badge badge-neutral w-fit">{roleName}</span>
         )}
         {numPermisos > 0 && (
-          <span className="text-[10px] text-mining-400">+{numPermisos} permisos esp.</span>
+          <span className="text-[10px] text-mining-400">{numPermisos} módulos asignados</span>
         )}
       </div>
     );
@@ -185,6 +174,20 @@ export const UsuariosList = () => {
           Nuevo Usuario
         </button>
       </div>
+
+      {isError && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl flex items-center justify-between">
+          <div>
+            <p className="font-bold text-sm">Error al cargar usuarios</p>
+            <p className="text-xs text-red-300/80 mt-0.5">
+              {(queryError as any)?.response?.data?.message || (queryError as any)?.message || 'No se pudo conectar con el servidor.'}
+            </p>
+          </div>
+          <button onClick={() => refetch()} className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs rounded-lg font-medium transition-colors">
+            Reintentar
+          </button>
+        </div>
+      )}
 
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
@@ -205,7 +208,14 @@ export const UsuariosList = () => {
                 </tr>
               </thead>
               <motion.tbody variants={staggerContainer} initial="initial" animate="animate">
-                {data?.map((u: any) => (
+                {userList.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8 text-mining-400 text-sm">
+                      {isError ? 'No se pudieron recuperar los usuarios del servidor.' : 'No hay usuarios registrados.'}
+                    </td>
+                  </tr>
+                ) : (
+                  userList.map((u: any) => (
                   <motion.tr variants={tableRowVariant} key={u.id} className="group">
                     <td className="pl-6">
                       <div className="flex items-center gap-3">
@@ -240,7 +250,7 @@ export const UsuariosList = () => {
                       </div>
                     </td>
                   </motion.tr>
-                ))}
+                )))}
               </motion.tbody>
             </table>
           </div>
@@ -258,23 +268,6 @@ export const UsuariosList = () => {
           isLoading={deleteMutation.isPending}
           onConfirm={confirmDelete}
           onCancel={() => { setConfirmOpen(false); setDeleteTarget(null); }}
-        />,
-        document.body
-      )}
-
-      {createPortal(
-        <ConfirmDialog
-          isOpen={showWarningModal}
-          title="Elevación de Accesos Especiales"
-          message={warningMessage}
-          confirmLabel="Aceptar"
-          cancelLabel="Cerrar"
-          variant="warning"
-          onConfirm={() => {
-            setShowWarningModal(false);
-            saveMutation.mutate();
-          }}
-          onCancel={() => setShowWarningModal(false)}
         />,
         document.body
       )}
@@ -322,7 +315,16 @@ export const UsuariosList = () => {
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-mining-500 uppercase tracking-wider mb-2">Rol del Sistema *</label>
-                          <select className="input-field" required value={form.rol_id} onChange={e => setForm({...form, rol_id: e.target.value})}>
+                          <select
+                            className="input-field"
+                            required
+                            value={form.rol_id}
+                            onChange={e => {
+                              const newRoleId = e.target.value;
+                              const defaultPerms = getDefaultPermIdsForRole(newRoleId);
+                              setForm({ ...form, rol_id: newRoleId, permisos: defaultPerms });
+                            }}
+                          >
                             <option value="">Seleccione un rol</option>
                             {roles?.map((r: any) => <option key={r.id} value={r.id}>{r.nombre}</option>)}
                           </select>
@@ -347,7 +349,6 @@ export const UsuariosList = () => {
                         {(() => {
                           const selectedRole = roles?.find((r: any) => String(r.id) === String(form.rol_id));
                           const roleName = selectedRole?.nombre || '';
-                          const roleDefaults = ROLE_DEFAULT_MODULES[roleName] || [];
                           const isAdmin = roleName === 'Administrador General';
 
                           const moduleLabels: Record<string, string> = {
@@ -375,45 +376,35 @@ export const UsuariosList = () => {
 
                           return (
                             <div className="space-y-1.5">
-                              {/* Role defaults info */}
-                              <p className="text-[10px] text-mining-500 mb-2">
-                                Los módulos marcados con 🔒 son los accesos por defecto del rol <span className="text-white font-semibold">{roleName}</span>.
+                              <p className="text-[11px] text-mining-400 mb-2">
+                                Marque o desmarque libremente los módulos a los que tendrá acceso este usuario:
                               </p>
 
                               <div className="space-y-2 bg-white/[0.02] p-3 rounded-xl border border-white/5 max-h-[320px] overflow-y-auto">
                                 {permisos?.filter((p: any) => p.nombre !== 'solo_lectura').map((p: any) => {
-                                  const isDefault = roleDefaults.includes(p.nombre);
-                                  const isChecked = isDefault || form.permisos.includes(p.id);
+                                  const isChecked = form.permisos.includes(p.id);
 
                                   return (
                                     <label key={p.id} className={`flex items-center gap-3 text-sm cursor-pointer select-none p-2.5 rounded-lg transition-colors ${
-                                      isDefault ? 'bg-copper-500/5 border border-copper-500/10' : 'hover:bg-white/[0.03] border border-transparent'
+                                      isChecked ? 'bg-copper-500/10 border border-copper-500/20' : 'hover:bg-white/[0.03] border border-transparent'
                                     }`}>
                                       <input
                                         type="checkbox"
                                         checked={isChecked}
-                                        disabled={isDefault}
                                         onChange={e => {
-                                          if (isDefault) return;
                                           if (e.target.checked) {
                                             setForm({ ...form, permisos: [...form.permisos, p.id] });
                                           } else {
                                             setForm({ ...form, permisos: form.permisos.filter(id => id !== p.id) });
                                           }
                                         }}
-                                        className={`rounded h-4 w-4 shrink-0 ${
-                                          isDefault 
-                                            ? 'border-copper-500/30 bg-copper-500/20 text-copper-500 cursor-not-allowed' 
-                                            : 'border-white/10 bg-white/5 text-copper-500 focus:ring-copper-500/50'
-                                        }`}
+                                        className="rounded h-4 w-4 shrink-0 border-white/10 bg-white/5 text-copper-500 focus:ring-copper-500/50 cursor-pointer"
                                       />
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                          <p className={`font-semibold text-sm ${isDefault ? 'text-copper-300' : 'text-white'}`}>
+                                          <p className={`font-semibold text-sm ${isChecked ? 'text-copper-300' : 'text-white'}`}>
                                             {moduleLabels[p.nombre] || p.nombre}
                                           </p>
-                                          {isDefault && <span className="text-[10px]" title="Acceso por defecto del rol">🔒</span>}
-                                          {!isDefault && isChecked && <span className="text-[9px] bg-copper-500/20 text-copper-400 px-1.5 py-0.5 rounded-full font-bold">EXTRA</span>}
                                         </div>
                                         <p className="text-xs text-mining-500 leading-normal mt-0.5">{p.descripcion}</p>
                                       </div>
@@ -421,34 +412,29 @@ export const UsuariosList = () => {
                                   );
                                 })}
 
-                                 {/* Solo Lectura separator */}
+                                 {/* Solo Lectura option */}
                                  {permisos?.filter((p: any) => p.nombre === 'solo_lectura').map((p: any) => {
-                                   const isConsulta = roleName === 'Consulta';
-                                   const isSoloLecturaChecked = isConsulta || form.permisos.includes(p.id);
+                                   const isSoloLecturaChecked = form.permisos.includes(p.id);
 
                                    return (
                                      <div key={p.id} className="mt-2 pt-2 border-t border-white/5">
-                                       <label className={`flex items-center gap-3 text-sm p-2.5 rounded-lg border border-transparent transition-colors ${
-                                         isConsulta ? 'bg-red-500/5 border-red-500/10 cursor-not-allowed' : 'cursor-pointer hover:bg-red-500/5'
+                                       <label className={`flex items-center gap-3 text-sm cursor-pointer select-none p-2.5 rounded-lg border border-transparent transition-colors ${
+                                         isSoloLecturaChecked ? 'bg-red-500/10 border-red-500/20' : 'hover:bg-red-500/5'
                                        }`}>
                                          <input
                                            type="checkbox"
                                            checked={isSoloLecturaChecked}
-                                           disabled={isConsulta}
                                            onChange={e => {
-                                             if (isConsulta) return;
                                              if (e.target.checked) {
                                                setForm({ ...form, permisos: [...form.permisos, p.id] });
                                              } else {
                                                setForm({ ...form, permisos: form.permisos.filter(id => id !== p.id) });
                                              }
                                            }}
-                                           className={`rounded h-4 w-4 shrink-0 border-red-500/30 text-red-500 focus:ring-red-500/50 ${
-                                             isConsulta ? 'bg-red-500/20 cursor-not-allowed' : 'bg-red-500/10'
-                                           }`}
+                                           className="rounded h-4 w-4 shrink-0 border-red-500/30 bg-red-500/10 text-red-500 focus:ring-red-500/50 cursor-pointer"
                                          />
                                          <div>
-                                           <p className="font-semibold text-sm text-red-400">Solo Lectura</p>
+                                           <p className="font-semibold text-sm text-red-400">Modo Solo Lectura</p>
                                            <p className="text-xs text-mining-500 leading-normal mt-0.5">{p.descripcion}</p>
                                          </div>
                                        </label>

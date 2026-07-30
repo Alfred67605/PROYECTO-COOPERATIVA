@@ -28,13 +28,15 @@ class CheckRole
 
         $user->load(['rol', 'permisos']);
 
+        $roleName = $user->rol?->nombre;
+
         // Admin always passes
-        if ($user->rol->nombre === 'Administrador General') {
+        if ($user->isAdmin()) {
             return $next($request);
         }
 
         // Check if the user's role is directly in the allowed list
-        if (in_array($user->rol->nombre, $allowed)) {
+        if ($roleName && in_array($roleName, $allowed)) {
             return $next($request);
         }
 

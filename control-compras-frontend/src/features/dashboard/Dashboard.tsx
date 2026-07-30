@@ -21,7 +21,7 @@ export const Dashboard = () => {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [viewMode, setViewMode] = useState<'mensual' | 'diario'>('mensual');
 
-  const { data: stats, isLoading, isFetching, refetch } = useQuery({
+  const { data: stats, isLoading, isFetching, isError, error, refetch } = useQuery({
     queryKey: ['dashboard-stats', selectedYear],
     queryFn: async () => {
       const { data } = await api.get(`/reportes/dashboard?year=${selectedYear}`);
@@ -71,10 +71,23 @@ export const Dashboard = () => {
           >
             <option value={currentYear}>{currentYear}</option>
             <option value={currentYear - 1}>{currentYear - 1}</option>
-            <option value={currentYear - 2}>{currentYear - 2}</option>
           </select>
         </div>
       </div>
+
+      {isError && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl flex items-center justify-between">
+          <div>
+            <p className="font-bold text-sm">Error al cargar datos del Dashboard</p>
+            <p className="text-xs text-red-300/80 mt-0.5">
+              {(error as any)?.response?.data?.message || (error as any)?.message || 'No se pudo obtener las estadísticas del servidor.'}
+            </p>
+          </div>
+          <button onClick={() => refetch()} className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs rounded-lg font-medium transition-colors">
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {/* KPI Cards */}
       {isLoading ? (

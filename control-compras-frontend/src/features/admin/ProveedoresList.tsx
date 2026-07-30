@@ -111,17 +111,19 @@ export const ProveedoresList = () => {
     if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
   };
 
+  const provList = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+
   return (
     <div className="space-y-6">
       <div className="section-header">
         <div>
-          <h1 className="section-title">Gestión de Proveedores</h1>
-          <p className="section-subtitle">Gestión de empresas asociadas a Minera Cop</p>
+          <h1 className="section-title">Proveedores de Insumos</h1>
+          <p className="section-subtitle">Directorio comercial y logística de compras</p>
         </div>
         {canWrite('proveedores') && (
           <button className="btn-primary" onClick={openCreate}>
             <Plus size={18} />
-            Registrar Proveedor
+            Nuevo Proveedor
           </button>
         )}
       </div>
@@ -129,7 +131,7 @@ export const ProveedoresList = () => {
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
           <div className="p-8 animate-pulse space-y-4">
-            {Array.from({length: 5}).map((_, i) => (
+            {Array.from({length: 4}).map((_, i) => (
               <div key={i} className="h-12 bg-mining-50 rounded-lg"></div>
             ))}
           </div>
@@ -150,12 +152,12 @@ export const ProveedoresList = () => {
                 initial="initial"
                 animate="animate"
               >
-                {data?.map((p: any) => (
+                {provList.map((p: any) => (
                   <motion.tr variants={tableRowVariant} key={p.id} className="group">
                     <td className="pl-6">
                       <div className="flex items-center gap-3">
                         {p.logo ? (
-                          <img src={`${BASE_URL}/storage/${p.logo}`} alt={p.nombre} className="w-10 h-10 rounded-xl object-cover bg-white/5" />
+                          <img src={`${BASE_URL}/storage/${p.logo}`} alt={p.nombre} className="w-10 h-10 rounded-xl object-cover border border-white/10 shadow-sm" />
                         ) : (
                           <div className="w-10 h-10 rounded-xl bg-white/5 text-mining-300 flex items-center justify-center font-bold text-sm">
                             {p.nombre.substring(0, 2).toUpperCase()}
@@ -208,7 +210,7 @@ export const ProveedoresList = () => {
                     </td>
                   </motion.tr>
                 ))}
-                {(!data || data.length === 0) && (
+                {provList.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-16 text-center">
                       <Building2 size={48} className="text-mining-200 mx-auto mb-4" />

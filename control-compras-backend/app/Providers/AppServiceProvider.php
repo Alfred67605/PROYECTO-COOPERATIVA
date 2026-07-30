@@ -40,8 +40,11 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
             'maquinaria' => \App\Models\Maquinaria::class,
             'vehiculo' => \App\Models\Vehiculo::class,
+            'grua' => \App\Models\AlquilerGrua::class,
+            'alquiler_grua' => \App\Models\AlquilerGrua::class,
             'App\Models\Maquinaria' => \App\Models\Maquinaria::class,
             'App\Models\Vehiculo' => \App\Models\Vehiculo::class,
+            'App\Models\AlquilerGrua' => \App\Models\AlquilerGrua::class,
         ]);
 
         // Configure Rate Limiters

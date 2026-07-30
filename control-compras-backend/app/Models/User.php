@@ -58,12 +58,18 @@ class User extends Authenticatable
         return $this->belongsToMany(Permiso::class);
     }
 
+    public function isAdmin(): bool
+    {
+        $roleName = strtolower($this->rol?->nombre ?? '');
+        return str_contains($roleName, 'admin') || $this->rol_id == 1;
+    }
+
     public function hasPermission(string $permiso): bool
     {
         if (!$this->estado) {
             return false;
         }
-        if ($this->rol?->nombre === 'Administrador General') {
+        if ($this->isAdmin()) {
             return true;
         }
         return $this->permisos()->where('nombre', $permiso)->exists();
@@ -74,20 +80,24 @@ class User extends Authenticatable
         if (!$this->estado) {
             return false;
         }
-        if ($this->rol?->nombre === 'Administrador General') {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        if ($this->permisos()->where('nombre', $module)->exists()) {
             return true;
         }
 
         $roleDefaults = [
-            'Gerencia' =>            ['materiales', 'compras', 'servicios', 'reportes', 'auditoria'],
-            'Compras' =>             ['proveedores', 'materiales', 'compras'],
-            'Contabilidad' =>        ['materiales', 'compras', 'reportes'],
-            'Supervisor Bocamina' => ['bocaminas', 'materiales', 'servicios'],
-            'Consulta' =>            ['reportes', 'auditoria'],
+            'Gerencia' =>            ['dashboard', 'materiales', 'compras', 'servicios', 'reportes', 'auditoria'],
+            'Compras' =>             ['dashboard', 'proveedores', 'materiales', 'compras'],
+            'Contabilidad' =>        ['dashboard', 'materiales', 'compras', 'reportes'],
+            'Supervisor Bocamina' => ['dashboard', 'bocaminas', 'materiales', 'servicios'],
+            'Consulta' =>            ['dashboard', 'reportes', 'auditoria'],
         ];
 
         $defaults = $roleDefaults[$this->rol?->nombre] ?? [];
-        return in_array($module, $defaults) || $this->hasPermission($module);
+        return in_array($module, $defaults);
     }
 
     public function canWrite(string $module): bool
@@ -95,7 +105,7 @@ class User extends Authenticatable
         if (!$this->estado) {
             return false;
         }
-        if ($this->rol?->nombre === 'Administrador General') {
+        if ($this->isAdmin()) {
             return true;
         }
         if ($this->rol?->nombre === 'Consulta') {

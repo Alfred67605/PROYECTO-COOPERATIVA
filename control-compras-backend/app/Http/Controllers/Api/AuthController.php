@@ -14,39 +14,46 @@ class AuthController extends Controller
 {
     public function login(LoginRequest $request)
     {
-        $email = strtolower(trim($request->email));
-        $password = $request->password;
+        try {
+            $email = strtolower(trim($request->email));
+            $password = $request->password;
 
-        $user = \App\Models\User::whereRaw('LOWER(email) = ?', [$email])->first();
+            $user = \App\Models\User::whereRaw('LOWER(email) = ?', [$email])->first();
 
-        if (!$user || !\Illuminate\Support\Facades\Hash::check($password, $user->password)) {
-            // Generic error message to avoid user enumeration (CWE-204)
+            if (!$user || !\Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+                // Generic error message to avoid user enumeration (CWE-204)
+                return response()->json([
+                    'message' => 'Credenciales incorrectas'
+                ], 401);
+            }
+
+            if (!$user->estado) {
+                return response()->json([
+                    'message' => 'Usuario inactivo. Contacte al administrador.'
+                ], 403);
+            }
+
+            \Illuminate\Support\Facades\Auth::login($user);
+
+            // Regenerar sesión solo si está disponible (SPA con cookie) 
+            if ($request->hasSession()) {
+                $request->session()->regenerate();
+            }
+
+            $user->load(['rol', 'permisos']);
+
+            Log::info('Login exitoso', ['user_id' => $user->id, 'ip' => $request->ip()]);
+
             return response()->json([
-                'message' => 'Credenciales incorrectas'
-            ], 401);
-        }
-
-        if (!$user->estado) {
+                'message' => 'Login exitoso',
+                'user'    => $user
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Login error', ['error' => $e->getMessage()]);
             return response()->json([
-                'message' => 'Usuario inactivo. Contacte al administrador.'
-            ], 403);
+                'message' => 'Error al iniciar sesión: ' . $e->getMessage()
+            ], 500);
         }
-
-        \Illuminate\Support\Facades\Auth::login($user);
-
-        // Regenerar sesión solo si está disponible (SPA con cookie) 
-        if ($request->hasSession()) {
-            $request->session()->regenerate();
-        }
-
-        $user->load(['rol', 'permisos']);
-
-        Log::info('Login exitoso', ['user_id' => $user->id, 'ip' => $request->ip()]);
-
-        return response()->json([
-            'message' => 'Login exitoso',
-            'user'    => $user
-        ]);
     }
 
     public function logout(Request $request)

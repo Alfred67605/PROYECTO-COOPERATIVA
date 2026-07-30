@@ -8,6 +8,8 @@ define('LARAVEL_START', microtime(true));
 // Auto-detect Laravel root folder for cPanel hosting
 if (file_exists(__DIR__ . '/control-compras-backend/vendor/autoload.php')) {
     $backendDir = __DIR__ . '/control-compras-backend';
+} elseif (file_exists(__DIR__ . '/../backend/vendor/autoload.php')) {
+    $backendDir = __DIR__ . '/../backend';
 } elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     $backendDir = __DIR__ . '/..';
 } elseif (file_exists(__DIR__ . '/vendor/autoload.php')) {
@@ -27,4 +29,3 @@ require $backendDir . '/vendor/autoload.php';
 // Bootstrap Laravel and handle the request...
 (require $backendDir . '/bootstrap/app.php')
     ->handleRequest(Request::capture());
-

@@ -68,20 +68,28 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // In production, never expose internal error details via API
+        // In production / API, expose detailed error messages when APP_DEBUG is true to help diagnose issues
         $exceptions->render(function (\Throwable $e, Request $request) {
-            if ($request->is('api/*') && app()->environment('production')) {
+            if ($request->is('api/*') || $request->wantsJson()) {
                 $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
 
                 if ($status >= 500) {
+                    $msg = config('app.debug')
+                        ? $e->getMessage() . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')'
+                        : 'Error interno del servidor.';
                     return response()->json([
-                        'message' => 'Error interno del servidor.',
+                        'message' => $msg,
+                        'detail' => config('app.debug') ? $e->getMessage() : null,
                     ], $status);
                 }
             }
         });
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        if (!app()->runningInConsole()) {
+            return;
+        }
+
         try {
             $setting = \App\Models\EmpresaSetting::first();
             $frecuencia = $setting->backup_frecuencia ?? 'semanal';
