@@ -36,14 +36,29 @@ class VaciarDatosOperativos extends Command
 
         $this->info('Iniciando vaciado completo de datos preservando el usuario Administrador...');
 
-        // 1. Obtener usuario admin principal
+        // 1. Obtener o crear usuario admin principal y asegurar su contraseña
         $adminRol = Rol::where('nombre', 'Administrador General')->first();
-        $adminUser = User::where('email', 'admin@cooperativa.com')->first();
-        if (!$adminUser && $adminRol) {
-            $adminUser = User::where('rol_id', $adminRol->id)->first();
+        if (!$adminRol) {
+            $adminRol = Rol::create(['nombre' => 'Administrador General', 'descripcion' => 'Administrador del sistema']);
         }
 
-        $adminId = $adminUser ? $adminUser->id : 1;
+        $adminUser = User::where('email', 'admin@cooperativa.com')->first();
+        if (!$adminUser) {
+            $adminUser = User::create([
+                'nombre' => 'Admin Cooperativa',
+                'email' => 'admin@cooperativa.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('Admin2026!'),
+                'rol_id' => $adminRol->id,
+                'estado' => true,
+            ]);
+        } else {
+            $adminUser->password = \Illuminate\Support\Facades\Hash::make('Admin2026!');
+            $adminUser->estado = true;
+            $adminUser->rol_id = $adminRol->id;
+            $adminUser->save();
+        }
+
+        $adminId = $adminUser->id;
 
         // 2. Tablas a vaciar por completo en orden inverso de dependencias
         $tablesToTruncate = [
