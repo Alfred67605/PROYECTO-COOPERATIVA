@@ -35,6 +35,18 @@ class AuthController extends Controller
 
             \Illuminate\Support\Facades\Auth::login($user);
 
+            // Forzar sesión única: cerrar sesión en otros dispositivos/navegadores
+            try {
+                \Illuminate\Support\Facades\Auth::logoutOtherDevices($password);
+            } catch (\Throwable $e) {
+                Log::warning('No se pudieron cerrar otras sesiones: ' . $e->getMessage());
+            }
+
+            // Revocar tokens antiguos si se utilizan Sanctum tokens
+            if (method_exists($user, 'tokens')) {
+                $user->tokens()->delete();
+            }
+
             // Regenerar sesión solo si está disponible (SPA con cookie) 
             if ($request->hasSession()) {
                 $request->session()->regenerate();
