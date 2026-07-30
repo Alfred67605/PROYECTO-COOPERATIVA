@@ -29,7 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ], append: [
-            \Illuminate\Session\Middleware\AuthenticateSession::class,
             \App\Http\Middleware\SanitizeInput::class,
         ]);
     })

@@ -37,7 +37,7 @@ class AuthController extends Controller
 
             // Forzar sesión única: cerrar sesión en otros dispositivos/navegadores
             try {
-                \Illuminate\Support\Facades\Auth::logoutOtherDevices($password);
+                \Illuminate\Support\Facades\Auth::guard('web')->logoutOtherDevices($password);
             } catch (\Throwable $e) {
                 Log::warning('No se pudieron cerrar otras sesiones: ' . $e->getMessage());
             }
