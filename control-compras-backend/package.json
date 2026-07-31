@@ -6,9 +6,6 @@
         "build": "vite build",
         "dev": "vite"
     },
-    "engines": {
-        "node": ">=22"
-    },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
         "concurrently": "^9.0.1",
