@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const getBaseUrl = (): string => {
   const raw = import.meta.env.VITE_API_URL;
-  if (raw && !raw.includes('localhost') && !raw.includes('127.0.0.1')) {
+  if (raw && !raw.includes('localhost') && !raw.includes('127.0.0.1') && !raw.includes('inginformatica')) {
     const clean = raw.replace(/\/+$/, '');
     return clean.endsWith('/api') ? clean : `${clean}/api`;
   }

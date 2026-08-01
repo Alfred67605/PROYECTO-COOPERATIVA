@@ -19,7 +19,7 @@ return [
     */
 
     'stateful' => array_values(array_filter(array_unique(array_merge(
-        explode(',', env('SANCTUM_STATEFUL_DOMAINS', 'localhost,localhost:5173,localhost:8000,127.0.0.1,127.0.0.1:5173,127.0.0.1:8000,::1,koyositasrl.org,www.koyositasrl.org,alfredo.inginformatica.dev')),
+        explode(',', env('SANCTUM_STATEFUL_DOMAINS', 'localhost,localhost:5173,localhost:8000,127.0.0.1,127.0.0.1:5173,127.0.0.1:8000,::1,koyositasrl.org,www.koyositasrl.org')),
         [
             Sanctum::currentApplicationUrlWithPort(),
             isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null,

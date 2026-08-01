@@ -175,18 +175,18 @@ Esta sección contiene las instrucciones paso a paso que debe seguir el encargad
    APP_NAME="Empresa Minera"
    APP_ENV=production
    APP_DEBUG=false
-   APP_URL=https://alfredo.inginformatica.app
-   FRONTEND_URL=https://alfredo.inginformatica.app
+   APP_URL=https://koyositasrl.org
+   FRONTEND_URL=https://koyositasrl.org
 
    # Clave de encriptación
    APP_KEY=base64:D3zgoRqZVx5rs/pkccmnrdSFgpgx9+nugWqGoM4F8Eo=
 
    # Dominios autorizados para autenticación por cookies Sanctum
-   SANCTUM_STATEFUL_DOMAINS=alfredo.inginformatica.app
+   SANCTUM_STATEFUL_DOMAINS=koyositasrl.org,www.koyositasrl.org
 
    # Configuración de Sesiones e HTTPS
    SESSION_DRIVER=database
-   SESSION_DOMAIN=alfredo.inginformatica.app
+   SESSION_DOMAIN=koyositasrl.org
    SESSION_SECURE_COOKIE=true
    SESSION_SAME_SITE=lax
    APP_TIMEZONE=America/La_Paz

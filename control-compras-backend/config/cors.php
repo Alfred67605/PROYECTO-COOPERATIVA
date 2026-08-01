@@ -14,14 +14,12 @@ return [
             'http://127.0.0.1:8000',
             'https://koyositasrl.org',
             'https://www.koyositasrl.org',
-            'https://alfredo.inginformatica.dev',
         ],
         explode(',', env('FRONTEND_URL', ''))
     )))),
 
     'allowed_origins_patterns' => [
         '#^https?://.*\.koyositasrl\.org$#i',
-        '#^https?://.*\.inginformatica\.dev$#i',
         '#^https?://koyositasrl\.org$#i',
     ],
 
