@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "echo 'Build skipped for backend'",
         "dev": "vite"
     },
     "devDependencies": {
