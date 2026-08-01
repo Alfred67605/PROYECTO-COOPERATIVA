@@ -32,7 +32,8 @@ const api = axios.create({
 
 export const getBackendRootUrl = (): string => {
   const currentBase = api.defaults.baseURL || getBaseUrl();
-  return currentBase.replace(/\/api\/?$/, '');
+  const root = currentBase.replace(/\/api\/?$/, '');
+  return root || (typeof window !== 'undefined' ? window.location.origin : '');
 };
 
 // No need for request interceptor with Bearer token since we use HttpOnly session cookies
