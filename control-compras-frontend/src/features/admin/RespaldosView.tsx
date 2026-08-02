@@ -127,7 +127,10 @@ export const RespaldosView = () => {
         const formData = new FormData();
         formData.append('backup_file', restoreTarget.file);
         res = await api.post('/respaldos/restaurar-upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 600000, // 10 minutos para archivos grandes
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
         });
       } else if (restoreTarget.id) {
         res = await api.post(`/respaldos/${restoreTarget.id}/restaurar`);
