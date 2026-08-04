@@ -44,6 +44,11 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !error.config.url?.includes('/login') && window.location.pathname !== '/login') {
       window.location.href = '/login';
     }
+    if (error.response?.status === 403 && error.config?.method?.toLowerCase() === 'delete') {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('unauthorized-delete'));
+      }
+    }
     return Promise.reject(error);
   }
 );

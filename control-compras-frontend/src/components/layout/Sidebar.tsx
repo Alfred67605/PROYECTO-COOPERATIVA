@@ -53,6 +53,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isMobile }: SidebarProps) => {
         { name: 'Mantenimientos', path: '/servicios/mantenimientos' },
         { name: 'Inspecciones', path: '/servicios/inspecciones' },
         { name: 'Alquiler de Grúas', path: '/servicios/alquiler-gruas' },
+        { name: 'Carga de Combustible', path: '/servicios/combustible' },
       ]
     },
     { name: 'Reportes', path: '/reportes', icon: <Activity size={20} />, reqAdmin: false },

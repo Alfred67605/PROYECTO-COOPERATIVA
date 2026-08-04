@@ -50,6 +50,10 @@ class UsuarioController extends Controller
             }
         }
 
+        if (!$request->user()->isAdmin()) {
+            unset($validated['puede_eliminar']);
+        }
+
         $validated['password'] = Hash::make($validated['password']);
         $permisoIds = $validated['permisos'] ?? [];
         unset($validated['permisos']);
@@ -119,6 +123,10 @@ class UsuarioController extends Controller
             return response()->json([
                 'message' => 'No puede desactivar su propia cuenta.'
             ], 422);
+        }
+
+        if (!$request->user()->isAdmin()) {
+            unset($validated['puede_eliminar']);
         }
 
         $permisoIds = $validated['permisos'] ?? [];

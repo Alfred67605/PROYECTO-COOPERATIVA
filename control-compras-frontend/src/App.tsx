@@ -4,7 +4,7 @@ import { AuthProvider, useAuth, getDefaultRedirect } from './features/auth/AuthC
 import { Login } from './features/auth/Login';
 import { Dashboard } from './features/dashboard/Dashboard';
 import { InventarioList } from './features/inventario/InventarioList';
-import { ComprasHistorial } from './features/compras/ComprasHistorial';
+import { ComprasView } from './features/compras/ComprasView';
 import { NuevaCompra } from './features/compras/NuevaCompra';
 import { ProveedoresList } from './features/admin/ProveedoresList';
 import { UsuariosList } from './features/admin/UsuariosList';
@@ -60,7 +60,7 @@ const AnimatedRoutes = () => {
       <Route path="/inventario" element={<PrivateRoute module="materiales"><InventarioList /></PrivateRoute>} />
       
       {/* Rutas Compras */}
-      <Route path="/compras" element={<PrivateRoute module="compras"><ComprasHistorial /></PrivateRoute>} />
+      <Route path="/compras" element={<PrivateRoute module="compras"><ComprasView /></PrivateRoute>} />
       <Route path="/compras/nueva" element={<PrivateRoute module="compras"><NuevaCompra /></PrivateRoute>} />
 
       {/* Rutas Admin */}

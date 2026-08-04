@@ -86,7 +86,7 @@ const emptyForm: MaterialForm = {
 export const InventarioList = () => {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const { canWrite, canDelete: authCanDelete } = useAuth();
+  const { canWrite, canDelete: authCanDelete, showNoDeleteModal } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'materiales' | 'categorias'>('materiales');
   const [search, setSearch] = useState('');
@@ -295,7 +295,7 @@ export const InventarioList = () => {
 
   const handleDelete = (id: number, descripcion: string) => {
     if (!authCanDelete()) {
-      toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+      showNoDeleteModal();
       return;
     }
     setDeleteTarget({ id, descripcion });

@@ -19,7 +19,7 @@ class CheckDeletePermission
 
             if ($user && !$user->isAdmin() && !$user->puede_eliminar) {
                 return response()->json([
-                    'message' => 'No tiene permisos para realizar esta acción.'
+                    'message' => 'Usted no tiene permisos para eliminar registros del sistema. Solicite acceso a un Administrador General.'
                 ], 403);
             }
         }

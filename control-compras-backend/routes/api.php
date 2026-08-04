@@ -149,6 +149,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'audit'])->group(function () 
 
     // Compras — Admin + Compras + Contabilidad + Gerencia + permiso compras
     Route::middleware('role:Compras,Contabilidad,Gerencia,Administrador General,compras')->group(function () {
+        Route::get('/compras/analisis-categorias', [CompraController::class, 'analisisCategorias']);
         Route::apiResource('compras', CompraController::class);
     });
 
@@ -157,6 +158,8 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'audit'])->group(function () 
     Route::apiResource('vehiculos', \App\Http\Controllers\Api\VehiculosController::class);
     Route::apiResource('servicios', \App\Http\Controllers\Api\ServiciosController::class);
     Route::apiResource('inspecciones', \App\Http\Controllers\Api\InspeccionController::class);
+    Route::get('/cargas-combustible/resumen', [\App\Http\Controllers\Api\CargaCombustibleController::class, 'resumen']);
+    Route::apiResource('cargas-combustible', \App\Http\Controllers\Api\CargaCombustibleController::class);
     Route::get('/dashboard-servicios', [\App\Http\Controllers\Api\DashboardServiciosController::class, 'index']);
 
     // Reportes — Admin + Gerencia + Contabilidad + permiso reportes

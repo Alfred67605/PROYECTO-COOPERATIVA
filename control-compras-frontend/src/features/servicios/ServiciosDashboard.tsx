@@ -4,6 +4,7 @@ import { ServiciosList } from './ServiciosList';
 import { VehiculosList } from './VehiculosList';
 import { InspeccionesList } from './InspeccionesList';
 import { AlquilerGruasList } from './AlquilerGruasList';
+import { CombustibleList } from './CombustibleList';
 
 export const ServiciosDashboard = () => {
   return (
@@ -11,7 +12,7 @@ export const ServiciosDashboard = () => {
       <div className="section-header">
         <div>
           <h1 className="section-title">Servicios y Mantenimiento</h1>
-          <p className="section-subtitle">Gestión integral de equipos y reparaciones</p>
+          <p className="section-subtitle">Gestión integral de equipos, reparaciones y abastecimiento de combustible</p>
         </div>
       </div>
 
@@ -23,6 +24,7 @@ export const ServiciosDashboard = () => {
           <Route path="mantenimientos" element={<ServiciosList />} />
           <Route path="inspecciones" element={<InspeccionesList />} />
           <Route path="alquiler-gruas" element={<AlquilerGruasList />} />
+          <Route path="combustible" element={<CombustibleList />} />
           <Route path="*" element={<Navigate to="mantenimientos" replace />} />
         </Routes>
       </div>

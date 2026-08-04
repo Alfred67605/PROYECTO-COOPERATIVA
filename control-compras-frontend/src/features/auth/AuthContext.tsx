@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import api from '../../lib/axios';
+import { NoDeletePermissionModal } from '../../components/ui/NoDeletePermissionModal';
 
 interface User {
   id: number;
@@ -39,6 +40,7 @@ interface AuthContextType {
   canAccess: (module: string) => boolean;
   canWrite: (module: string) => boolean;
   canDelete: () => boolean;
+  showNoDeleteModal: () => void;
   empresaSettings: EmpresaSettings | null;
   refreshEmpresaSettings: () => Promise<void>;
 }
@@ -49,6 +51,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [empresaSettings, setEmpresaSettings] = useState<EmpresaSettings | null>(null);
+  const [noDeleteModalOpen, setNoDeleteModalOpen] = useState(false);
+
+  const showNoDeleteModal = useCallback(() => {
+    setNoDeleteModalOpen(true);
+  }, []);
+
+  const closeNoDeleteModal = useCallback(() => {
+    setNoDeleteModalOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleUnauthorizedDelete = () => {
+      setNoDeleteModalOpen(true);
+    };
+    window.addEventListener('unauthorized-delete', handleUnauthorizedDelete);
+    return () => {
+      window.removeEventListener('unauthorized-delete', handleUnauthorizedDelete);
+    };
+  }, []);
 
   const refreshEmpresaSettings = useCallback(async () => {
     try {
@@ -152,11 +173,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         canAccess,
         canWrite,
         canDelete,
+        showNoDeleteModal,
         empresaSettings,
         refreshEmpresaSettings
       }}
     >
       {children}
+      <NoDeletePermissionModal isOpen={noDeleteModalOpen} onClose={closeNoDeleteModal} />
     </AuthContext.Provider>
   );
 };

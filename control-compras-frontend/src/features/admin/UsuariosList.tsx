@@ -37,7 +37,8 @@ const ROLE_DEFAULT_MODULES: Record<string, string[]> = {
 export const UsuariosList = () => {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const { canDelete } = useAuth();
+  const { canDelete, showNoDeleteModal, user: currentUser } = useAuth();
+  const isAdminUser = currentUser?.rol?.nombre === 'Administrador General';
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<UserForm>(emptyForm);
@@ -155,7 +156,7 @@ export const UsuariosList = () => {
   const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm); setError(''); setConfirmDeletePermOpen(false); };
   const handleDelete = (id: number, nombre: string) => {
     if (!canDelete()) {
-      toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+      showNoDeleteModal();
       return;
     }
     setDeleteTarget({ id, nombre }); setConfirmOpen(true);
@@ -262,7 +263,7 @@ export const UsuariosList = () => {
                         <button onClick={() => openEdit(u)} className="btn-icon">
                           <Edit size={16} />
                         </button>
-                        <button onClick={() => handleDelete(u.id, u.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" disabled={u.id === 1 || !canDelete()} title={!canDelete() ? 'No tiene permisos para eliminar' : 'Eliminar usuario'}>
+                        <button onClick={() => handleDelete(u.id, u.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" disabled={u.id === 1} title="Eliminar usuario">
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -380,22 +381,32 @@ export const UsuariosList = () => {
                           </div>
                         )}
 
-                        {/* Permiso para Eliminar Registros - Siempre visible */}
-                        <div className="flex items-center justify-between p-3.5 bg-amber-500/10 rounded-xl border border-amber-500/30 mt-4 shadow-sm">
+                        {/* Permiso para Eliminar Registros - Habilitado solo para Admin */}
+                        <div className={`flex items-center justify-between p-3.5 rounded-xl border mt-4 shadow-sm transition-all ${
+                          isAdminUser ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/[0.02] border-white/10 opacity-75'
+                        }`}>
                           <div className="flex items-center gap-2.5 pr-2">
-                            <ShieldAlert size={18} className="text-amber-400 shrink-0" />
+                            <ShieldAlert size={18} className={isAdminUser ? 'text-amber-400 shrink-0' : 'text-mining-500 shrink-0'} />
                             <div>
-                              <label htmlFor="puede_eliminar_left" className="text-xs font-bold text-amber-300 cursor-pointer select-none block">
+                              <label htmlFor="puede_eliminar_left" className={`text-xs font-bold select-none block ${isAdminUser ? 'text-amber-300 cursor-pointer' : 'text-mining-400 cursor-not-allowed'}`}>
                                 Permiso para Eliminar Registros
                               </label>
                               <p className="text-[10px] text-mining-400 leading-tight mt-0.5">
-                                Permite eliminar cualquier registro en los módulos
+                                {isAdminUser
+                                  ? 'Permite a este usuario eliminar registros en todos los módulos'
+                                  : 'Solo un Administrador General puede modificar este permiso'}
                               </p>
                             </div>
                           </div>
                           <div className="relative inline-flex cursor-pointer items-center shrink-0">
-                            <input type="checkbox" id="puede_eliminar_left" className="peer sr-only" checked={form.puede_eliminar}
+                            <input
+                              type="checkbox"
+                              id="puede_eliminar_left"
+                              className="peer sr-only"
+                              disabled={!isAdminUser}
+                              checked={form.puede_eliminar}
                               onChange={e => {
+                                if (!isAdminUser) return;
                                 if (e.target.checked) {
                                   setConfirmDeletePermOpen(true);
                                 } else {
@@ -403,7 +414,7 @@ export const UsuariosList = () => {
                                 }
                               }}
                             />
-                            <div className="h-6 w-11 rounded-full bg-white/10 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white/10 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+                            <div className="h-6 w-11 rounded-full bg-white/10 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white/10 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                           </div>
                         </div>
                       </div>
