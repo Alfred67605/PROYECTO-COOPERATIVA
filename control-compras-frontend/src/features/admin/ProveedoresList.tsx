@@ -22,7 +22,7 @@ interface ProvForm {
 const emptyForm: ProvForm = { nombre: '', nit: '', telefono: '', direccion: '', email: '' };
 
 export const ProveedoresList = () => {
-  const { canWrite, canDelete } = useAuth();
+  const { canWrite, canDelete, showNoDeleteModal } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
   const BASE_URL = getBackendRootUrl();
@@ -104,7 +104,7 @@ export const ProveedoresList = () => {
   
   const handleDelete = (id: number, nombre: string) => {
     if (!canDelete()) {
-      toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+      showNoDeleteModal();
       return;
     }
     setDeleteTarget({ id, nombre });
@@ -205,7 +205,7 @@ export const ProveedoresList = () => {
                             <button onClick={() => openEdit(p)} className="btn-icon">
                               <Edit size={16} />
                             </button>
-                            <button onClick={() => handleDelete(p.id, p.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" disabled={!canDelete()} title={!canDelete() ? 'No tiene permisos para eliminar' : 'Eliminar proveedor'}>
+                            <button onClick={() => handleDelete(p.id, p.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" title="Eliminar proveedor">
                               <Trash2 size={16} />
                             </button>
                           </>

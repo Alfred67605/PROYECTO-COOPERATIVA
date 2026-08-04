@@ -15,7 +15,7 @@ import { useAuth } from '../auth/AuthContext';
 export const RespaldosView = () => {
   const toast = useToast();
   const queryClient = useQueryClient();
-  const { canDelete } = useAuth();
+  const { canDelete, showNoDeleteModal } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [page, setPage] = useState(1);
@@ -405,14 +405,13 @@ export const RespaldosView = () => {
                           <button
                             onClick={() => {
                               if (!canDelete()) {
-                                toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+                                showNoDeleteModal();
                                 return;
                               }
                               setDeleteId(item.id);
                             }}
                             className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-colors"
-                            title={!canDelete() ? 'No tiene permisos para eliminar' : 'Eliminar'}
-                            disabled={!canDelete()}
+                            title="Eliminar"
                           >
                             <Trash2 size={14} />
                           </button>

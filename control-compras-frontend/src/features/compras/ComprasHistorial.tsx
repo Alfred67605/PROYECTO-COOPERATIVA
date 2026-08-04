@@ -11,7 +11,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 
 export const ComprasHistorial = () => {
-  const { canWrite, canDelete: authCanDelete } = useAuth();
+  const { canWrite, canDelete: authCanDelete, showNoDeleteModal } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -129,7 +129,7 @@ export const ComprasHistorial = () => {
                   <th>Bocamina Destino</th>
                   <th>Total</th>
                   <th>Estado</th>
-                  {canDelete && <th className="pr-6 text-right w-20">Acciones</th>}
+                  {canWrite('compras') && <th className="pr-6 text-right w-20">Acciones</th>}
                 </tr>
               </thead>
               <motion.tbody
@@ -168,11 +168,15 @@ export const ComprasHistorial = () => {
                       <td>{compra.bocamina?.nombre || <span className="text-mining-500 italic">Bodega Central</span>}</td>
                       <td className="font-bold text-copper-400 drop-shadow-[0_0_8px_rgba(234,119,64,0.3)]">Bs. {parseFloat(compra.total).toLocaleString()}</td>
                       <td>{getStatusBadge(compra.estado || 'completada')}</td>
-                      {canDelete && (
+                      {canWrite('compras') && (
                         <td className="pr-6 text-right">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (!authCanDelete()) {
+                                showNoDeleteModal();
+                                return;
+                              }
                               setDeleteTargetId(compra.id);
                               setConfirmOpen(true);
                             }}

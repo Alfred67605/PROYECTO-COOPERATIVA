@@ -302,7 +302,7 @@ export const CombustibleList = () => {
             placeholder="Buscar por placa, modelo, surtidor..."
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
-            className="input-field pl-10 py-2 text-xs w-full"
+            className="input-field pl-10 py-2 text-sm w-full"
           />
         </div>
 
@@ -310,7 +310,7 @@ export const CombustibleList = () => {
           <select
             value={filterCombustible}
             onChange={e => { setFilterCombustible(e.target.value); setPage(1); }}
-            className="input-field py-2 text-xs w-full sm:w-auto"
+            className="input-field py-2 text-sm w-full sm:w-auto"
           >
             <option value="">Todos los combustibles</option>
             <option value="diesel">Diésel</option>
@@ -320,7 +320,7 @@ export const CombustibleList = () => {
           <select
             value={filterEquipo}
             onChange={e => { setFilterEquipo(e.target.value); setPage(1); }}
-            className="input-field py-2 text-xs w-full sm:w-auto"
+            className="input-field py-2 text-sm w-full sm:w-auto"
           >
             <option value="">Todos los equipos</option>
             <option value="vehiculo">Vehículos</option>
@@ -369,7 +369,7 @@ export const CombustibleList = () => {
                     return (
                       <motion.tr variants={tableRowVariant} key={c.id} className="group hover:bg-white/[0.02]">
                         <td className="pl-6">
-                          <div className="text-xs text-white font-medium">
+                          <div className="text-sm text-white font-medium">
                             {new Date(c.fecha_hora).toLocaleDateString()}
                           </div>
                           <div className="text-[10px] text-mining-500 font-mono">
@@ -418,14 +418,14 @@ export const CombustibleList = () => {
                           )}
                         </td>
 
-                        <td className="text-xs text-mining-300">
+                        <td className="text-sm text-mining-300">
                           <div className="flex items-center gap-1">
                             <MapPin size={12} className="text-copper-400 shrink-0" />
                             <span>{c.surtidor_grifo}</span>
                           </div>
                         </td>
 
-                        <td className="text-xs text-white font-medium">
+                        <td className="text-sm text-white font-medium">
                           <div className="flex items-center gap-1.5">
                             <UserCheck size={12} className="text-teal-400 shrink-0" />
                             <span>{c.responsable}</span>
@@ -596,7 +596,7 @@ export const CombustibleList = () => {
                           </label>
                           <select
                             required
-                            className="input-field text-xs"
+                            className="input-field text-sm"
                             value={form.vehiculo_id}
                             onChange={e => setForm({ ...form, vehiculo_id: e.target.value })}
                           >
@@ -615,7 +615,7 @@ export const CombustibleList = () => {
                           </label>
                           <select
                             required
-                            className="input-field text-xs"
+                            className="input-field text-sm"
                             value={form.maquinaria_id}
                             onChange={e => setForm({ ...form, maquinaria_id: e.target.value })}
                           >
@@ -642,7 +642,7 @@ export const CombustibleList = () => {
                           required
                           min="0.01"
                           placeholder="Ej. 45.5"
-                          className="input-field text-xs"
+                          className="input-field text-sm"
                           value={form.litros}
                           onChange={e => setForm({ ...form, litros: e.target.value })}
                         />
@@ -658,7 +658,7 @@ export const CombustibleList = () => {
                           required
                           min="0"
                           placeholder="Ej. 170.00"
-                          className="input-field text-xs"
+                          className="input-field text-sm"
                           value={form.monto}
                           onChange={e => setForm({ ...form, monto: e.target.value })}
                         />
@@ -675,7 +675,7 @@ export const CombustibleList = () => {
                           type="text"
                           required
                           placeholder="Ej. Surtidor YPFB San Lucas"
-                          className="input-field text-xs"
+                          className="input-field text-sm"
                           value={form.surtidor_grifo}
                           onChange={e => setForm({ ...form, surtidor_grifo: e.target.value })}
                         />
@@ -689,7 +689,7 @@ export const CombustibleList = () => {
                           type="text"
                           required
                           placeholder="Nombre del operador o chofer"
-                          className="input-field text-xs"
+                          className="input-field text-sm"
                           value={form.responsable}
                           onChange={e => setForm({ ...form, responsable: e.target.value })}
                         />
@@ -704,7 +704,7 @@ export const CombustibleList = () => {
                       <input
                         type="datetime-local"
                         required
-                        className="input-field text-xs"
+                        className="input-field text-sm"
                         value={form.fecha_hora}
                         onChange={e => setForm({ ...form, fecha_hora: e.target.value })}
                       />
@@ -718,7 +718,7 @@ export const CombustibleList = () => {
                       <textarea
                         rows={2}
                         placeholder="Nro. de tiquete de surtidor, kilometraje o detalles de la recarga"
-                        className="input-field text-xs"
+                        className="input-field text-sm"
                         value={form.observacion}
                         onChange={e => setForm({ ...form, observacion: e.target.value })}
                       />

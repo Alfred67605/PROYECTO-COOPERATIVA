@@ -12,7 +12,7 @@ import { useAuth } from '../auth/AuthContext';
 const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
 
 export const VehiculosList = () => {
-  const { canWrite, canDelete } = useAuth();
+  const { canWrite, canDelete, showNoDeleteModal } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
   const [showModal, setShowModal] = useState(false);
@@ -85,7 +85,7 @@ export const VehiculosList = () => {
   const closeModal = () => setShowModal(false);
   const handleDelete = (id: number, placa: string) => {
     if (!canDelete()) {
-      toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+      showNoDeleteModal();
       return;
     }
     setDeleteTarget({ id, nombre: placa }); setConfirmOpen(true);
@@ -153,7 +153,7 @@ export const VehiculosList = () => {
                             <button onClick={() => openEdit(v)} className="btn-icon">
                               <Edit size={16} />
                             </button>
-                            <button onClick={() => handleDelete(v.id, v.placa)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" disabled={!canDelete()} title={!canDelete() ? 'No tiene permisos para eliminar' : 'Eliminar vehículo'}>
+                            <button onClick={() => handleDelete(v.id, v.placa)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" title="Eliminar vehículo">
                               <Trash2 size={16} />
                             </button>
                           </>

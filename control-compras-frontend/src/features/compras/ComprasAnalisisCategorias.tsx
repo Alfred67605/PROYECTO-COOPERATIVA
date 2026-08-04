@@ -137,7 +137,7 @@ export const ComprasAnalisisCategorias = () => {
             <label className="block text-[10px] font-bold text-mining-400 uppercase tracking-wider mb-1">Fecha Desde</label>
             <input
               type="date"
-              className="input-field py-1.5 text-xs"
+              className="input-field py-1.5 text-sm"
               value={fechaInicio}
               onChange={e => setFechaInicio(e.target.value)}
             />
@@ -147,7 +147,7 @@ export const ComprasAnalisisCategorias = () => {
             <label className="block text-[10px] font-bold text-mining-400 uppercase tracking-wider mb-1">Fecha Hasta</label>
             <input
               type="date"
-              className="input-field py-1.5 text-xs"
+              className="input-field py-1.5 text-sm"
               value={fechaFin}
               onChange={e => setFechaFin(e.target.value)}
             />
@@ -156,7 +156,7 @@ export const ComprasAnalisisCategorias = () => {
           <div>
             <label className="block text-[10px] font-bold text-mining-400 uppercase tracking-wider mb-1">Bocamina Destino</label>
             <select
-              className="input-field py-1.5 text-xs"
+              className="input-field py-1.5 text-sm"
               value={bocaminaId}
               onChange={e => setBocaminaId(e.target.value)}
             >
@@ -170,7 +170,7 @@ export const ComprasAnalisisCategorias = () => {
           <div>
             <label className="block text-[10px] font-bold text-mining-400 uppercase tracking-wider mb-1">Proveedor</label>
             <select
-              className="input-field py-1.5 text-xs"
+              className="input-field py-1.5 text-sm"
               value={proveedorId}
               onChange={e => setProveedorId(e.target.value)}
             >

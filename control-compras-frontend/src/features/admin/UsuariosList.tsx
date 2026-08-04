@@ -370,38 +370,37 @@ export const UsuariosList = () => {
                         </div>
                         
                         {editingId && (
-                          <div className="flex items-center gap-3 p-3 bg-white/[0.02] rounded-xl border border-white/5 mt-4">
-                            <div className="relative inline-flex cursor-pointer items-center">
-                              <input type="checkbox" id="estado" className="peer sr-only" checked={form.estado} onChange={e => setForm({...form, estado: e.target.checked})} />
+                          <label className="flex items-center gap-3 p-3 bg-white/[0.02] rounded-xl border border-white/5 mt-4 cursor-pointer select-none">
+                            <div className="relative inline-flex items-center">
+                              <input type="checkbox" className="peer sr-only" checked={form.estado} onChange={e => setForm({...form, estado: e.target.checked})} />
                               <div className="h-6 w-11 rounded-full bg-white/10 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white/10 after:bg-white after:transition-all after:content-[''] peer-checked:bg-copper-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
                             </div>
-                            <label htmlFor="estado" className="text-sm font-semibold text-white cursor-pointer select-none">
+                            <span className="text-sm font-semibold text-white">
                               Cuenta de usuario activa
-                            </label>
-                          </div>
+                            </span>
+                          </label>
                         )}
 
                         {/* Permiso para Eliminar Registros - Habilitado solo para Admin */}
-                        <div className={`flex items-center justify-between p-3.5 rounded-xl border mt-4 shadow-sm transition-all ${
-                          isAdminUser ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/[0.02] border-white/10 opacity-75'
+                        <label className={`flex items-center justify-between p-3.5 rounded-xl border mt-4 shadow-sm transition-all ${
+                          isAdminUser ? 'bg-amber-500/10 border-amber-500/30 cursor-pointer' : 'bg-white/[0.02] border-white/10 opacity-75 cursor-not-allowed'
                         }`}>
                           <div className="flex items-center gap-2.5 pr-2">
                             <ShieldAlert size={18} className={isAdminUser ? 'text-amber-400 shrink-0' : 'text-mining-500 shrink-0'} />
                             <div>
-                              <label htmlFor="puede_eliminar_left" className={`text-xs font-bold select-none block ${isAdminUser ? 'text-amber-300 cursor-pointer' : 'text-mining-400 cursor-not-allowed'}`}>
+                              <span className={`text-sm font-bold select-none block ${isAdminUser ? 'text-amber-300' : 'text-mining-400'}`}>
                                 Permiso para Eliminar Registros
-                              </label>
-                              <p className="text-[10px] text-mining-400 leading-tight mt-0.5">
+                              </span>
+                              <p className="text-[11px] text-mining-400 leading-tight mt-0.5">
                                 {isAdminUser
                                   ? 'Permite a este usuario eliminar registros en todos los módulos'
                                   : 'Solo un Administrador General puede modificar este permiso'}
                               </p>
                             </div>
                           </div>
-                          <div className="relative inline-flex cursor-pointer items-center shrink-0">
+                          <div className="relative inline-flex items-center shrink-0">
                             <input
                               type="checkbox"
-                              id="puede_eliminar_left"
                               className="peer sr-only"
                               disabled={!isAdminUser}
                               checked={form.puede_eliminar}
@@ -414,9 +413,9 @@ export const UsuariosList = () => {
                                 }
                               }}
                             />
-                            <div className="h-6 w-11 rounded-full bg-white/10 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white/10 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                            <div className="h-6 w-11 rounded-full bg-white/10 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white/10 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-disabled:opacity-50"></div>
                           </div>
-                        </div>
+                        </label>
                       </div>
 
                       {/* Right Column: Module Access */}

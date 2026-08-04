@@ -28,9 +28,8 @@ const getTodayLocalDate = (): string => {
 };
 
 export const ServiciosList = () => {
-  const { user, canWrite, canDelete: authCanDelete } = useAuth();
+  const { user, canWrite, canDelete: authCanDelete, showNoDeleteModal } = useAuth();
   const canEdit = canWrite('servicios');
-  const canDelete = canWrite('servicios') && authCanDelete();
   const queryClient = useQueryClient();
   const toast = useToast();
   const [showModal, setShowModal] = useState(false);
@@ -150,7 +149,7 @@ export const ServiciosList = () => {
   const closeModal = () => setShowModal(false);
   const handleDelete = (id: number, codigo: string) => {
     if (!authCanDelete()) {
-      toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+      showNoDeleteModal();
       return;
     }
     setDeleteTarget({ id, nombre: codigo }); setConfirmOpen(true);
@@ -228,11 +227,9 @@ export const ServiciosList = () => {
                           <button onClick={() => openEdit(s)} className="btn-icon">
                             <Edit size={16} />
                           </button>
-                          {canDelete && (
-                            <button onClick={() => handleDelete(s.id, s.codigo)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" disabled={!canDelete} title={!canDelete ? 'No tiene permisos para eliminar' : 'Eliminar servicio'}>
-                              <Trash2 size={16} />
-                            </button>
-                          )}
+                          <button onClick={() => handleDelete(s.id, s.codigo)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" title="Eliminar servicio">
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     )}
