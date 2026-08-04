@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { UserPlus, Edit, Trash2, X, Loader2, Mail, Shield, CircleDot } from 'lucide-react';
+import { UserPlus, Edit, Trash2, X, Loader2, Mail, Shield, CircleDot, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
+import { useAuth } from '../auth/AuthContext';
 import { staggerContainer, tableRowVariant } from '../../components/ui/PageTransition';
 
 const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
@@ -17,9 +18,10 @@ interface UserForm {
   rol_id: string;
   estado: boolean;
   permisos: number[];
+  puede_eliminar: boolean;
 }
 
-const emptyForm: UserForm = { nombre: '', email: '', password: '', rol_id: '', estado: true, permisos: [] };
+const emptyForm: UserForm = { nombre: '', email: '', password: '', rol_id: '', estado: true, permisos: [], puede_eliminar: false };
 
 // Default module access per role — these define general access (read or write)
 const ROLE_DEFAULT_MODULES: Record<string, string[]> = {
@@ -35,6 +37,7 @@ const ROLE_DEFAULT_MODULES: Record<string, string[]> = {
 export const UsuariosList = () => {
   const queryClient = useQueryClient();
   const toast = useToast();
+  const { canDelete } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<UserForm>(emptyForm);
@@ -42,6 +45,9 @@ export const UsuariosList = () => {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null);
+
+  const [confirmDeletePermOpen, setConfirmDeletePermOpen] = useState(false);
+  const [pendingDeletePerm, setPendingDeletePerm] = useState(false);
 
   const { data, isLoading, isError, error: queryError, refetch } = useQuery({
     queryKey: ['usuarios'],
@@ -136,12 +142,19 @@ export const UsuariosList = () => {
       password: '', 
       rol_id: String(u.rol_id), 
       estado: u.estado,
-      permisos: userPermIds
+      permisos: userPermIds,
+      puede_eliminar: !!u.puede_eliminar
     });
     setEditingId(u.id); setError(''); setShowModal(true);
   };
-  const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm); setError(''); };
-  const handleDelete = (id: number, nombre: string) => { setDeleteTarget({ id, nombre }); setConfirmOpen(true); };
+  const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm); setError(''); setConfirmDeletePermOpen(false); setPendingDeletePerm(false); };
+  const handleDelete = (id: number, nombre: string) => {
+    if (!canDelete()) {
+      toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+      return;
+    }
+    setDeleteTarget({ id, nombre }); setConfirmOpen(true);
+  };
   const confirmDelete = () => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id); };
 
   const getRoleBadge = (u: any) => {
@@ -244,7 +257,7 @@ export const UsuariosList = () => {
                         <button onClick={() => openEdit(u)} className="btn-icon">
                           <Edit size={16} />
                         </button>
-                        <button onClick={() => handleDelete(u.id, u.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" disabled={u.id === 1}>
+                        <button onClick={() => handleDelete(u.id, u.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" disabled={u.id === 1 || !canDelete()} title={!canDelete() ? 'No tiene permisos para eliminar' : 'Eliminar usuario'}>
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -268,6 +281,28 @@ export const UsuariosList = () => {
           isLoading={deleteMutation.isPending}
           onConfirm={confirmDelete}
           onCancel={() => { setConfirmOpen(false); setDeleteTarget(null); }}
+        />,
+        document.body
+      )}
+
+      {createPortal(
+        <ConfirmDialog
+          isOpen={confirmDeletePermOpen}
+          title="Otorgar Permiso de Eliminación"
+          message={`¿Está seguro de otorgar permiso de eliminación al usuario "${form.nombre}"? Este usuario podrá eliminar registros en todos los módulos del sistema.`}
+          confirmLabel="Sí, Otorgar Permiso"
+          cancelLabel="Cancelar"
+          variant="danger"
+          isLoading={false}
+          onConfirm={() => {
+            setForm({...form, puede_eliminar: true});
+            setConfirmDeletePermOpen(false);
+            setPendingDeletePerm(false);
+          }}
+          onCancel={() => {
+            setConfirmDeletePermOpen(false);
+            setPendingDeletePerm(false);
+          }}
         />,
         document.body
       )}
@@ -339,6 +374,30 @@ export const UsuariosList = () => {
                             <label htmlFor="estado" className="text-sm font-semibold text-white cursor-pointer select-none">
                               Cuenta de usuario activa
                             </label>
+                          </div>
+                        )}
+
+                        {editingId && (
+                          <div className="flex items-center gap-3 p-3 bg-amber-500/5 rounded-xl border border-amber-500/20 mt-4">
+                            <div className="relative inline-flex cursor-pointer items-center">
+                              <input type="checkbox" id="puede_eliminar" className="peer sr-only" checked={form.puede_eliminar}
+                                onChange={e => {
+                                  if (e.target.checked) {
+                                    setPendingDeletePerm(true);
+                                    setConfirmDeletePermOpen(true);
+                                  } else {
+                                    setForm({...form, puede_eliminar: false});
+                                  }
+                                }}
+                              />
+                              <div className="h-6 w-11 rounded-full bg-white/10 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white/10 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+                            </div>
+                            <div>
+                              <label htmlFor="puede_eliminar" className="text-sm font-semibold text-amber-300 cursor-pointer select-none flex items-center gap-1.5">
+                                <ShieldAlert size={14} /> Permitir eliminar registros
+                              </label>
+                              <p className="text-[10px] text-mining-400 mt-0.5">Si se activa, este usuario podrá eliminar registros en todos los módulos.</p>
+                            </div>
                           </div>
                         )}
                       </div>

@@ -12,7 +12,7 @@ import { useAuth } from '../auth/AuthContext';
 const isTest = typeof window !== 'undefined' && !!(window as any).Cypress;
 
 export const InspeccionesList = () => {
-  const { canWrite } = useAuth();
+  const { canWrite, canDelete } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
   const [showModal, setShowModal] = useState(false);
@@ -95,7 +95,13 @@ export const InspeccionesList = () => {
     setEditingId(i.id); setError(''); setShowModal(true);
   };
   const closeModal = () => setShowModal(false);
-  const handleDelete = (id: number) => { setDeleteTarget({ id, nombre: `Inspección #${id}` }); setConfirmOpen(true); };
+  const handleDelete = (id: number) => {
+    if (!canDelete()) {
+      toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+      return;
+    }
+    setDeleteTarget({ id, nombre: `Inspección #${id}` }); setConfirmOpen(true);
+  };
 
   const getEquipos = () => {
     if (form.equipo_tipo === 'App\\Models\\Maquinaria') return maquinaria || [];
@@ -168,7 +174,7 @@ export const InspeccionesList = () => {
                             <button onClick={() => openEdit(i)} className="btn-icon">
                               <Edit size={16} />
                             </button>
-                            <button onClick={() => handleDelete(i.id)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
+                            <button onClick={() => handleDelete(i.id)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" disabled={!canDelete()} title={!canDelete() ? 'No tiene permisos para eliminar' : 'Eliminar inspección'}>
                               <Trash2 size={16} />
                             </button>
                           </>

@@ -11,7 +11,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 
 export const ComprasHistorial = () => {
-  const { canWrite } = useAuth();
+  const { canWrite, canDelete: authCanDelete } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -21,7 +21,7 @@ export const ComprasHistorial = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
-  const canDelete = canWrite('compras');
+  const canDelete = canWrite('compras') && authCanDelete();
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {

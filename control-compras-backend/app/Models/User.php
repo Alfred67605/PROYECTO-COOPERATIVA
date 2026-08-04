@@ -19,6 +19,7 @@ class User extends Authenticatable
         'rol_id',
         'estado',
         'avatar',
+        'puede_eliminar',
     ];
 
     protected $appends = ['avatar_url'];
@@ -45,6 +46,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'estado' => 'boolean',
+            'puede_eliminar' => 'boolean',
         ];
     }
 
@@ -62,6 +64,15 @@ class User extends Authenticatable
     {
         $roleName = strtolower($this->rol?->nombre ?? '');
         return str_contains($roleName, 'admin') || $this->rol_id == 1;
+    }
+
+    /**
+     * Verifica si el usuario puede eliminar registros.
+     * Solo admin o usuarios con puede_eliminar = true.
+     */
+    public function canDelete(): bool
+    {
+        return $this->isAdmin() || (bool) $this->puede_eliminar;
     }
 
     public function hasPermission(string $permiso): bool

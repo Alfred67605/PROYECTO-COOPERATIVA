@@ -17,7 +17,7 @@ interface BocaminaForm {
 const emptyForm: BocaminaForm = { nombre: '', ubicacion: '' };
 
 export const BocaminasList = () => {
-  const { canWrite } = useAuth();
+  const { canWrite, canDelete } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
   const [showModal, setShowModal] = useState(false);
@@ -76,7 +76,13 @@ export const BocaminasList = () => {
     setEditingId(b.id); setError(''); setShowModal(true);
   };
   const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm); setError(''); };
-  const handleDelete = (id: number, nombre: string) => { setDeleteTarget({ id, nombre }); setConfirmOpen(true); };
+  const handleDelete = (id: number, nombre: string) => {
+    if (!canDelete()) {
+      toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+      return;
+    }
+    setDeleteTarget({ id, nombre }); setConfirmOpen(true);
+  };
   const confirmDelete = () => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id); };
 
   return (
@@ -147,7 +153,7 @@ export const BocaminasList = () => {
                             <button onClick={() => openEdit(b)} className="btn-icon">
                               <Edit size={16} />
                             </button>
-                            <button onClick={() => handleDelete(b.id, b.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10">
+                            <button onClick={() => handleDelete(b.id, b.nombre)} className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-500/10" disabled={!canDelete()} title={!canDelete() ? 'No tiene permisos para eliminar' : 'Eliminar bocamina'}>
                               <Trash2 size={16} />
                             </button>
                           </>

@@ -10,10 +10,12 @@ import { useToast } from '../../components/ui/Toast';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, tableRowVariant } from '../../components/ui/PageTransition';
+import { useAuth } from '../auth/AuthContext';
 
 export const RespaldosView = () => {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const { canDelete } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [page, setPage] = useState(1);
@@ -401,9 +403,16 @@ export const RespaldosView = () => {
                             </>
                           )}
                           <button
-                            onClick={() => setDeleteId(item.id)}
+                            onClick={() => {
+                              if (!canDelete()) {
+                                toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+                                return;
+                              }
+                              setDeleteId(item.id);
+                            }}
                             className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-colors"
-                            title="Eliminar"
+                            title={!canDelete() ? 'No tiene permisos para eliminar' : 'Eliminar'}
+                            disabled={!canDelete()}
                           >
                             <Trash2 size={14} />
                           </button>

@@ -82,6 +82,17 @@ Route::get('/seed-db', function () {
     }
 });
 
+// Helper route to WIPE all operational data preserving only admin credentials
+Route::get('/vaciar-datos', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('sistema:vaciar-datos', ['--force' => true]);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        return '✅ ¡Sistema vaciado exitosamente! Solo se conservó el usuario admin (admin@cooperativa.com / Admin2026!).<br/><pre>' . $output . '</pre>';
+    } catch (\Throwable $e) {
+        return '❌ Error al vaciar datos: ' . $e->getMessage();
+    }
+});
+
 // Diagnostic route for cPanel hosting to test PostgreSQL database connection
 Route::get('/debug-db', function () {
     $results = [];
@@ -120,5 +131,5 @@ Route::get('/{any?}', function () {
         return response()->file($indexPath);
     }
     return view('welcome');
-})->where('any', '^(?!api|sanctum|symlink|reset-admin|seed-db|migrate|clear-cache|debug-db).*$');
+})->where('any', '^(?!api|sanctum|symlink|reset-admin|seed-db|migrate|clear-cache|debug-db|vaciar-datos).*$');
 

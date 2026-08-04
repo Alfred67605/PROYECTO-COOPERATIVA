@@ -9,6 +9,7 @@ interface User {
   rol_id: number;
   avatar?: string;
   avatar_url?: string | null;
+  puede_eliminar?: boolean;
   rol?: {
     id: number;
     nombre: string;
@@ -37,6 +38,7 @@ interface AuthContextType {
   hasPermission: (perm: string) => boolean;
   canAccess: (module: string) => boolean;
   canWrite: (module: string) => boolean;
+  canDelete: () => boolean;
   empresaSettings: EmpresaSettings | null;
   refreshEmpresaSettings: () => Promise<void>;
 }
@@ -132,6 +134,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return canAccess(module);
   };
 
+  const canDelete = (): boolean => {
+    if (!user) return false;
+    if (user.rol?.nombre === 'Administrador General') return true;
+    return !!user.puede_eliminar;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -143,6 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         hasPermission,
         canAccess,
         canWrite,
+        canDelete,
         empresaSettings,
         refreshEmpresaSettings
       }}

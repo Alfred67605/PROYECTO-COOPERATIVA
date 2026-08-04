@@ -86,7 +86,7 @@ const emptyForm: MaterialForm = {
 export const InventarioList = () => {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const { canWrite } = useAuth();
+  const { canWrite, canDelete: authCanDelete } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'materiales' | 'categorias'>('materiales');
   const [search, setSearch] = useState('');
@@ -110,7 +110,7 @@ export const InventarioList = () => {
   const [deleteCatTarget, setDeleteCatTarget] = useState<any>(null);
 
   const canEdit = canWrite('materiales');
-  const canDelete = canWrite('materiales');
+  const canDelete = canWrite('materiales') && authCanDelete();
 
   // Fetch categories dynamically
   const { data: categoriasData, isLoading: isLoadingCategorias } = useQuery({
@@ -294,6 +294,10 @@ export const InventarioList = () => {
   };
 
   const handleDelete = (id: number, descripcion: string) => {
+    if (!authCanDelete()) {
+      toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
+      return;
+    }
     setDeleteTarget({ id, descripcion });
     setConfirmOpen(true);
   };

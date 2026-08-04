@@ -34,6 +34,7 @@ class UsuarioController extends Controller
                     ->symbols(),
             ],
             'rol_id' => 'required|exists:roles,id',
+            'puede_eliminar' => 'boolean',
             'permisos' => 'nullable|array',
             'permisos.*' => 'exists:permisos,id'
         ]);
@@ -88,6 +89,7 @@ class UsuarioController extends Controller
             ],
             'rol_id' => 'required|exists:roles,id',
             'estado' => 'boolean',
+            'puede_eliminar' => 'boolean',
             'permisos' => 'nullable|array',
             'permisos.*' => 'exists:permisos,id'
         ]);

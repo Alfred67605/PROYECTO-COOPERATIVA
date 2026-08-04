@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ], append: [
             \App\Http\Middleware\SanitizeInput::class,
             \App\Http\Middleware\EnforceSingleSession::class,
+            \App\Http\Middleware\CheckDeletePermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
