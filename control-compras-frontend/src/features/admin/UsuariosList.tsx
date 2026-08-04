@@ -374,28 +374,6 @@ export const UsuariosList = () => {
                           </div>
                         )}
 
-                        {editingId && (
-                          <div className="flex items-center gap-3 p-3 bg-amber-500/5 rounded-xl border border-amber-500/20 mt-4">
-                            <div className="relative inline-flex cursor-pointer items-center">
-                              <input type="checkbox" id="puede_eliminar" className="peer sr-only" checked={form.puede_eliminar}
-                                onChange={e => {
-                                  if (e.target.checked) {
-                                    setConfirmDeletePermOpen(true);
-                                  } else {
-                                    setForm({...form, puede_eliminar: false});
-                                  }
-                                }}
-                              />
-                              <div className="h-6 w-11 rounded-full bg-white/10 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white/10 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
-                            </div>
-                            <div>
-                              <label htmlFor="puede_eliminar" className="text-sm font-semibold text-amber-300 cursor-pointer select-none flex items-center gap-1.5">
-                                <ShieldAlert size={14} /> Permitir eliminar registros
-                              </label>
-                              <p className="text-[10px] text-mining-400 mt-0.5">Si se activa, este usuario podrá eliminar registros en todos los módulos.</p>
-                            </div>
-                          </div>
-                        )}
                       </div>
 
                       {/* Right Column: Module Access */}
@@ -496,6 +474,34 @@ export const UsuariosList = () => {
                                      </div>
                                    );
                                  })}
+
+                                 {/* Permiso Especial de Eliminación */}
+                                 <div className="mt-2 pt-2 border-t border-amber-500/20">
+                                   <label className={`flex items-center gap-3 text-sm cursor-pointer select-none p-2.5 rounded-lg border transition-colors ${
+                                     form.puede_eliminar ? 'bg-amber-500/15 border-amber-500/40 text-amber-300' : 'bg-amber-500/5 hover:bg-amber-500/10 border-amber-500/20'
+                                   }`}>
+                                     <input
+                                       type="checkbox"
+                                       checked={form.puede_eliminar}
+                                       onChange={e => {
+                                         if (e.target.checked) {
+                                           setConfirmDeletePermOpen(true);
+                                         } else {
+                                           setForm({ ...form, puede_eliminar: false });
+                                         }
+                                       }}
+                                       className="rounded h-4 w-4 shrink-0 border-amber-500/50 bg-amber-500/10 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
+                                     />
+                                     <div>
+                                       <p className="font-semibold text-sm text-amber-400 flex items-center gap-1.5">
+                                         <ShieldAlert size={14} /> Permiso de Eliminación
+                                       </p>
+                                       <p className="text-xs text-mining-400 leading-normal mt-0.5">
+                                         Permite a este usuario eliminar cualquier registro en todos los módulos del sistema.
+                                       </p>
+                                     </div>
+                                   </label>
+                                 </div>
                               </div>
                             </div>
                           );
