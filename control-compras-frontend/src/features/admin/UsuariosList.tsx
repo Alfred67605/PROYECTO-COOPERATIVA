@@ -488,33 +488,6 @@ export const UsuariosList = () => {
                                   );
                                 })}
 
-                                  {/* Permiso Especial de Eliminación */}
-                                  <div className="mb-2 pb-2 border-b border-amber-500/20">
-                                    <label className={`flex items-center gap-3 text-sm cursor-pointer select-none p-2.5 rounded-lg border transition-colors ${
-                                      form.puede_eliminar ? 'bg-amber-500/15 border-amber-500/40 text-amber-300' : 'bg-amber-500/5 hover:bg-amber-500/10 border-amber-500/20'
-                                    }`}>
-                                      <input
-                                        type="checkbox"
-                                        checked={form.puede_eliminar}
-                                        onChange={e => {
-                                          if (e.target.checked) {
-                                            setConfirmDeletePermOpen(true);
-                                          } else {
-                                            setForm({...form, puede_eliminar: false});
-                                          }
-                                        }}
-                                        className="rounded h-4 w-4 shrink-0 border-amber-500/50 bg-amber-500/10 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
-                                      />
-                                      <div>
-                                        <p className="font-semibold text-sm text-amber-400 flex items-center gap-1.5">
-                                          <ShieldAlert size={14} /> Permiso de Eliminación
-                                        </p>
-                                        <p className="text-xs text-mining-400 leading-normal mt-0.5">
-                                          Permite a este usuario eliminar cualquier registro en todos los módulos del sistema.
-                                        </p>
-                                      </div>
-                                    </label>
-                                  </div>
 
                                   {/* Solo Lectura option */}
                                   {permisos?.filter((p: any) => p.nombre === 'solo_lectura').map((p: any) => {
