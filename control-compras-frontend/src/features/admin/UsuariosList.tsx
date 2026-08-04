@@ -374,6 +374,32 @@ export const UsuariosList = () => {
                           </div>
                         )}
 
+                        {/* Permiso para Eliminar Registros - Siempre visible */}
+                        <div className="flex items-center justify-between p-3.5 bg-amber-500/10 rounded-xl border border-amber-500/30 mt-4 shadow-sm">
+                          <div className="flex items-center gap-2.5 pr-2">
+                            <ShieldAlert size={18} className="text-amber-400 shrink-0" />
+                            <div>
+                              <label htmlFor="puede_eliminar_left" className="text-xs font-bold text-amber-300 cursor-pointer select-none block">
+                                Permiso para Eliminar Registros
+                              </label>
+                              <p className="text-[10px] text-mining-400 leading-tight mt-0.5">
+                                Permite eliminar cualquier registro en los módulos
+                              </p>
+                            </div>
+                          </div>
+                          <div className="relative inline-flex cursor-pointer items-center shrink-0">
+                            <input type="checkbox" id="puede_eliminar_left" className="peer sr-only" checked={form.puede_eliminar}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setConfirmDeletePermOpen(true);
+                                } else {
+                                  setForm({...form, puede_eliminar: false});
+                                }
+                              }}
+                            />
+                            <div className="h-6 w-11 rounded-full bg-white/10 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white/10 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Right Column: Module Access */}
@@ -445,63 +471,63 @@ export const UsuariosList = () => {
                                   );
                                 })}
 
-                                 {/* Solo Lectura option */}
-                                 {permisos?.filter((p: any) => p.nombre === 'solo_lectura').map((p: any) => {
-                                   const isSoloLecturaChecked = form.permisos.includes(p.id);
+                                  {/* Permiso Especial de Eliminación */}
+                                  <div className="mb-2 pb-2 border-b border-amber-500/20">
+                                    <label className={`flex items-center gap-3 text-sm cursor-pointer select-none p-2.5 rounded-lg border transition-colors ${
+                                      form.puede_eliminar ? 'bg-amber-500/15 border-amber-500/40 text-amber-300' : 'bg-amber-500/5 hover:bg-amber-500/10 border-amber-500/20'
+                                    }`}>
+                                      <input
+                                        type="checkbox"
+                                        checked={form.puede_eliminar}
+                                        onChange={e => {
+                                          if (e.target.checked) {
+                                            setConfirmDeletePermOpen(true);
+                                          } else {
+                                            setForm({...form, puede_eliminar: false});
+                                          }
+                                        }}
+                                        className="rounded h-4 w-4 shrink-0 border-amber-500/50 bg-amber-500/10 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
+                                      />
+                                      <div>
+                                        <p className="font-semibold text-sm text-amber-400 flex items-center gap-1.5">
+                                          <ShieldAlert size={14} /> Permiso de Eliminación
+                                        </p>
+                                        <p className="text-xs text-mining-400 leading-normal mt-0.5">
+                                          Permite a este usuario eliminar cualquier registro en todos los módulos del sistema.
+                                        </p>
+                                      </div>
+                                    </label>
+                                  </div>
 
-                                   return (
-                                     <div key={p.id} className="mt-2 pt-2 border-t border-white/5">
-                                       <label className={`flex items-center gap-3 text-sm cursor-pointer select-none p-2.5 rounded-lg border border-transparent transition-colors ${
-                                         isSoloLecturaChecked ? 'bg-red-500/10 border-red-500/20' : 'hover:bg-red-500/5'
-                                       }`}>
-                                         <input
-                                           type="checkbox"
-                                           checked={isSoloLecturaChecked}
-                                           onChange={e => {
-                                             if (e.target.checked) {
-                                               setForm({ ...form, permisos: [...form.permisos, p.id] });
-                                             } else {
-                                               setForm({ ...form, permisos: form.permisos.filter(id => id !== p.id) });
-                                             }
-                                           }}
-                                           className="rounded h-4 w-4 shrink-0 border-red-500/30 bg-red-500/10 text-red-500 focus:ring-red-500/50 cursor-pointer"
-                                         />
-                                         <div>
-                                           <p className="font-semibold text-sm text-red-400">Modo Solo Lectura</p>
-                                           <p className="text-xs text-mining-500 leading-normal mt-0.5">{p.descripcion}</p>
-                                         </div>
-                                       </label>
-                                     </div>
-                                   );
-                                 })}
+                                  {/* Solo Lectura option */}
+                                  {permisos?.filter((p: any) => p.nombre === 'solo_lectura').map((p: any) => {
+                                    const isSoloLecturaChecked = form.permisos.includes(p.id);
 
-                                 {/* Permiso Especial de Eliminación */}
-                                 <div className="mt-2 pt-2 border-t border-amber-500/20">
-                                   <label className={`flex items-center gap-3 text-sm cursor-pointer select-none p-2.5 rounded-lg border transition-colors ${
-                                     form.puede_eliminar ? 'bg-amber-500/15 border-amber-500/40 text-amber-300' : 'bg-amber-500/5 hover:bg-amber-500/10 border-amber-500/20'
-                                   }`}>
-                                     <input
-                                       type="checkbox"
-                                       checked={form.puede_eliminar}
-                                       onChange={e => {
-                                         if (e.target.checked) {
-                                           setConfirmDeletePermOpen(true);
-                                         } else {
-                                           setForm({ ...form, puede_eliminar: false });
-                                         }
-                                       }}
-                                       className="rounded h-4 w-4 shrink-0 border-amber-500/50 bg-amber-500/10 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
-                                     />
-                                     <div>
-                                       <p className="font-semibold text-sm text-amber-400 flex items-center gap-1.5">
-                                         <ShieldAlert size={14} /> Permiso de Eliminación
-                                       </p>
-                                       <p className="text-xs text-mining-400 leading-normal mt-0.5">
-                                         Permite a este usuario eliminar cualquier registro en todos los módulos del sistema.
-                                       </p>
-                                     </div>
-                                   </label>
-                                 </div>
+                                    return (
+                                      <div key={p.id} className="mt-2 pt-2 border-t border-white/5">
+                                        <label className={`flex items-center gap-3 text-sm cursor-pointer select-none p-2.5 rounded-lg border border-transparent transition-colors ${
+                                          isSoloLecturaChecked ? 'bg-red-500/10 border-red-500/20' : 'hover:bg-red-500/5'
+                                        }`}>
+                                          <input
+                                            type="checkbox"
+                                            checked={isSoloLecturaChecked}
+                                            onChange={e => {
+                                              if (e.target.checked) {
+                                                setForm({ ...form, permisos: [...form.permisos, p.id] });
+                                              } else {
+                                                setForm({ ...form, permisos: form.permisos.filter(id => id !== p.id) });
+                                              }
+                                            }}
+                                            className="rounded h-4 w-4 shrink-0 border-red-500/30 bg-red-500/10 text-red-500 focus:ring-red-500/50 cursor-pointer"
+                                          />
+                                          <div>
+                                            <p className="font-semibold text-sm text-red-400">Modo Solo Lectura</p>
+                                            <p className="text-xs text-mining-500 leading-normal mt-0.5">{p.descripcion}</p>
+                                          </div>
+                                        </label>
+                                      </div>
+                                    );
+                                  })}
                               </div>
                             </div>
                           );
