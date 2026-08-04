@@ -62,8 +62,11 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        $roleName = strtolower($this->rol?->nombre ?? '');
-        return str_contains($roleName, 'admin') || $this->rol_id == 1;
+        if ($this->rol_id == 1) {
+            return true;
+        }
+        $roleName = strtolower($this->rol?->nombre ?? Rol::find($this->rol_id)?->nombre ?? '');
+        return str_contains($roleName, 'admin');
     }
 
     /**
