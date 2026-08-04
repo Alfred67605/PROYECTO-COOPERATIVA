@@ -82,6 +82,12 @@ export const UsuariosList = () => {
         }
       }
 
+      // Sync eliminar permission if puede_eliminar is checked
+      const eliminarPerm = permisosList.find((p: any) => p.nombre === 'eliminar');
+      if (form.puede_eliminar && eliminarPerm && !payload.permisos.includes(eliminarPerm.id)) {
+        payload.permisos = [...payload.permisos, eliminarPerm.id];
+      }
+
       if (editingId) return await api.put(`/usuarios/${editingId}`, payload);
       return await api.post('/usuarios', payload);
     },
@@ -440,7 +446,7 @@ export const UsuariosList = () => {
                               </p>
 
                               <div className="space-y-2 bg-white/[0.02] p-3 rounded-xl border border-white/5 max-h-[320px] overflow-y-auto">
-                                {permisos?.filter((p: any) => p.nombre !== 'solo_lectura').map((p: any) => {
+                                {permisos?.filter((p: any) => p.nombre !== 'solo_lectura' && p.nombre !== 'eliminar').map((p: any) => {
                                   const isChecked = form.permisos.includes(p.id);
 
                                   return (

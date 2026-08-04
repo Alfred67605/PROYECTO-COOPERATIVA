@@ -39,6 +39,10 @@ class PermisoSeeder extends Seeder
                 'descripcion' => 'Ver Auditoría del Sistema (Historial/Bitácora).',
             ],
             [
+                'nombre' => 'eliminar',
+                'descripcion' => 'Permiso para eliminar cualquier registro en los módulos.',
+            ],
+            [
                 'nombre' => 'solo_lectura',
                 'descripcion' => 'Forzar todas las operaciones a modo consulta (sin editar ni eliminar).',
             ],
