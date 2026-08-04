@@ -47,7 +47,6 @@ export const UsuariosList = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null);
 
   const [confirmDeletePermOpen, setConfirmDeletePermOpen] = useState(false);
-  const [pendingDeletePerm, setPendingDeletePerm] = useState(false);
 
   const { data, isLoading, isError, error: queryError, refetch } = useQuery({
     queryKey: ['usuarios'],
@@ -147,7 +146,7 @@ export const UsuariosList = () => {
     });
     setEditingId(u.id); setError(''); setShowModal(true);
   };
-  const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm); setError(''); setConfirmDeletePermOpen(false); setPendingDeletePerm(false); };
+  const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm); setError(''); setConfirmDeletePermOpen(false); };
   const handleDelete = (id: number, nombre: string) => {
     if (!canDelete()) {
       toast.error('Acción no permitida', 'No tiene permisos para realizar esta acción.');
@@ -297,11 +296,9 @@ export const UsuariosList = () => {
           onConfirm={() => {
             setForm({...form, puede_eliminar: true});
             setConfirmDeletePermOpen(false);
-            setPendingDeletePerm(false);
           }}
           onCancel={() => {
             setConfirmDeletePermOpen(false);
-            setPendingDeletePerm(false);
           }}
         />,
         document.body
@@ -383,7 +380,6 @@ export const UsuariosList = () => {
                               <input type="checkbox" id="puede_eliminar" className="peer sr-only" checked={form.puede_eliminar}
                                 onChange={e => {
                                   if (e.target.checked) {
-                                    setPendingDeletePerm(true);
                                     setConfirmDeletePermOpen(true);
                                   } else {
                                     setForm({...form, puede_eliminar: false});
