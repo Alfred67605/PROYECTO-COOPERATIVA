@@ -107,9 +107,9 @@ stdout_logfile_maxbytes=0 \n\
 stderr_logfile=/dev/stderr \n\
 stderr_logfile_maxbytes=0' > /etc/supervisor/conf.d/app.conf
 
-# Crear enlace simbólico de storage
-RUN php artisan storage:link 2>/dev/null || true
+# Dar permisos de ejecución al script de inicio
+RUN chmod +x /var/www/html/entrypoint.sh
 
 EXPOSE 80
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/app.conf"]
+CMD ["/var/www/html/entrypoint.sh"]
