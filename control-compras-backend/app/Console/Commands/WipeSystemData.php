@@ -31,6 +31,8 @@ class WipeSystemData extends Command
         $connection = DB::connection()->getDriverName();
         if ($connection === 'sqlite') {
             DB::statement('PRAGMA foreign_keys = OFF;');
+        } elseif ($connection === 'pgsql') {
+            DB::statement("SET session_replication_role = 'replica';");
         } else {
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         }
@@ -96,6 +98,8 @@ class WipeSystemData extends Command
 
         if ($connection === 'sqlite') {
             DB::statement('PRAGMA foreign_keys = ON;');
+        } elseif ($connection === 'pgsql') {
+            DB::statement("SET session_replication_role = 'DEFAULT';");
         } else {
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         }
