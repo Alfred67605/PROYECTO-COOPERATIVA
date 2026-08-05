@@ -30,12 +30,12 @@ class Servicio extends Model
 
     public function usuarioRegistro()
     {
-        return $this->belongsTo(User::class, 'usuario_registro_id');
+        return $this->belongsTo(User::class, 'usuario_registro_id')->withTrashed();
     }
 
     public function responsable()
     {
-        return $this->belongsTo(User::class, 'responsable_id');
+        return $this->belongsTo(User::class, 'responsable_id')->withTrashed();
     }
 
     public function equipo()

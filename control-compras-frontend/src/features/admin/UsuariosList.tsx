@@ -111,7 +111,7 @@ export const UsuariosList = () => {
     mutationFn: async (id: number) => await api.delete(`/usuarios/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
-      toast.success('Usuario eliminado', 'El usuario fue eliminado de manera definitiva.');
+      toast.success('Usuario eliminado', 'El usuario fue eliminado correctamente.');
       setConfirmOpen(false);
       setDeleteTarget(null);
     },
@@ -280,7 +280,7 @@ export const UsuariosList = () => {
         <ConfirmDialog
           isOpen={confirmOpen}
           title="Eliminar Usuario"
-          message={`¿Estás seguro de que deseas eliminar al usuario "${deleteTarget?.nombre}" de manera definitiva? Esta acción no se puede deshacer.`}
+          message={`¿Estás seguro de que deseas eliminar al usuario "${deleteTarget?.nombre}"?`}
           confirmLabel="Eliminar"
           cancelLabel="Cancelar"
           variant="danger"

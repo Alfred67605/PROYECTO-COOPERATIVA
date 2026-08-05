@@ -25,7 +25,7 @@ class Inspeccion extends Model
 
     public function responsable()
     {
-        return $this->belongsTo(User::class, 'firma_responsable_id');
+        return $this->belongsTo(User::class, 'firma_responsable_id')->withTrashed();
     }
 
     public function equipo()

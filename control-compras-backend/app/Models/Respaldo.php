@@ -21,6 +21,6 @@ class Respaldo extends Model
 
     public function usuario()
     {
-        return $this->belongsTo(User::class, 'creado_por');
+        return $this->belongsTo(User::class, 'creado_por')->withTrashed();
     }
 }

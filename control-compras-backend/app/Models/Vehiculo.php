@@ -21,7 +21,7 @@ class Vehiculo extends Model
 
     public function conductor()
     {
-        return $this->belongsTo(User::class, 'conductor_id');
+        return $this->belongsTo(User::class, 'conductor_id')->withTrashed();
     }
 
     public function servicios()

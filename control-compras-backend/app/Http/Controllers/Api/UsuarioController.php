@@ -155,7 +155,7 @@ class UsuarioController extends Controller
         $user = User::findOrFail($id);
         try {
             $user->delete();
-            return response()->json(['message' => 'Usuario eliminado de manera definitiva']);
+            return response()->json(['message' => 'Usuario eliminado correctamente']);
         } catch (\Illuminate\Database\QueryException $e) {
             return response()->json([
                 'message' => 'No se puede eliminar el usuario porque tiene transacciones registradas.'
