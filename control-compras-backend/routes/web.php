@@ -83,11 +83,15 @@ Route::get('/seed-db', function () {
 });
 
 // Helper route to WIPE all operational data preserving only admin credentials
-Route::get('/vaciar-datos', function () {
+Route::get('/vaciar-datos', function (\Illuminate\Http\Request $request) {
+    if ($request->query('token') !== 'KoyositaWipe2026') {
+        abort(403, 'Acceso denegado. Se requiere un token válido para esta acción destructiva.');
+    }
+    
     try {
-        \Illuminate\Support\Facades\Artisan::call('sistema:vaciar-datos', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('system:wipe-data');
         $output = \Illuminate\Support\Facades\Artisan::output();
-        return '✅ ¡Sistema vaciado exitosamente! Solo se conservó el usuario admin (admin@cooperativa.com / Admin2026!).<br/><pre>' . $output . '</pre>';
+        return '✅ ¡Sistema vaciado exitosamente! Solo se conservó el usuario admin.<br/><pre>' . $output . '</pre>';
     } catch (\Throwable $e) {
         return '❌ Error al vaciar datos: ' . $e->getMessage();
     }
